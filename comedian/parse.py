@@ -281,13 +281,7 @@ def parse_block_device(
         "swap_volume",
         "lvm_physical_volume",
     }
-    validate_spec(
-        name,
-        spec,
-        allowed=keys,
-        variant=keys,
-        exclusive=keys,
-    )
+    validate_spec(name, spec, allowed=keys, variant=keys, exclusive=keys)
 
     if "gpt_partition_table" in spec:
         gpt_partition_table_spec = spec["gpt_partition_table"]
@@ -357,7 +351,7 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     )
 
     physical_device_name = physical_device_spec["name"]
-    yield PhysicalDeviceDeclaration(physical_device_name)
+    yield PhysicalDeviceDeclaration(name=physical_device_name)
 
     if block_device_spec:
         yield from parse_block_device(
@@ -374,7 +368,10 @@ def parse_gpt_partition_table(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     partition_table_name = spec["name"]
     device_name = spec["device"]
-    yield GptPartitionTableDeclaration(partition_table_name, device_name)
+    yield GptPartitionTableDeclaration(
+        name=partition_table_name,
+        device=device_name,
+    )
 
     for index, partition_spec in enumerate(spec["gpt_partitions"]):
         validate_spec(
@@ -405,12 +402,12 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     partition_name = gpt_partition_spec["name"]
     yield GptPartitionDeclaration(
-        partition_name,
-        gpt_partition_spec["partition_table"],
-        gpt_partition_spec["number"],
-        gpt_partition_spec["start"],
-        gpt_partition_spec["end"],
-        gpt_partition_spec.get("flags", []),
+        name=partition_name,
+        partition_table=gpt_partition_spec["partition_table"],
+        number=gpt_partition_spec["number"],
+        start=gpt_partition_spec["start"],
+        end=gpt_partition_spec["end"],
+        flags=gpt_partition_spec.get("flags", []),
     )
 
     if block_device_spec:
@@ -428,10 +425,10 @@ def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     raid_volume_name = raid_volume_spec["name"]
     yield RaidVolumeDeclaration(
-        raid_volume_name,
-        raid_volume_spec["devices"],
-        raid_volume_spec["level"],
-        raid_volume_spec["metadata"],
+        name=raid_volume_name,
+        devices=raid_volume_spec["devices"],
+        level=raid_volume_spec["level"],
+        metadata=raid_volume_spec["metadata"],
     )
 
     if block_device_spec:
@@ -450,11 +447,11 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     crypt_volume_name = crypt_volume_spec["name"]
     yield CryptVolumeDeclaration(
-        crypt_volume_name,
-        crypt_volume_spec["device"],
-        crypt_volume_spec["type"],
-        crypt_volume_spec.get("keysize"),
-        crypt_volume_spec.get("password"),
+        name=crypt_volume_name,
+        device=crypt_volume_spec["device"],
+        type=crypt_volume_spec["type"],
+        keysize=crypt_volume_spec.get("keysize"),
+        password=crypt_volume_spec.get("password"),
     )
 
     if block_device_spec:
@@ -466,7 +463,7 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 def parse_lvm_physical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec("LvmPhysicalVolume", spec, required={"name", "device"})
 
-    yield LvmPhysicalVolumeDeclaration(spec["name"], spec["device"])
+    yield LvmPhysicalVolumeDeclaration(name=spec["name"], device=spec["device"])
 
 
 def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Declaration]:
@@ -478,7 +475,8 @@ def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     lvm_volume_group_name = spec["name"]
     yield LvmVolumeGroupDeclaration(
-        lvm_volume_group_name, spec["lvm_physical_volumes"]
+        name=lvm_volume_group_name,
+        lvm_physical_volumes=spec["lvm_physical_volumes"],
     )
 
     for lvm_logical_volume_spec in spec["lvm_logical_volumes"]:
@@ -506,10 +504,10 @@ def parse_lvm_logical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     lvm_logical_volume_name = lvm_logical_volume_spec["name"]
     yield LvmLogicalVolumeDeclaration(
-        lvm_logical_volume_name,
-        lvm_logical_volume_spec["lvm_volume_group"],
-        lvm_logical_volume_spec["size"],
-        lvm_logical_volume_spec.get("args", []),
+        name=lvm_logical_volume_name,
+        lvm_volume_group=lvm_logical_volume_spec["lvm_volume_group"],
+        size=lvm_logical_volume_spec["size"],
+        args=lvm_logical_volume_spec.get("args", []),
     )
 
     if block_device_spec:
@@ -528,11 +526,11 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     filesystem_name = spec["name"]
     yield FilesystemDeclaration(
-        filesystem_name,
-        spec["device"],
-        spec["mountpoint"],
-        spec["type"],
-        spec.get("options", []),
+        name=filesystem_name,
+        device=spec["device"],
+        mountpoint=spec["mountpoint"],
+        type=spec["type"],
+        options=spec.get("options", []),
     )
 
     for directory_spec in spec.get("directories", []):
@@ -566,12 +564,12 @@ def parse_directory(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     )
 
     yield DirectoryDeclaration(
-        spec["name"],
-        spec["filesystem"],
-        spec["relative_path"],
-        spec.get("owner"),
-        spec.get("group"),
-        spec.get("mode"),
+        name=spec["name"],
+        filesystem=spec["filesystem"],
+        relative_path=spec["relative_path"],
+        owner=spec.get("owner"),
+        group=spec.get("group"),
+        mode=spec.get("mode"),
     )
 
 
@@ -588,13 +586,13 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     file_name = spec["name"]
     yield FileDeclaration(
-        file_name,
-        spec["filesystem"],
-        spec["relative_path"],
-        spec.get("owner"),
-        spec.get("group"),
-        spec.get("mode"),
-        spec.get("size"),
+        name=file_name,
+        filesystem=spec["filesystem"],
+        relative_path=spec["relative_path"],
+        owner=spec.get("owner"),
+        group=spec.get("group"),
+        mode=spec.get("mode"),
+        size=spec.get("size"),
     )
 
     if "loop_device" in spec:
@@ -632,9 +630,9 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 
     loop_device_name = loop_device_spec["name"]
     yield LoopDeviceDeclaration(
-        loop_device_name,
-        loop_device_spec["file"],
-        loop_device_spec.get("args", []),
+        name=loop_device_name,
+        file=loop_device_spec["file"],
+        args=loop_device_spec.get("args", []),
     )
 
     if block_device_spec:
@@ -644,4 +642,4 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
 def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec("SwapVolume", spec, required={"name", "device"})
 
-    yield SwapVolumeDeclaration(spec["name"], spec["device"])
+    yield SwapVolumeDeclaration(name=spec["name"], device=spec["device"])
