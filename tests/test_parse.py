@@ -6,21 +6,21 @@ from unittest.mock import patch
 
 from context import comedian
 
-from comedian.declaration import (
-    Declaration,
-    PhysicalDeviceDeclaration,
-    GptPartitionTableDeclaration,
-    GptPartitionDeclaration,
-    RaidVolumeDeclaration,
-    CryptVolumeDeclaration,
-    LvmPhysicalVolumeDeclaration,
-    LvmVolumeGroupDeclaration,
-    LvmLogicalVolumeDeclaration,
-    FilesystemDeclaration,
-    DirectoryDeclaration,
-    FileDeclaration,
-    LoopDeviceDeclaration,
-    SwapVolumeDeclaration,
+from comedian.declaration import Declaration
+from comedian.specifications import (
+    PhysicalDevice,
+    GptPartitionTable,
+    GptPartition,
+    RaidVolume,
+    CryptVolume,
+    LvmPhysicalVolume,
+    LvmVolumeGroup,
+    LvmLogicalVolume,
+    Filesystem,
+    Directory,
+    File,
+    LoopDevice,
+    SwapVolume,
 )
 
 from comedian.parse import (
@@ -174,12 +174,12 @@ class ParseRootTest(ParseTestBase):
 
     def test_complete(self):
         expected = [
-            PhysicalDeviceDeclaration("sda"),
-            GptPartitionTableDeclaration(
+            PhysicalDevice("sda"),
+            GptPartitionTable(
                 name="sda:gpt",
                 device="sda",
             ),
-            GptPartitionDeclaration(
+            GptPartition(
                 name="sda:gpt:1",
                 partition_table="sda:gpt",
                 number=1,
@@ -187,7 +187,7 @@ class ParseRootTest(ParseTestBase):
                 end="3",
                 flags=["bios_grub"]
             ),
-            GptPartitionDeclaration(
+            GptPartition(
                 name="sda:gpt:2",
                 partition_table="sda:gpt",
                 number=2,
@@ -195,21 +195,21 @@ class ParseRootTest(ParseTestBase):
                 end="-1",
                 flags=[],
             ),
-            CryptVolumeDeclaration(
+            CryptVolume(
                 name="cryptroot",
                 device="sda:gpt:2",
                 type="luks2",
                 keysize="2048",
                 password="hunter2"
             ),
-            FilesystemDeclaration(
+            Filesystem(
                 name="fsroot",
                 device="cryptroot",
                 mountpoint="/",
                 type="ext4",
                 options=[],
             ),
-            DirectoryDeclaration(
+            Directory(
                 name="mountraid",
                 filesystem="fsroot",
                 relative_path="raid",
@@ -217,7 +217,7 @@ class ParseRootTest(ParseTestBase):
                 group="root",
                 mode="0755",
             ),
-            DirectoryDeclaration(
+            Directory(
                 name="mountloop",
                 filesystem="fsroot",
                 relative_path="loop",
@@ -225,7 +225,7 @@ class ParseRootTest(ParseTestBase):
                 group=None,
                 mode=None,
             ),
-            FileDeclaration(
+            File(
                 name="swapfile",
                 filesystem="fsroot",
                 relative_path="swapfile",
@@ -234,8 +234,8 @@ class ParseRootTest(ParseTestBase):
                 mode="0755",
                 size="10",
             ),
-            SwapVolumeDeclaration(name="swap1", device="swapfile"),
-            FileDeclaration(
+            SwapVolume(name="swap1", device="swapfile"),
+            File(
                 name="loopfile",
                 filesystem="fsroot",
                 relative_path="loopfile",
@@ -244,19 +244,19 @@ class ParseRootTest(ParseTestBase):
                 mode=None,
                 size="10",
             ),
-            LoopDeviceDeclaration(
+            LoopDevice(
                 name="loop",
                 file="loopfile",
                 args=["-e", "18"],
             ),
-            FilesystemDeclaration(
+            Filesystem(
                 name="fsloop",
                 device="loop",
                 mountpoint="/loop",
                 type="ext4",
                 options=["noatime"],
             ),
-            FileDeclaration(
+            File(
                 name="randomfile",
                 filesystem="fsroot",
                 relative_path="randomfile",
@@ -265,32 +265,32 @@ class ParseRootTest(ParseTestBase):
                 mode=None,
                 size=None,
             ),
-            PhysicalDeviceDeclaration("sdb"),
-            SwapVolumeDeclaration(name="swap2", device="sdb"),
-            PhysicalDeviceDeclaration("sdc"),
-            LvmPhysicalVolumeDeclaration(
+            PhysicalDevice("sdb"),
+            SwapVolume(name="swap2", device="sdb"),
+            PhysicalDevice("sdc"),
+            LvmPhysicalVolume(
                 name="lvmpv",
                 device="sdc",
             ),
-            PhysicalDeviceDeclaration("sdd"),
-            RaidVolumeDeclaration(
+            PhysicalDevice("sdd"),
+            RaidVolume(
                 name="raidarray",
                 devices=["sdc"],
                 level="1",
                 metadata="1.2",
             ),
-            FilesystemDeclaration(
+            Filesystem(
                 name="fsraid",
                 device="raidarray",
                 mountpoint="/raid",
                 type="ext4",
                 options=[],
             ),
-            LvmVolumeGroupDeclaration(
+            LvmVolumeGroup(
                 name="lvmvg",
                 lvm_physical_volumes=["lvmpv"],
             ),
-            LvmLogicalVolumeDeclaration(
+            LvmLogicalVolume(
                 name="lvmlv",
                 lvm_volume_group="lvmvg",
                 size="10",
