@@ -129,21 +129,21 @@ __all__ = (
     "FoundIncompatibleKeysError",
     "MissingRequiredKeysError",
     "MissingVariantKeysError",
-    "ParseValidationError",
+    "ParseError",
     "parse",
 )
 
 # Public interface
 
 
-class ParseValidationError(Exception):
+class ParseError(Exception):
     """
-    Base class for all validation errors
+    Base class for all parse errors.
     """
     pass
 
 
-class MissingRequiredKeysError(ParseValidationError):
+class MissingRequiredKeysError(ParseError):
     """
     Error thrown when required keys are missing from a spec.
     """
@@ -156,7 +156,7 @@ class MissingRequiredKeysError(ParseValidationError):
         self.keys = keys
 
 
-class MissingVariantKeysError(ParseValidationError):
+class MissingVariantKeysError(ParseError):
     """
     Error thrown when variant keys are missing from a spec.
     """
@@ -169,7 +169,7 @@ class MissingVariantKeysError(ParseValidationError):
         self.keys = keys
 
 
-class FoundIllegalKeysError(ParseValidationError):
+class FoundIllegalKeysError(ParseError):
     """
     Error thrown when illegal keys are found in a spec.
     """
@@ -182,7 +182,7 @@ class FoundIllegalKeysError(ParseValidationError):
         self.keys = keys
 
 
-class FoundIncompatibleKeysError(ParseValidationError):
+class FoundIncompatibleKeysError(ParseError):
     """
     Error thrown when incompatible keys are found in a spec.
     """
