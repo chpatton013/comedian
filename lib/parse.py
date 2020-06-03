@@ -105,7 +105,7 @@ LvmPhysicalVolume:
     "name": str
 """
 
-from typing import Any, Dict, Generator, Optional, Set, Tuple
+from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
 from declaration import (
     Declaration,
@@ -195,7 +195,7 @@ class FoundIncompatibleKeysError(ParseValidationError):
         self.keys = keys
 
 
-def parse(spec: Dict[str, Any]) -> Generator[Declaration, None, None]:
+def parse(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     """
     Parse a spec and yield the declarations described within.
     """
@@ -221,7 +221,7 @@ def parse(spec: Dict[str, Any]) -> Generator[Declaration, None, None]:
 
 def validate_spec(
     name: str,
-    spec: Dict[str, Any],
+    spec: Mapping[str, Any],
     required: Set[str] = set(),
     allowed: Set[str] = set(),
     illegal: Set[str] = set(),
@@ -231,31 +231,31 @@ def validate_spec(
 ) -> Set[str]:
     missing = required - spec.keys()
     if missing:
-        raise MissingRequiredKeysError(name, spec, missing)
+        raise MissingRequiredKeysError(name, dict(spec), missing)
 
     valid = required | allowed
     if not ignore:
         disallowed = spec.keys() - valid
         if disallowed:
-            raise FoundIllegalKeysError(name, spec, disallowed)
+            raise FoundIllegalKeysError(name, dict(spec), disallowed)
 
     disallowed = spec.keys() & illegal
     if illegal and disallowed:
-        raise FoundIllegalKeysError(name, spec, disallowed)
+        raise FoundIllegalKeysError(name, dict(spec), disallowed)
 
     matching = spec.keys() & variant
     if variant and len(matching) < 1:
-        raise MissingVariantKeysError(name, spec, variant)
+        raise MissingVariantKeysError(name, dict(spec), variant)
 
     mutually_exclusive = exclusive | variant
     incompatible = spec.keys() & mutually_exclusive
     if len(incompatible) > 1:
-        raise FoundIncompatibleKeysError(name, spec, incompatible)
+        raise FoundIncompatibleKeysError(name, dict(spec), incompatible)
 
     return valid
 
 
-def partition_spec(name: str, spec: Dict[str, Any],
+def partition_spec(name: str, spec: Mapping[str, Any],
                    **kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     valid_keys = validate_spec(name, spec, **kwargs)
 
@@ -271,9 +271,9 @@ def partition_spec(name: str, spec: Dict[str, Any],
 
 def parse_block_device(
     name: str,
-    spec: Dict[str, Any],
+    spec: Mapping[str, Any],
     device: str,
-) -> Generator[Declaration, None, None]:
+) -> Iterator[Declaration]:
     keys = {
         "gpt_partition_table",
         "filesystem",
@@ -347,9 +347,7 @@ def parse_block_device(
         })
 
 
-def parse_physical_device(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     name = "PhysicalDevice"
     physical_device_spec, block_device_spec = partition_spec(
         name,
@@ -367,9 +365,7 @@ def parse_physical_device(
         )
 
 
-def parse_gpt_partition_table(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_gpt_partition_table(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec(
         "GptPartitionTable",
         spec,
@@ -397,9 +393,7 @@ def parse_gpt_partition_table(
         })
 
 
-def parse_gpt_partition(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     name = "GptPartition"
     gpt_partition_spec, block_device_spec = partition_spec(
         name,
@@ -423,9 +417,7 @@ def parse_gpt_partition(
         yield from parse_block_device(name, block_device_spec, partition_name)
 
 
-def parse_raid_volume(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     name = "RaidVolume"
     raid_volume_spec, block_device_spec = partition_spec(
         name,
@@ -446,9 +438,7 @@ def parse_raid_volume(
         yield from parse_block_device(name, block_device_spec, raid_volume_name)
 
 
-def parse_crypt_volume(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     name = "CryptVolume"
     crypt_volume_spec, block_device_spec = partition_spec(
         name,
@@ -473,17 +463,13 @@ def parse_crypt_volume(
         )
 
 
-def parse_lvm_physical_volume(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_lvm_physical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec("LvmPhysicalVolume", spec, required={"name", "device"})
 
     yield LvmPhysicalVolumeDeclaration(spec["name"], spec["device"])
 
 
-def parse_lvm_volume_group(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec(
         "LvmVolumeGroup",
         spec,
@@ -508,9 +494,7 @@ def parse_lvm_volume_group(
         })
 
 
-def parse_lvm_logical_volume(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_lvm_logical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     name = "LvmLogicalVolume"
     lvm_logical_volume_spec, block_device_spec = partition_spec(
         name,
@@ -534,9 +518,7 @@ def parse_lvm_logical_volume(
         )
 
 
-def parse_filesystem(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec(
         "Filesystem",
         spec,
@@ -575,7 +557,7 @@ def parse_filesystem(
         yield from parse_file({"filesystem": filesystem_name, **file_spec})
 
 
-def parse_directory(spec: Dict[str, Any]) -> Generator[Declaration, None, None]:
+def parse_directory(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec(
         "Directory",
         spec,
@@ -593,7 +575,7 @@ def parse_directory(spec: Dict[str, Any]) -> Generator[Declaration, None, None]:
     )
 
 
-def parse_file(spec: Dict[str, Any]) -> Generator[Declaration, None, None]:
+def parse_file(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec(
         "File",
         spec,
@@ -638,9 +620,7 @@ def parse_file(spec: Dict[str, Any]) -> Generator[Declaration, None, None]:
         yield from parse_swap_volume({"device": file_name, **swap_volume_spec})
 
 
-def parse_loop_device(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     name = "LoopDevice"
     loop_device_spec, block_device_spec = partition_spec(
         name,
@@ -661,9 +641,7 @@ def parse_loop_device(
         yield from parse_block_device(name, block_device_spec, loop_device_name)
 
 
-def parse_swap_volume(
-    spec: Dict[str, Any],
-) -> Generator[Declaration, None, None]:
+def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     validate_spec("SwapVolume", spec, required={"name", "device"})
 
     yield SwapVolumeDeclaration(spec["name"], spec["device"])
