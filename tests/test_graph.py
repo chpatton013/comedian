@@ -2,8 +2,10 @@
 
 import unittest
 
-from declaration import Declaration
-from graph import Graph, GraphEdgeError, GraphWalkError
+from context import comedian
+
+from comedian.declaration import Declaration
+from comedian.graph import Graph, GraphEdgeError, GraphWalkError
 
 
 class TestDeclaration(Declaration):

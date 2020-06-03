@@ -5,8 +5,8 @@ import copy
 from collections import defaultdict, OrderedDict
 from typing import Dict, Iterable, Iterator, List, Mapping, Set
 
-from declaration import Declaration
-from traits import __Debug__
+from .declaration import Declaration
+from .traits import __Debug__
 
 __all__ = (
     "Graph",

@@ -4,8 +4,32 @@ import copy
 import unittest
 from unittest.mock import patch
 
-import declaration
-import parse
+from context import comedian
+
+from comedian.declaration import (
+    Declaration,
+    PhysicalDeviceDeclaration,
+    GptPartitionTableDeclaration,
+    GptPartitionDeclaration,
+    RaidVolumeDeclaration,
+    CryptVolumeDeclaration,
+    LvmPhysicalVolumeDeclaration,
+    LvmVolumeGroupDeclaration,
+    LvmLogicalVolumeDeclaration,
+    FilesystemDeclaration,
+    DirectoryDeclaration,
+    FileDeclaration,
+    LoopDeviceDeclaration,
+    SwapVolumeDeclaration,
+)
+
+from comedian.parse import (
+    FoundIllegalKeysError,
+    FoundIncompatibleKeysError,
+    MissingRequiredKeysError,
+    MissingVariantKeysError,
+    parse,
+)
 
 _FSROOT_SPEC = {
     "name":
@@ -134,8 +158,8 @@ class ParseRootTest(ParseTestBase):
         spec = self.spec
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Root")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -143,19 +167,19 @@ class ParseRootTest(ParseTestBase):
         spec = self.spec
         del spec["physical_devices"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Root")
         self.assertSetEqual(context.exception.keys, {"physical_devices"})
 
     def test_complete(self):
         expected = [
-            declaration.PhysicalDeviceDeclaration("sda"),
-            declaration.GptPartitionTableDeclaration(
+            PhysicalDeviceDeclaration("sda"),
+            GptPartitionTableDeclaration(
                 name="sda:gpt",
                 device="sda",
             ),
-            declaration.GptPartitionDeclaration(
+            GptPartitionDeclaration(
                 name="sda:gpt:1",
                 partition_table="sda:gpt",
                 number=1,
@@ -163,7 +187,7 @@ class ParseRootTest(ParseTestBase):
                 end="3",
                 flags=["bios_grub"]
             ),
-            declaration.GptPartitionDeclaration(
+            GptPartitionDeclaration(
                 name="sda:gpt:2",
                 partition_table="sda:gpt",
                 number=2,
@@ -171,21 +195,21 @@ class ParseRootTest(ParseTestBase):
                 end="-1",
                 flags=[],
             ),
-            declaration.CryptVolumeDeclaration(
+            CryptVolumeDeclaration(
                 name="cryptroot",
                 device="sda:gpt:2",
                 type="luks2",
                 keysize="2048",
                 password="hunter2"
             ),
-            declaration.FilesystemDeclaration(
+            FilesystemDeclaration(
                 name="fsroot",
                 device="cryptroot",
                 mountpoint="/",
                 type="ext4",
                 options=[],
             ),
-            declaration.DirectoryDeclaration(
+            DirectoryDeclaration(
                 name="mountraid",
                 filesystem="fsroot",
                 relative_path="raid",
@@ -193,7 +217,7 @@ class ParseRootTest(ParseTestBase):
                 group="root",
                 mode="0755",
             ),
-            declaration.DirectoryDeclaration(
+            DirectoryDeclaration(
                 name="mountloop",
                 filesystem="fsroot",
                 relative_path="loop",
@@ -201,7 +225,7 @@ class ParseRootTest(ParseTestBase):
                 group=None,
                 mode=None,
             ),
-            declaration.FileDeclaration(
+            FileDeclaration(
                 name="swapfile",
                 filesystem="fsroot",
                 relative_path="swapfile",
@@ -210,8 +234,8 @@ class ParseRootTest(ParseTestBase):
                 mode="0755",
                 size="10",
             ),
-            declaration.SwapVolumeDeclaration(name="swap1", device="swapfile"),
-            declaration.FileDeclaration(
+            SwapVolumeDeclaration(name="swap1", device="swapfile"),
+            FileDeclaration(
                 name="loopfile",
                 filesystem="fsroot",
                 relative_path="loopfile",
@@ -220,19 +244,19 @@ class ParseRootTest(ParseTestBase):
                 mode=None,
                 size="10",
             ),
-            declaration.LoopDeviceDeclaration(
+            LoopDeviceDeclaration(
                 name="loop",
                 file="loopfile",
                 args=["-e", "18"],
             ),
-            declaration.FilesystemDeclaration(
+            FilesystemDeclaration(
                 name="fsloop",
                 device="loop",
                 mountpoint="/loop",
                 type="ext4",
                 options=["noatime"],
             ),
-            declaration.FileDeclaration(
+            FileDeclaration(
                 name="randomfile",
                 filesystem="fsroot",
                 relative_path="randomfile",
@@ -241,32 +265,32 @@ class ParseRootTest(ParseTestBase):
                 mode=None,
                 size=None,
             ),
-            declaration.PhysicalDeviceDeclaration("sdb"),
-            declaration.SwapVolumeDeclaration(name="swap2", device="sdb"),
-            declaration.PhysicalDeviceDeclaration("sdc"),
-            declaration.LvmPhysicalVolumeDeclaration(
+            PhysicalDeviceDeclaration("sdb"),
+            SwapVolumeDeclaration(name="swap2", device="sdb"),
+            PhysicalDeviceDeclaration("sdc"),
+            LvmPhysicalVolumeDeclaration(
                 name="lvmpv",
                 device="sdc",
             ),
-            declaration.PhysicalDeviceDeclaration("sdd"),
-            declaration.RaidVolumeDeclaration(
+            PhysicalDeviceDeclaration("sdd"),
+            RaidVolumeDeclaration(
                 name="raidarray",
                 devices=["sdc"],
                 level="1",
                 metadata="1.2",
             ),
-            declaration.FilesystemDeclaration(
+            FilesystemDeclaration(
                 name="fsraid",
                 device="raidarray",
                 mountpoint="/raid",
                 type="ext4",
                 options=[],
             ),
-            declaration.LvmVolumeGroupDeclaration(
+            LvmVolumeGroupDeclaration(
                 name="lvmvg",
                 lvm_physical_volumes=["lvmpv"],
             ),
-            declaration.LvmLogicalVolumeDeclaration(
+            LvmLogicalVolumeDeclaration(
                 name="lvmlv",
                 lvm_volume_group="lvmvg",
                 size="10",
@@ -274,23 +298,23 @@ class ParseRootTest(ParseTestBase):
             ),
         ]
 
-        self.assertListEqual(list(parse.parse(self.spec)), expected)
+        self.assertListEqual(list(parse(self.spec)), expected)
 
 
 class ParsePhysicalDeviceTest(ParseTestBase):
     def test_illegal_key(self):
         self.spec["physical_devices"][0]["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "PhysicalDevice")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
         del self.spec["physical_devices"][0]["name"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "PhysicalDevice")
         self.assertSetEqual(context.exception.keys, {"name"})
 
@@ -300,8 +324,8 @@ class ParseRaidVolumeTest(ParseTestBase):
         spec = self.spec["raid_volumes"][0]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "RaidVolume")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -312,8 +336,8 @@ class ParseRaidVolumeTest(ParseTestBase):
         del spec["level"]
         del spec["metadata"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "RaidVolume")
         self.assertSetEqual(
             context.exception.keys, {"name", "devices", "level", "metadata"}
@@ -325,8 +349,8 @@ class ParseLvmVolumeGroupTest(ParseTestBase):
         spec = self.spec["lvm_volume_groups"][0]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmVolumeGroup")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -336,8 +360,8 @@ class ParseLvmVolumeGroupTest(ParseTestBase):
         del spec["lvm_physical_volumes"]
         del spec["lvm_logical_volumes"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmVolumeGroup")
         self.assertSetEqual(
             context.exception.keys,
@@ -353,8 +377,8 @@ class ParseGptPartitionTableTest(ParseTestBase):
         spec["name"] = "name"
         spec["device"] = "device"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartitionTable")
         self.assertSetEqual(context.exception.keys, {"name", "device"})
 
@@ -362,8 +386,8 @@ class ParseGptPartitionTableTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartitionTable")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -371,8 +395,8 @@ class ParseGptPartitionTableTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         del spec["gpt_partitions"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartitionTable")
         self.assertSetEqual(context.exception.keys, {"gpt_partitions"})
 
@@ -387,8 +411,8 @@ class ParseGptPartitionTest(ParseTestBase):
         spec["partition_table"] = "partition_table"
         spec["number"] = 1
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartition")
         self.assertSetEqual(
             context.exception.keys, {"name", "partition_table", "number"}
@@ -399,8 +423,8 @@ class ParseGptPartitionTest(ParseTestBase):
         spec = spec["gpt_partitions"][0]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartition")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -410,8 +434,8 @@ class ParseGptPartitionTest(ParseTestBase):
         del spec["start"]
         del spec["end"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartition")
         self.assertSetEqual(context.exception.keys, {"start", "end"})
 
@@ -424,8 +448,8 @@ class ParseCryptVolumeTest(ParseTestBase):
         spec = spec["gpt_partitions"][1]["crypt_volume"]
         spec["device"] = "device"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "CryptVolume")
         self.assertSetEqual(context.exception.keys, {"device"})
 
@@ -434,8 +458,8 @@ class ParseCryptVolumeTest(ParseTestBase):
         spec = spec["gpt_partitions"][1]["crypt_volume"]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "CryptVolume")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -445,8 +469,8 @@ class ParseCryptVolumeTest(ParseTestBase):
         del spec["name"]
         del spec["type"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "CryptVolume")
         self.assertSetEqual(context.exception.keys, {"name", "type"})
 
@@ -459,8 +483,8 @@ class ParseFilesystemTest(ParseTestBase):
         spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
         spec["device"] = "device"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Filesystem")
         self.assertSetEqual(context.exception.keys, {"device"})
 
@@ -469,8 +493,8 @@ class ParseFilesystemTest(ParseTestBase):
         spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Filesystem")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -481,8 +505,8 @@ class ParseFilesystemTest(ParseTestBase):
         del spec["mountpoint"]
         del spec["type"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Filesystem")
         self.assertSetEqual(
             context.exception.keys, {"name", "mountpoint", "type"}
@@ -498,8 +522,8 @@ class ParseDirectoryTest(ParseTestBase):
         spec = spec["directories"][0]
         spec["filesystem"] = "filesystem"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Directory")
         self.assertSetEqual(context.exception.keys, {"filesystem"})
 
@@ -509,8 +533,8 @@ class ParseDirectoryTest(ParseTestBase):
         spec = spec["directories"][0]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Directory")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -521,8 +545,8 @@ class ParseDirectoryTest(ParseTestBase):
         del spec["name"]
         del spec["relative_path"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "Directory")
         self.assertSetEqual(context.exception.keys, {"name", "relative_path"})
 
@@ -535,8 +559,8 @@ class ParseFileTest(ParseTestBase):
         spec = spec["files"][0]
         spec["filesystem"] = "filesystem"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "File")
         self.assertSetEqual(context.exception.keys, {"filesystem"})
 
@@ -546,8 +570,8 @@ class ParseFileTest(ParseTestBase):
         spec = spec["files"][0]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "File")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -558,8 +582,8 @@ class ParseFileTest(ParseTestBase):
         del spec["name"]
         del spec["relative_path"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "File")
         self.assertSetEqual(context.exception.keys, {"name", "relative_path"})
 
@@ -573,8 +597,8 @@ class ParseSwapVolumeTest(ParseTestBase):
         spec = spec["files"][0]["swap_volume"]
         spec["device"] = "device"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "SwapVolume")
         self.assertSetEqual(context.exception.keys, {"device"})
 
@@ -584,8 +608,8 @@ class ParseSwapVolumeTest(ParseTestBase):
         spec = spec["files"][0]["swap_volume"]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "SwapVolume")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -595,8 +619,8 @@ class ParseSwapVolumeTest(ParseTestBase):
         spec = spec["files"][0]["swap_volume"]
         del spec["name"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "SwapVolume")
         self.assertSetEqual(context.exception.keys, {"name"})
 
@@ -610,8 +634,8 @@ class ParseLoopDeviceTest(ParseTestBase):
         spec = spec["files"][1]["loop_device"]
         spec["file"] = "file"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LoopDevice")
         self.assertSetEqual(context.exception.keys, {"file"})
 
@@ -621,8 +645,8 @@ class ParseLoopDeviceTest(ParseTestBase):
         spec = spec["files"][1]["loop_device"]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LoopDevice")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -632,8 +656,8 @@ class ParseLoopDeviceTest(ParseTestBase):
         spec = spec["files"][1]["loop_device"]
         del spec["name"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LoopDevice")
         self.assertSetEqual(context.exception.keys, {"name"})
 
@@ -645,8 +669,8 @@ class ParseLvmPhysicalVolumeTest(ParseTestBase):
         spec = self.spec["physical_devices"][2]["lvm_physical_volume"]
         spec["device"] = "device"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmPhysicalVolume")
         self.assertSetEqual(context.exception.keys, {"device"})
 
@@ -654,8 +678,8 @@ class ParseLvmPhysicalVolumeTest(ParseTestBase):
         spec = self.spec["physical_devices"][2]["lvm_physical_volume"]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmPhysicalVolume")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -663,8 +687,8 @@ class ParseLvmPhysicalVolumeTest(ParseTestBase):
         spec = self.spec["physical_devices"][2]["lvm_physical_volume"]
         del spec["name"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmPhysicalVolume")
         self.assertSetEqual(context.exception.keys, {"name"})
 
@@ -676,8 +700,8 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
         spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
         spec["lvm_volume_group"] = "lvm_volume_group"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmLogicalVolume")
         self.assertSetEqual(context.exception.keys, {"lvm_volume_group"})
 
@@ -685,8 +709,8 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
         spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
         spec["foo"] = "bar"
 
-        with self.assertRaises(parse.FoundIllegalKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmLogicalVolume")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
@@ -695,8 +719,8 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
         del spec["name"]
         del spec["size"]
 
-        with self.assertRaises(parse.MissingRequiredKeysError) as context:
-            list(parse.parse(self.spec))
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmLogicalVolume")
         self.assertSetEqual(context.exception.keys, {"name", "size"})
 

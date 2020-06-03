@@ -107,7 +107,7 @@ LvmPhysicalVolume:
 
 from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
-from declaration import (
+from .declaration import (
     Declaration,
     PhysicalDeviceDeclaration,
     GptPartitionTableDeclaration,

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from traits import __Debug__, __Eq__
+from .traits import __Debug__, __Eq__
 
 
 class Declaration(__Debug__, __Eq__):
