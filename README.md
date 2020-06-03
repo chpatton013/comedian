@@ -2,6 +2,12 @@
 
 *Configuration-driven media preparation*
 
+## Notice
+
+This project is a work-in-progress. Very little of the necessary functionality
+has been completed, and the final direction of the project is unclear. Save
+yourself the eye-strain; there is nothing for you here.
+
 ## Summary
 
 `comedian` prepares destination-media for Linux installation via data
