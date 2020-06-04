@@ -8,18 +8,19 @@ from context import comedian
 
 from comedian.declaration import Declaration
 from comedian.specifications import (
-    PhysicalDevice,
-    GptPartitionTable,
-    GptPartition,
-    RaidVolume,
     CryptVolume,
-    LvmPhysicalVolume,
-    LvmVolumeGroup,
-    LvmLogicalVolume,
-    Filesystem,
     Directory,
     File,
+    Filesystem,
+    GptPartition,
+    GptPartitionTable,
     LoopDevice,
+    LvmLogicalVolume,
+    LvmPhysicalVolume,
+    LvmVolumeGroup,
+    PhysicalDevice,
+    RaidVolume,
+    Root,
     SwapVolume,
 )
 
@@ -174,11 +175,9 @@ class ParseRootTest(ParseTestBase):
 
     def test_complete(self):
         expected = [
+            Root(),
             PhysicalDevice("sda"),
-            GptPartitionTable(
-                name="sda:gpt",
-                device="sda",
-            ),
+            GptPartitionTable(name="sda:gpt", device="sda"),
             GptPartition(
                 name="sda:gpt:1",
                 partition_table="sda:gpt",
@@ -268,10 +267,7 @@ class ParseRootTest(ParseTestBase):
             PhysicalDevice("sdb"),
             SwapVolume(name="swap2", device="sdb"),
             PhysicalDevice("sdc"),
-            LvmPhysicalVolume(
-                name="lvmpv",
-                device="sdc",
-            ),
+            LvmPhysicalVolume(name="lvmpv", device="sdc"),
             PhysicalDevice("sdd"),
             RaidVolume(
                 name="raidarray",
@@ -286,10 +282,7 @@ class ParseRootTest(ParseTestBase):
                 type="ext4",
                 options=[],
             ),
-            LvmVolumeGroup(
-                name="lvmvg",
-                lvm_physical_volumes=["lvmpv"],
-            ),
+            LvmVolumeGroup(name="lvmvg", lvm_physical_volumes=["lvmpv"]),
             LvmLogicalVolume(
                 name="lvmlv",
                 lvm_volume_group="lvmvg",

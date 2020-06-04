@@ -109,18 +109,19 @@ from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
 from .declaration import Declaration
 from .specifications import (
-    PhysicalDevice,
-    GptPartitionTable,
-    GptPartition,
-    RaidVolume,
     CryptVolume,
-    LvmPhysicalVolume,
-    LvmVolumeGroup,
-    LvmLogicalVolume,
-    Filesystem,
     Directory,
     File,
+    Filesystem,
+    GptPartition,
+    GptPartitionTable,
     LoopDevice,
+    LvmLogicalVolume,
+    LvmPhysicalVolume,
+    LvmVolumeGroup,
+    PhysicalDevice,
+    RaidVolume,
+    Root,
     SwapVolume,
 )
 
@@ -205,6 +206,8 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         required={"physical_devices"},
         allowed={"raid_volumes", "lvm_volume_groups"},
     )
+
+    yield Root()
 
     for physical_device_spec in spec["physical_devices"]:
         yield from parse_physical_device(physical_device_spec)

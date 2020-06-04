@@ -10,4 +10,5 @@ from .lvm_physical_volume import LvmPhysicalVolume
 from .lvm_volume_group import LvmVolumeGroup
 from .physical_device import PhysicalDevice
 from .raid_volume import RaidVolume
+from .root import Root
 from .swap_volume import SwapVolume
