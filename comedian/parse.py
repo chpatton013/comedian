@@ -11,8 +11,8 @@ structures:
 * Any unquoted string is a token representing a type
 * An asterisk (*) after a type indicates that the rule is repeated 0 or more times
 * A plus (+) after a type indicates that the rule is repeated 1 or more times
-* A carrot (^) after a type indicates that the rule is mutually-exclusive with
-  all other carrots
+* A carrot (^) after a type indicates that the rule is mutually-exclusive with all other carrots
+* An ampersand (&) after a type indicates that the rule is mutually-inclusive with all other ampersands
 * A token in brackes ([...]) is optional
 * An asterisk (*) on the left side of a colon (:) transfers to the next rule
 
@@ -95,7 +95,8 @@ LoopDevice:
 CryptVolume:
     "name": str
     "type": str
-    "keysize": [str]
+    "keysize": [str &]
+    "keyfile": [str &]
     "password": [str]
 
 SwapVolume:
@@ -230,6 +231,7 @@ def validate_spec(
     illegal: Set[str] = set(),
     variant: Set[str] = set(),
     exclusive: Set[str] = set(),
+    inclusive: Set[str] = set(),
     ignore: bool = False,
 ) -> Set[str]:
     missing = required - spec.keys()
@@ -246,14 +248,19 @@ def validate_spec(
     if illegal and disallowed:
         raise FoundIllegalKeysError(name, dict(spec), disallowed)
 
-    matching = spec.keys() & variant
-    if variant and len(matching) < 1:
+    missing = spec.keys() & variant
+    if variant and len(missing) < 1:
         raise MissingVariantKeysError(name, dict(spec), variant)
 
     mutually_exclusive = exclusive | variant
     incompatible = spec.keys() & mutually_exclusive
     if len(incompatible) > 1:
         raise FoundIncompatibleKeysError(name, dict(spec), incompatible)
+
+    specified = spec.keys() & inclusive
+    missing = inclusive - spec.keys()
+    if inclusive and specified and specified != inclusive:
+        raise MissingRequiredKeysError(name, dict(spec), missing)
 
     return valid
 
@@ -444,7 +451,8 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         name,
         spec,
         required={"name", "device", "type"},
-        allowed={"keysize", "password"},
+        allowed={"keyfile", "keysize", "password"},
+        inclusive={"keyfile", "keysize"},
         ignore=True,
     )
 
@@ -453,6 +461,7 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         name=crypt_volume_name,
         device=crypt_volume_spec["device"],
         type=crypt_volume_spec["type"],
+        keyfile=crypt_volume_spec.get("keyfile"),
         keysize=crypt_volume_spec.get("keysize"),
         password=crypt_volume_spec.get("password"),
     )

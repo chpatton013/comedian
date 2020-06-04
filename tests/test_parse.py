@@ -103,7 +103,6 @@ SPEC = {
                         "crypt_volume": {
                             "name": "cryptroot",
                             "type": "luks2",
-                            "keysize": "2048",
                             "password": "hunter2",
                             "filesystem": _FSROOT_SPEC,
                         },
@@ -139,11 +138,18 @@ SPEC = {
         },
     }],
     "lvm_volume_groups": [{
-        "name": "lvmvg",
+        "name":
+            "lvmvg",
         "lvm_physical_volumes": ["lvmpv"],
         "lvm_logical_volumes": [{
             "name": "lvmlv",
             "size": "10",
+            "crypt_volume": {
+                "name": "crypt_lvm",
+                "type": "luks2",
+                "keyfile": "randomfile",
+                "keysize": "2048",
+            },
         }],
     }],
 }
@@ -198,7 +204,8 @@ class ParseRootTest(ParseTestBase):
                 name="cryptroot",
                 device="sda:gpt:2",
                 type="luks2",
-                keysize="2048",
+                keyfile=None,
+                keysize=None,
                 password="hunter2"
             ),
             Filesystem(
@@ -288,6 +295,14 @@ class ParseRootTest(ParseTestBase):
                 lvm_volume_group="lvmvg",
                 size="10",
                 args=[],
+            ),
+            CryptVolume(
+                name="crypt_lvm",
+                device="lvmlv",
+                type="luks2",
+                keyfile="randomfile",
+                keysize="2048",
+                password=None,
             ),
         ]
 
@@ -456,7 +471,7 @@ class ParseCryptVolumeTest(ParseTestBase):
         self.assertEqual(context.exception.name, "CryptVolume")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
-    def test_missing_key(self):
+    def test_missing_key_1(self):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec = spec["gpt_partitions"][1]["crypt_volume"]
         del spec["name"]
@@ -466,6 +481,26 @@ class ParseCryptVolumeTest(ParseTestBase):
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "CryptVolume")
         self.assertSetEqual(context.exception.keys, {"name", "type"})
+
+    def test_missing_key_2(self):
+        spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
+        spec = spec["crypt_volume"]
+        del spec["keyfile"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "CryptVolume")
+        self.assertSetEqual(context.exception.keys, {"keyfile"})
+
+    def test_missing_key_3(self):
+        spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
+        spec = spec["crypt_volume"]
+        del spec["keysize"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "CryptVolume")
+        self.assertSetEqual(context.exception.keys, {"keysize"})
 
 
 class ParseFilesystemTest(ParseTestBase):
