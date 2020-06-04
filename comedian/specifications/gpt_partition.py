@@ -1,9 +1,10 @@
-from typing import List
+from typing import Iterator, List
 
+from ..command import Command, CommandGenerator
 from ..declaration import Declaration
 
 
-class GptPartition(Declaration):
+class GptPartition(CommandGenerator, Declaration):
     def __init__(
         self,
         name: str,
@@ -19,3 +20,6 @@ class GptPartition(Declaration):
         self.start = start
         self.end = end
         self.flags = flags
+
+    def generate_commands(self) -> Iterator[Command]:
+        yield from ()

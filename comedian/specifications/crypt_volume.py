@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Iterator, Optional
 
+from ..command import Command, CommandGenerator
 from ..declaration import Declaration
 
 
-class CryptVolume(Declaration):
+class CryptVolume(CommandGenerator, Declaration):
     def __init__(
         self,
         name: str,
@@ -17,3 +18,6 @@ class CryptVolume(Declaration):
         self.type = type
         self.keysize = keysize
         self.password = password
+
+    def generate_commands(self) -> Iterator[Command]:
+        yield from ()

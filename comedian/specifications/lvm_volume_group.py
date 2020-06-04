@@ -1,9 +1,10 @@
-from typing import List
+from typing import Iterator, List
 
+from ..command import Command, CommandGenerator
 from ..declaration import Declaration
 
 
-class LvmVolumeGroup(Declaration):
+class LvmVolumeGroup(CommandGenerator, Declaration):
     def __init__(
         self,
         name: str,
@@ -11,3 +12,6 @@ class LvmVolumeGroup(Declaration):
     ):
         super().__init__(name, lvm_physical_volumes)
         self.lvm_physical_volumes = lvm_physical_volumes
+
+    def generate_commands(self) -> Iterator[Command]:
+        yield from ()
