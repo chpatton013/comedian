@@ -553,10 +553,12 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         validate_spec(
             "Directory",
             directory_spec,
-            illegal={"filesystem"},
+            required={"relative_path"},
+            illegal={"name", "filesystem"},
             ignore=True,
         )
         yield from parse_directory({
+            "name": f"{filesystem_name}:{directory_spec['relative_path']}",
             "filesystem": filesystem_name,
             **directory_spec
         })
@@ -565,10 +567,15 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         validate_spec(
             "File",
             file_spec,
-            illegal={"filesystem"},
+            required={"relative_path"},
+            illegal={"name", "filesystem"},
             ignore=True,
         )
-        yield from parse_file({"filesystem": filesystem_name, **file_spec})
+        yield from parse_file({
+            "name": f"{filesystem_name}:{file_spec['relative_path']}",
+            "filesystem": filesystem_name,
+            **file_spec
+        })
 
 
 def parse_directory(spec: Mapping[str, Any]) -> Iterator[Declaration]:

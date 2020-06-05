@@ -41,20 +41,17 @@ _FSROOT_SPEC = {
         "ext4",
     "directories": [
         {
-            "name": "mountraid",
             "relative_path": "raid",
             "owner": "root",
             "group": "root",
             "mode": "0755",
         },
         {
-            "name": "mountloop",
             "relative_path": "loop",
         },
     ],
     "files": [
         {
-            "name": "swapfile",
             "relative_path": "swapfile",
             "owner": "root",
             "group": "root",
@@ -65,7 +62,6 @@ _FSROOT_SPEC = {
             },
         },
         {
-            "name": "loopfile",
             "relative_path": "loopfile",
             "size": "10",
             "loop_device": {
@@ -80,7 +76,6 @@ _FSROOT_SPEC = {
             },
         },
         {
-            "name": "randomfile",
             "relative_path": "randomfile",
         },
     ],
@@ -147,7 +142,7 @@ SPEC = {
             "crypt_volume": {
                 "name": "crypt_lvm",
                 "type": "luks2",
-                "keyfile": "randomfile",
+                "keyfile": "fsroot:randomfile",
                 "keysize": "2048",
             },
         }],
@@ -218,7 +213,7 @@ class ParseRootTest(ParseTestBase):
                 options=[],
             ),
             Directory(
-                name="mountraid",
+                name="fsroot:raid",
                 filesystem="fsroot",
                 relative_path="raid",
                 owner="root",
@@ -226,7 +221,7 @@ class ParseRootTest(ParseTestBase):
                 mode="0755",
             ),
             Directory(
-                name="mountloop",
+                name="fsroot:loop",
                 filesystem="fsroot",
                 relative_path="loop",
                 owner=None,
@@ -234,7 +229,7 @@ class ParseRootTest(ParseTestBase):
                 mode=None,
             ),
             File(
-                name="swapfile",
+                name="fsroot:swapfile",
                 filesystem="fsroot",
                 relative_path="swapfile",
                 owner="root",
@@ -242,9 +237,9 @@ class ParseRootTest(ParseTestBase):
                 mode="0755",
                 size="10",
             ),
-            SwapVolume(name="swap1", device="swapfile"),
+            SwapVolume(name="swap1", device="fsroot:swapfile"),
             File(
-                name="loopfile",
+                name="fsroot:loopfile",
                 filesystem="fsroot",
                 relative_path="loopfile",
                 owner=None,
@@ -254,7 +249,7 @@ class ParseRootTest(ParseTestBase):
             ),
             LoopDevice(
                 name="loop",
-                file="loopfile",
+                file="fsroot:loopfile",
                 args=["-e", "18"],
             ),
             Filesystem(
@@ -265,7 +260,7 @@ class ParseRootTest(ParseTestBase):
                 options=["noatime"],
             ),
             File(
-                name="randomfile",
+                name="fsroot:randomfile",
                 filesystem="fsroot",
                 relative_path="randomfile",
                 owner=None,
@@ -302,7 +297,7 @@ class ParseRootTest(ParseTestBase):
                 name="crypt_lvm",
                 device="lvmlv",
                 type="luks2",
-                keyfile="randomfile",
+                keyfile="fsroot:randomfile",
                 keysize="2048",
                 password=None,
             ),
@@ -550,12 +545,13 @@ class ParseDirectoryTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["directories"][0]
+        spec["name"] = "name"
         spec["filesystem"] = "filesystem"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "Directory")
-        self.assertSetEqual(context.exception.keys, {"filesystem"})
+        self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
 
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
@@ -572,13 +568,12 @@ class ParseDirectoryTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["directories"][0]
-        del spec["name"]
         del spec["relative_path"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "Directory")
-        self.assertSetEqual(context.exception.keys, {"name", "relative_path"})
+        self.assertSetEqual(context.exception.keys, {"relative_path"})
 
 
 class ParseFileTest(ParseTestBase):
@@ -587,12 +582,13 @@ class ParseFileTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
+        spec["name"] = "name"
         spec["filesystem"] = "filesystem"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "File")
-        self.assertSetEqual(context.exception.keys, {"filesystem"})
+        self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
 
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
@@ -609,13 +605,12 @@ class ParseFileTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
-        del spec["name"]
         del spec["relative_path"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "File")
-        self.assertSetEqual(context.exception.keys, {"name", "relative_path"})
+        self.assertSetEqual(context.exception.keys, {"relative_path"})
 
 
 class ParseSwapVolumeTest(ParseTestBase):
