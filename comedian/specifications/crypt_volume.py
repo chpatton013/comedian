@@ -14,7 +14,11 @@ class CryptVolume(CommandGenerator, Declaration):
         keysize: Optional[str],
         password: Optional[str],
     ):
-        super().__init__(name, [device])
+        dependencies = [device]
+        if keyfile:
+            dependencies.append(keyfile)
+        super().__init__(name, dependencies)
+
         self.device = device
         self.type = type
         self.keyfile = keyfile
