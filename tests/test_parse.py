@@ -190,6 +190,7 @@ class ParseRootTest(ParseTestBase):
                 number=1,
                 start="1",
                 end="3",
+                label=None,
                 flags=["bios_grub"]
             ),
             GptPartition(
@@ -198,6 +199,7 @@ class ParseRootTest(ParseTestBase):
                 number=2,
                 start="3",
                 end="-1",
+                label=None,
                 flags=[],
             ),
             CryptVolume(
