@@ -9,6 +9,7 @@ from .action import make_action
 from .command import Command, CommandContext
 from .configuration import Configuration
 from .graph import Graph
+from .mode import make_mode
 from .parse import parse
 
 
@@ -41,6 +42,12 @@ def main():
         default=os.path.join(os.path.dirname(__file__), "default.config.json"),
         help="Path to configuration file",
     )
+    parser.add_argument(
+        "--mode",
+        choices=("exec", "dryrun", "shell"),
+        default="shell",
+        help="Operational mode of comedian tool",
+    )
     log_level_group = parser.add_mutually_exclusive_group()
     log_level_group.add_argument(
         "--debug",
@@ -56,7 +63,7 @@ def main():
         dest="log_level",
         help="Only show warning and error log messages",
     )
-    parser.set_defaults(level=logging.INFO)
+    parser.set_defaults(log_level=logging.INFO)
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level)
@@ -64,17 +71,19 @@ def main():
     config = load_config(args.config)
 
     spec = load_spec(args.specification)
-    specifications = parse(spec)
+    specifications = list(parse(spec))
 
     graph = Graph(specifications)
 
     context = CommandContext(config, graph)
     action = make_action(args.action, context)
 
+    mode = make_mode(args.mode)
+
     for specification in graph.walk():
-        print(specification)
+        mode.on_specification(specification)
         for command in action(specification):
-            print(" ", command)
+            mode.on_command(command)
 
 
 main()

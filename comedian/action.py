@@ -2,28 +2,12 @@
 Action API for encapsulating the command-generation of different named tasks.
 """
 
-from typing import Callable, Iterator, Optional
+from abc import ABC, abstractmethod
+from typing import Iterator, Optional
 
 from .command import Command, CommandContext, CommandGenerator
 
 __all__ = ("make_action", "ActionCommandGenerator")
-
-
-def make_action(
-    name: str,
-    context: CommandContext,
-) -> Callable[[], Iterator[Command]]:
-    """
-    Instantiate the appropriate Action based on the specified name.
-    """
-    if name == "apply":
-        return ApplyAction(context)
-    elif name == "up":
-        return UpAction(context)
-    elif name == "down":
-        return DownAction(context)
-    else:
-        raise ValueError(f"Unknown action '{name}'")
 
 
 class ActionCommandGenerator:
@@ -71,7 +55,30 @@ class ActionCommandGenerator:
             yield from self.down(context)
 
 
-class ApplyAction:
+class Action(ABC):
+    """
+    Base class for all objects that will encapsule command-generation.
+    """
+    @abstractmethod
+    def __call__(self, generator: ActionCommandGenerator) -> Iterator[Command]:
+        pass
+
+
+def make_action(name: str, context: CommandContext) -> Action:
+    """
+    Instantiate the appropriate Action based on the specified name.
+    """
+    if name == "apply":
+        return ApplyAction(context)
+    elif name == "up":
+        return UpAction(context)
+    elif name == "down":
+        return DownAction(context)
+    else:
+        raise ValueError(f"Unknown action '{name}'")
+
+
+class ApplyAction(Action):
     """
     Object encapsulating the command-generation for the "apply" action.
     """
@@ -83,7 +90,7 @@ class ApplyAction:
         yield from generator.generate_post_apply_commands(self.context)
 
 
-class UpAction:
+class UpAction(Action):
     """
     Object encapsulating the command-generation for the "up" action.
     """
@@ -94,7 +101,7 @@ class UpAction:
         yield from generator.generate_up_commands(self.context)
 
 
-class DownAction:
+class DownAction(Action):
     """
     Object encapsulating the command-generation for the "down" action.
     """
