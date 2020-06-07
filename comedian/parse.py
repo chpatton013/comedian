@@ -57,9 +57,12 @@ GptPartitionTable:
     "gpt_partitions": GptPartition +
 
 GptPartition:
+    "type": str
     "start": str
     "end": str,
     "flags": str *
+    "label": [str]
+    "unit": [str]
     *: BlockDevice
 
 Filesystem:
@@ -414,8 +417,8 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
     gpt_partition_spec, block_device_spec = partition_spec(
         name,
         spec,
-        required={"name", "partition_table", "number", "start", "end"},
-        allowed={"label", "flags"},
+        required={"name", "partition_table", "number", "type", "start", "end"},
+        allowed={"label", "unit", "flags"},
         ignore=True,
     )
 
@@ -424,9 +427,11 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
         name=partition_name,
         partition_table=gpt_partition_spec["partition_table"],
         number=gpt_partition_spec["number"],
+        type=gpt_partition_spec["type"],
         start=gpt_partition_spec["start"],
         end=gpt_partition_spec["end"],
         label=gpt_partition_spec.get("label"),
+        unit=gpt_partition_spec.get("unit"),
         flags=gpt_partition_spec.get("flags", []),
     )
 

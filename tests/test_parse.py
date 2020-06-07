@@ -90,11 +90,13 @@ SPEC = {
             "gpt_partition_table": {
                 "gpt_partitions": [
                     {
+                        "type": "primary",
                         "start": "1",
                         "end": "3",
                         "flags": ["bios_grub"],
                     },
                     {
+                        "type": "primary",
                         "start": "3",
                         "end": "-1",
                         "crypt_volume": {
@@ -187,18 +189,22 @@ class ParseRootTest(ParseTestBase):
                 name="sda:gpt:1",
                 partition_table="sda:gpt",
                 number=1,
+                type="primary",
                 start="1",
                 end="3",
                 label=None,
+                unit=None,
                 flags=["bios_grub"]
             ),
             GptPartition(
                 name="sda:gpt:2",
                 partition_table="sda:gpt",
                 number=2,
+                type="primary",
                 start="3",
                 end="-1",
                 label=None,
+                unit=None,
                 flags=[],
             ),
             CryptVolume(
@@ -449,13 +455,14 @@ class ParseGptPartitionTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["gpt_partition_table"]
         spec = spec["gpt_partitions"][0]
+        del spec["type"]
         del spec["start"]
         del spec["end"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "GptPartition")
-        self.assertSetEqual(context.exception.keys, {"start", "end"})
+        self.assertSetEqual(context.exception.keys, {"type", "start", "end"})
 
 
 class ParseCryptVolumeTest(ParseTestBase):
