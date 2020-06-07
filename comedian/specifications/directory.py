@@ -1,4 +1,4 @@
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Tuple
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
@@ -20,3 +20,6 @@ class Directory(Specification):
         self.owner = owner
         self.group = group
         self.mode = mode
+
+    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
+        return self.filesystem, self.relative_path

@@ -9,16 +9,27 @@ TODO: Add cycle detection to graph construction
 """
 
 import copy
+import os
 from collections import defaultdict, OrderedDict
-from typing import Dict, Iterable, Iterator, List, Mapping, Set
+from typing import (
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+)
 
-from .traits import __Debug__
+from .traits import __Debug__, __Eq__
 
 __all__ = (
     "Graph",
     "GraphEdgeError",
     "GraphError",
     "GraphNode",
+    "GraphResolveError",
     "GraphWalkError",
 )
 
@@ -41,6 +52,15 @@ class GraphEdgeError(GraphError):
         )
         self.name = name
         self.dependency = dependency
+
+
+class GraphResolveError(GraphError):
+    """
+    Error thrown when resolving a reference to a GraphNode.
+    """
+    def __init__(self, reference: str):
+        super().__init__(f"Failed to resolve reference: {reference}")
+        self.reference = reference
 
 
 class GraphWalkError(GraphError):
@@ -68,6 +88,9 @@ class GraphNode(__Debug__, __Eq__):
         self.name = name
         self.dependencies = dependencies
         self.references = references
+
+    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
+        return None, None
 
 
 class Graph(__Debug__):
@@ -98,6 +121,40 @@ class Graph(__Debug__):
             for reference_name in node.references:
                 if reference_name not in self._nodes:
                     raise GraphEdgeError(name, reference_name)
+
+    def resolve(self, name: str) -> Optional[str]:
+        """
+        Resolve the name of a GraphNode to a filepath whose parts are produced
+        by an explicit chain of "parent" GraphNode.
+        """
+
+        # Ensure that the node exists.
+        try:
+            node = self._nodes[name]
+        except KeyError:
+            raise GraphResolveError(name)
+
+        # Ensure that the "parent" node is declared as a dependency or reference
+        # of the input node.
+        parent_name, node_path = node.resolve()
+        if (
+            parent_name and parent_name not in node.dependencies and
+            parent_name not in node.references
+        ):
+            raise GraphResolveError(parent_name)
+        parent_path = self.resolve(parent_name) if parent_name else None
+
+        # Produce a resultant resolved path by joining the parent-path and
+        # current-path if they are both set. Otherwise, return the one that is
+        # set (or None if neither).
+        if parent_path and node_path:
+            return os.path.join(parent_path, node_path)
+        elif parent_path:
+            return parent_path
+        elif node_path:
+            return node_path
+        else:
+            return None
 
     def walk(self) -> Iterator[GraphNode]:
         """

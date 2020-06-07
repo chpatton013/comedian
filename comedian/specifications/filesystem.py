@@ -1,4 +1,4 @@
-from typing import Iterator, List
+from typing import Iterator, List, Optional, Tuple
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
@@ -18,3 +18,6 @@ class Filesystem(Specification):
         self.mountpoint = mountpoint
         self.type = type
         self.options = options
+
+    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
+        return self.mountpoint, None
