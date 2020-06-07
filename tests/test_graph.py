@@ -16,6 +16,7 @@ from context import comedian
 from comedian.graph import (
     Graph,
     GraphEdgeError,
+    GraphNameError,
     GraphNode,
     GraphResolveError,
     GraphWalkError,
@@ -52,6 +53,18 @@ def make_node_factory(resolve_name: str) -> Callable[..., TestGraphNode]:
         return TestGraphNode(*args, **{resolve_name: resolve, **kwargs})
 
     return fn
+
+
+class GraphNameTest(unittest.TestCase):
+    def test_repeat_name(self):
+        a1 = TestGraphNode("a", [])
+        a2 = TestGraphNode("a", [])
+
+        nodes = [a1, a2]
+        with self.assertRaises(GraphNameError) as context:
+            graph = Graph(nodes)
+
+        self.assertEqual("a", context.exception.name)
 
 
 class GraphEdgeTest(unittest.TestCase):

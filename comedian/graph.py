@@ -30,6 +30,7 @@ __all__ = (
     "Graph",
     "GraphEdgeError",
     "GraphError",
+    "GraphNameError",
     "GraphNode",
     "GraphResolveError",
     "GraphWalkError",
@@ -41,6 +42,15 @@ class GraphError(Exception):
     Base class for all graph errors.
     """
     pass
+
+
+class GraphNameError(GraphError):
+    """
+    Error thrown when a GraphNode has a name that already exists.
+    """
+    def __init__(self, name: str):
+        super().__init__(f"GraphNode {name} has repeated name")
+        self.name = name
 
 
 class GraphEdgeError(GraphError):
@@ -123,6 +133,8 @@ class Graph(__Debug__):
     def __init__(self, nodes: Iterable[GraphNode]):
         self._nodes: Mapping[str, GraphNode] = OrderedDict()
         for node in nodes:
+            if node.name in self._nodes:
+                raise GraphNameError(node.name)
             self._nodes[node.name] = node
 
         self._dependencies: Mapping[str, Set[str]] = defaultdict(set)
