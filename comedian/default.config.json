@@ -1,0 +1,6 @@
+{
+  "dd_bs": "16M",
+  "random_device": "/dev/random",
+  "media_dir": "/mnt/comedian",
+  "tmp_dir": "/tmp/comedian"
+}

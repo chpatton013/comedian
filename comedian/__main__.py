@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 from typing import Any, Dict, Optional
 
@@ -11,10 +12,15 @@ from .graph import Graph
 from .parse import parse
 
 
-def load_spec(configuration: Optional[str]) -> Dict[str, Any]:
-    if not configuration or configuration == "-":
-        return json.load(sys.stdin)
+def load_config(configuration: str) -> Configuration:
     with open(configuration, "r") as f:
+        return Configuration(**json.load(f))
+
+
+def load_spec(specification: Optional[str]) -> Dict[str, Any]:
+    if not specification or specification == "-":
+        return json.load(sys.stdin)
+    with open(specification, "r") as f:
         return json.load(f)
 
 
@@ -26,9 +32,14 @@ def main():
         help="Action to perform",
     )
     parser.add_argument(
-        "configuration",
+        "specification",
         default=None,
-        help="Path to input configuration file",
+        help="Path to specification file",
+    )
+    parser.add_argument(
+        "--config",
+        default=os.path.join(os.path.dirname(__file__), "default.config.json"),
+        help="Path to configuration file",
     )
     log_level_group = parser.add_mutually_exclusive_group()
     log_level_group.add_argument(
@@ -50,9 +61,9 @@ def main():
 
     logging.basicConfig(level=args.log_level)
 
-    config = Configuration()
+    config = load_config(args.config)
 
-    spec = load_spec(args.configuration)
+    spec = load_spec(args.specification)
     specifications = parse(spec)
 
     graph = Graph(specifications)
