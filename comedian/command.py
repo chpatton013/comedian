@@ -37,5 +37,5 @@ class CommandGenerator(ABC):
     Abstract base class for a Callable that generates a series of Commands.
     """
     @abstractmethod
-    def generate_commands(self, context: CommandContext) -> Iterator[Command]:
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
         pass
