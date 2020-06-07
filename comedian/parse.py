@@ -106,6 +106,7 @@ LvmPhysicalVolume:
     "name": str
 """
 
+import logging
 from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
 from .specifications import (
@@ -352,6 +353,8 @@ def parse_block_device(
 
 
 def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_physical_device")
+
     name = "PhysicalDevice"
     physical_device_spec, block_device_spec = partition_spec(
         name,
@@ -372,6 +375,8 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
 def parse_gpt_partition_table(
     spec: Mapping[str, Any],
 ) -> Iterator[Specification]:
+    logging.debug("parse_gpt_partition_table")
+
     validate_spec(
         "GptPartitionTable",
         spec,
@@ -403,6 +408,8 @@ def parse_gpt_partition_table(
 
 
 def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_gpt_partition")
+
     name = "GptPartition"
     gpt_partition_spec, block_device_spec = partition_spec(
         name,
@@ -428,6 +435,8 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
 
 def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_raid_volume")
+
     name = "RaidVolume"
     raid_volume_spec, block_device_spec = partition_spec(
         name,
@@ -449,6 +458,8 @@ def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
 
 def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_crypt_volume")
+
     name = "CryptVolume"
     crypt_volume_spec, block_device_spec = partition_spec(
         name,
@@ -477,6 +488,8 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
 def parse_lvm_physical_volume(
     spec: Mapping[str, Any],
 ) -> Iterator[Specification]:
+    logging.debug("parse_lvm_physical_volume")
+
     validate_spec("LvmPhysicalVolume", spec, required={"name", "device"})
 
     yield LvmPhysicalVolume(
@@ -486,6 +499,8 @@ def parse_lvm_physical_volume(
 
 
 def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_lvm_volume_group")
+
     validate_spec(
         "LvmVolumeGroup",
         spec,
@@ -514,6 +529,8 @@ def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Specification]:
 def parse_lvm_logical_volume(
     spec: Mapping[str, Any],
 ) -> Iterator[Specification]:
+    logging.debug("parse_lvm_logical_volume")
+
     name = "LvmLogicalVolume"
     lvm_logical_volume_spec, block_device_spec = partition_spec(
         name,
@@ -538,6 +555,8 @@ def parse_lvm_logical_volume(
 
 
 def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_filesystem")
+
     validate_spec(
         "Filesystem",
         spec,
@@ -584,6 +603,8 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
 
 def parse_directory(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_directory")
+
     validate_spec(
         "Directory",
         spec,
@@ -602,6 +623,8 @@ def parse_directory(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
 
 def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_file")
+
     validate_spec(
         "File",
         spec,
@@ -647,6 +670,8 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
 
 def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_loop_device")
+
     name = "LoopDevice"
     loop_device_spec, block_device_spec = partition_spec(
         name,
@@ -668,6 +693,8 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
 
 def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_swap_volume")
+
     validate_spec("SwapVolume", spec, required={"name", "device"})
 
     yield SwapVolume(

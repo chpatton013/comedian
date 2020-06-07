@@ -9,6 +9,7 @@ TODO: Add cycle detection to graph construction
 """
 
 import copy
+import logging
 import os
 from collections import defaultdict, OrderedDict
 from typing import (
@@ -128,6 +129,8 @@ class Graph(__Debug__):
         by an explicit chain of "parent" GraphNode.
         """
 
+        logging.debug("Graph.resolve %s", name)
+
         # Ensure that the node exists.
         try:
             node = self._nodes[name]
@@ -143,6 +146,8 @@ class Graph(__Debug__):
         ):
             raise GraphResolveError(parent_name)
         parent_path = self.resolve(parent_name) if parent_name else None
+
+        logging.debug(" --> %s %s", parent_path, node_path)
 
         # Produce a resultant resolved path by joining the parent-path and
         # current-path if they are both set. Otherwise, return the one that is
