@@ -1,13 +1,10 @@
 from typing import Iterator
 
+from .specification import Specification
 from ..command import Command, CommandGenerator
-from ..declaration import Declaration
 
 
-class SwapVolume(CommandGenerator, Declaration):
+class SwapVolume(Specification):
     def __init__(self, name: str, device: str):
         super().__init__(name, [device])
         self.device = device
-
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()

@@ -1,10 +1,10 @@
 from typing import Iterator, List
 
+from .specification import Specification
 from ..command import Command, CommandGenerator
-from ..declaration import Declaration
 
 
-class RaidVolume(CommandGenerator, Declaration):
+class RaidVolume(Specification):
     def __init__(
         self,
         name: str,
@@ -16,6 +16,3 @@ class RaidVolume(CommandGenerator, Declaration):
         self.devices = devices
         self.level = level
         self.metadata = metadata
-
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()

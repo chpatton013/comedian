@@ -1,8 +1,8 @@
 """
 Parsing API for specification (or spec) dicts.
 
-Invoke the `parse()` function to generate a collection of Declarations, or raise
-errors on invalid input.
+Invoke the `parse()` function to generate a collection of Specifications, or
+raise errors on invalid input.
 
 We can describe Spec's according to a grammar with the following syntax
 structures:
@@ -108,7 +108,6 @@ LvmPhysicalVolume:
 
 from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
-from .declaration import Declaration
 from .specifications import (
     CryptVolume,
     Directory,
@@ -123,6 +122,7 @@ from .specifications import (
     PhysicalDevice,
     RaidVolume,
     Root,
+    Specification,
     SwapVolume,
 )
 
@@ -197,9 +197,9 @@ class FoundIncompatibleKeysError(ParseError):
         self.keys = keys
 
 
-def parse(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
     """
-    Parse a spec and yield the declarations described within.
+    Parse a spec and yield the specifications described within.
     """
     validate_spec(
         "Root",
@@ -283,7 +283,7 @@ def parse_block_device(
     name: str,
     spec: Mapping[str, Any],
     device: str,
-) -> Iterator[Declaration]:
+) -> Iterator[Specification]:
     keys = {
         "gpt_partition_table",
         "filesystem",
@@ -351,7 +351,7 @@ def parse_block_device(
         })
 
 
-def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     name = "PhysicalDevice"
     physical_device_spec, block_device_spec = partition_spec(
         name,
@@ -369,7 +369,9 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         )
 
 
-def parse_gpt_partition_table(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_gpt_partition_table(
+    spec: Mapping[str, Any],
+) -> Iterator[Specification]:
     validate_spec(
         "GptPartitionTable",
         spec,
@@ -400,7 +402,7 @@ def parse_gpt_partition_table(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         })
 
 
-def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
     name = "GptPartition"
     gpt_partition_spec, block_device_spec = partition_spec(
         name,
@@ -425,7 +427,7 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         yield from parse_block_device(name, block_device_spec, partition_name)
 
 
-def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     name = "RaidVolume"
     raid_volume_spec, block_device_spec = partition_spec(
         name,
@@ -446,7 +448,7 @@ def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         yield from parse_block_device(name, block_device_spec, raid_volume_name)
 
 
-def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     name = "CryptVolume"
     crypt_volume_spec, block_device_spec = partition_spec(
         name,
@@ -473,7 +475,9 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         )
 
 
-def parse_lvm_physical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_lvm_physical_volume(
+    spec: Mapping[str, Any],
+) -> Iterator[Specification]:
     validate_spec("LvmPhysicalVolume", spec, required={"name", "device"})
 
     yield LvmPhysicalVolume(
@@ -482,7 +486,7 @@ def parse_lvm_physical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     )
 
 
-def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "LvmVolumeGroup",
         spec,
@@ -508,7 +512,9 @@ def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         })
 
 
-def parse_lvm_logical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_lvm_logical_volume(
+    spec: Mapping[str, Any],
+) -> Iterator[Specification]:
     name = "LvmLogicalVolume"
     lvm_logical_volume_spec, block_device_spec = partition_spec(
         name,
@@ -532,7 +538,7 @@ def parse_lvm_logical_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         )
 
 
-def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "Filesystem",
         spec,
@@ -578,7 +584,7 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         })
 
 
-def parse_directory(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_directory(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "Directory",
         spec,
@@ -596,7 +602,7 @@ def parse_directory(spec: Mapping[str, Any]) -> Iterator[Declaration]:
     )
 
 
-def parse_file(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "File",
         spec,
@@ -641,7 +647,7 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         yield from parse_swap_volume({"device": file_name, **swap_volume_spec})
 
 
-def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     name = "LoopDevice"
     loop_device_spec, block_device_spec = partition_spec(
         name,
@@ -662,7 +668,7 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Declaration]:
         yield from parse_block_device(name, block_device_spec, loop_device_name)
 
 
-def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Declaration]:
+def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec("SwapVolume", spec, required={"name", "device"})
 
     yield SwapVolume(

@@ -1,12 +1,10 @@
 from typing import Iterator
 
+from .specification import Specification
 from ..command import Command, CommandGenerator
-from ..declaration import Declaration
 
 
-class Root(CommandGenerator, Declaration):
+class Root(Specification):
     def __init__(self):
         super().__init__("/", [])
 
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()

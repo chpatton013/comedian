@@ -1,10 +1,10 @@
 from typing import Iterator, Optional
 
+from .specification import Specification
 from ..command import Command, CommandGenerator
-from ..declaration import Declaration
 
 
-class Directory(CommandGenerator, Declaration):
+class Directory(Specification):
     def __init__(
         self,
         name: str,
@@ -20,6 +20,3 @@ class Directory(CommandGenerator, Declaration):
         self.owner = owner
         self.group = group
         self.mode = mode
-
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()

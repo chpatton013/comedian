@@ -1,10 +1,10 @@
 from typing import Iterator, Optional
 
+from .specification import Specification
 from ..command import Command, CommandGenerator
-from ..declaration import Declaration
 
 
-class File(CommandGenerator, Declaration):
+class File(Specification):
     def __init__(
         self,
         name: str,
@@ -22,6 +22,3 @@ class File(CommandGenerator, Declaration):
         self.group = group
         self.mode = mode
         self.size = size
-
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()

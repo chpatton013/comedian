@@ -1,10 +1,9 @@
 from typing import Iterator, Optional
 
-from ..command import Command, CommandGenerator
-from ..declaration import Declaration
+from .specification import Specification
 
 
-class CryptVolume(CommandGenerator, Declaration):
+class CryptVolume(Specification):
     def __init__(
         self,
         name: str,
@@ -14,16 +13,41 @@ class CryptVolume(CommandGenerator, Declaration):
         keysize: Optional[str],
         password: Optional[str],
     ):
-        dependencies = [device]
-        if keyfile:
-            dependencies.append(keyfile)
-        super().__init__(name, dependencies)
-
+        super().__init__(
+            name,
+            [device],
+            references=[keyfile],
+            apply=CryptVolumeApplyCommandGenerator(self),
+            post_apply=CryptVolumePostApplyCommandGenerator(self),
+            up=CryptVolumeUpCommandGenerator(self),
+            down=CryptVolumeDownCommandGenerator(self),
+        )
         self.device = device
         self.type = type
         self.keyfile = keyfile
         self.keysize = keysize
         self.password = password
 
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()
+    def debug_fields(self) -> Iterator[str]:
+        yield from (
+            "name",
+            "dependencies",
+            "references",
+            "device",
+            "type",
+            "keyfile",
+            "keysize",
+            "password",
+        )
+
+    def eq_fields(self) -> Iterator[str]:
+        yield from (
+            "name",
+            "dependencies",
+            "references",
+            "device",
+            "type",
+            "keyfile",
+            "keysize",
+            "password",
+        )

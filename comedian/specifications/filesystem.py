@@ -1,10 +1,10 @@
 from typing import Iterator, List
 
+from .specification import Specification
 from ..command import Command, CommandGenerator
-from ..declaration import Declaration
 
 
-class Filesystem(CommandGenerator, Declaration):
+class Filesystem(Specification):
     def __init__(
         self,
         name: str,
@@ -18,6 +18,3 @@ class Filesystem(CommandGenerator, Declaration):
         self.mountpoint = mountpoint
         self.type = type
         self.options = options
-
-    def generate_commands(self) -> Iterator[Command]:
-        yield from ()
