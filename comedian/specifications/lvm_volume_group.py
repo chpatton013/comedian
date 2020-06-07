@@ -1,8 +1,38 @@
 from typing import Iterator, List
 
 from .specification import Specification
-from ..command import Command, CommandGenerator
+from ..command import Command, CommandContext, CommandGenerator
 from ..graph import ResolveLink
+
+
+class LvmVolumeGroupApplyCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "LvmVolumeGroup"):
+        self.specification = specification
+
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        lvm_physical_volume_paths = [
+            context.graph.resolve_device(lvm_physical_volume)
+            for lvm_physical_volume in self.specification.lvm_physical_volumes
+        ]
+
+        yield Command(["vgcreate", self.specification.name] +
+                      lvm_physical_volume_paths)
+
+
+class LvmVolumeGroupUpCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "LvmVolumeGroup"):
+        self.specification = specification
+
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        yield Command(["vgcreate", "--activate", "y", self.specification.name])
+
+
+class LvmVolumeGroupDownCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "LvmVolumeGroup"):
+        self.specification = specification
+
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        yield Command(["vgcreate", "--activate", "n", self.specification.name])
 
 
 class LvmVolumeGroup(Specification):
@@ -11,7 +41,13 @@ class LvmVolumeGroup(Specification):
         name: str,
         lvm_physical_volumes: List[str],
     ):
-        super().__init__(name, lvm_physical_volumes)
+        super().__init__(
+            name,
+            lvm_physical_volumes,
+            apply=LvmVolumeGroupApplyCommandGenerator(self),
+            up=LvmVolumeGroupUpCommandGenerator(self),
+            down=LvmVolumeGroupDownCommandGenerator(self),
+        )
         self.lvm_physical_volumes = lvm_physical_volumes
 
     def resolve_device(self) -> ResolveLink:

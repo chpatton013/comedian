@@ -3,7 +3,7 @@ Command API for generating shell commands to be run on a system.
 """
 
 from abc import ABC, abstractmethod
-from typing import Iterator, List
+from typing import Iterable, Iterator, List, Optional
 
 from .configuration import Configuration
 from .graph import Graph
@@ -39,3 +39,24 @@ class CommandGenerator(ABC):
     @abstractmethod
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         pass
+
+
+def chmod(mode: str, *paths: Iterable[str]) -> Command:
+    return Command(["chmod", mode] + list(paths))
+
+
+def chown(
+    owner: Optional[str],
+    group: Optional[str],
+    *paths: Iterable[str],
+) -> Command:
+    own = ""
+    if owner:
+        own += owner
+    if group:
+        own += f":{group}"
+    return Command(["chown", own] + list(paths))
+
+
+def mkdir(*paths: Iterable[str]) -> Command:
+    return Command(["mkdir", "--parents"] + list(paths))
