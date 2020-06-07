@@ -2,6 +2,7 @@ from typing import Iterator, Optional, Tuple
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
+from ..graph import ResolveLink
 
 
 class File(Specification):
@@ -23,5 +24,5 @@ class File(Specification):
         self.mode = mode
         self.size = size
 
-    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
-        return self.filesystem, self.relative_path
+    def resolve_path(self) -> ResolveLink:
+        return ResolveLink(self.filesystem, self.relative_path)

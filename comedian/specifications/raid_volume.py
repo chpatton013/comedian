@@ -2,6 +2,7 @@ from typing import Iterator, List
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
+from ..graph import ResolveLink
 
 
 class RaidVolume(Specification):
@@ -16,3 +17,6 @@ class RaidVolume(Specification):
         self.devices = devices
         self.level = level
         self.metadata = metadata
+
+    def resolve_device(self) -> ResolveLink:
+        return ResolveLink(None, f"/dev/md/{self.name}")

@@ -2,6 +2,7 @@ from typing import Iterator, List, Optional
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
+from ..graph import ResolveLink
 
 
 class GptPartition(Specification):
@@ -22,3 +23,8 @@ class GptPartition(Specification):
         self.end = end
         self.label = label
         self.flags = flags
+
+    def resolve_device(self) -> ResolveLink:
+        return ResolveLink(
+            self.partition_table, str(self.number), lambda x, y: x + y
+        )

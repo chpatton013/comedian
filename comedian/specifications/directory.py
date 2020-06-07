@@ -1,7 +1,8 @@
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
+from ..graph import ResolveLink
 
 
 class Directory(Specification):
@@ -21,5 +22,5 @@ class Directory(Specification):
         self.group = group
         self.mode = mode
 
-    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
-        return self.filesystem, self.relative_path
+    def resolve_path(self) -> ResolveLink:
+        return ResolveLink(self.filesystem, self.relative_path)

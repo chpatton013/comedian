@@ -2,6 +2,7 @@ from typing import Iterator, List
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
+from ..graph import ResolveLink
 
 
 class LoopDevice(Specification):
@@ -9,3 +10,6 @@ class LoopDevice(Specification):
         super().__init__(name, [file])
         self.file = file
         self.args = args
+
+    def resolve_device(self) -> ResolveLink:
+        return ResolveLink(None, "/dev/{self.name}")

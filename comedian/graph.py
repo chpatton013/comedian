@@ -13,6 +13,8 @@ import logging
 import os
 from collections import defaultdict, OrderedDict
 from typing import (
+    Any,
+    Callable,
     Dict,
     Iterable,
     Iterator,
@@ -20,7 +22,6 @@ from typing import (
     Mapping,
     Optional,
     Set,
-    Tuple,
 )
 
 from .traits import __Debug__, __Eq__
@@ -75,6 +76,21 @@ class GraphWalkError(GraphError):
         self.not_visited = not_visited
 
 
+class ResolveLink(__Debug__, __Eq__):
+    def __init__(
+        self,
+        parent: Optional[str],
+        value: Optional[str],
+        join: Callable[[str, str], str] = os.path.join,
+    ):
+        self.parent = parent
+        self.value = value
+        self.join = join
+
+    def __iter__(self) -> Iterator[Any]:
+        yield from (self.parent, self.value, self.join)
+
+
 class GraphNode(__Debug__, __Eq__):
     """
     A single node within a Graph, consisting of a unique name, a list of
@@ -90,8 +106,11 @@ class GraphNode(__Debug__, __Eq__):
         self.dependencies = dependencies
         self.references = references
 
-    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
-        return None, None
+    def resolve_device(self) -> ResolveLink:
+        return ResolveLink(None, None)
+
+    def resolve_path(self) -> ResolveLink:
+        return ResolveLink(None, None)
 
 
 class Graph(__Debug__):
@@ -122,44 +141,6 @@ class Graph(__Debug__):
             for reference_name in node.references:
                 if reference_name not in self._nodes:
                     raise GraphEdgeError(name, reference_name)
-
-    def resolve(self, name: str) -> Optional[str]:
-        """
-        Resolve the name of a GraphNode to a filepath whose parts are produced
-        by an explicit chain of "parent" GraphNode.
-        """
-
-        logging.debug("Graph.resolve %s", name)
-
-        # Ensure that the node exists.
-        try:
-            node = self._nodes[name]
-        except KeyError:
-            raise GraphResolveError(name)
-
-        # Ensure that the "parent" node is declared as a dependency or reference
-        # of the input node.
-        parent_name, node_path = node.resolve()
-        if (
-            parent_name and parent_name not in node.dependencies and
-            parent_name not in node.references
-        ):
-            raise GraphResolveError(parent_name)
-        parent_path = self.resolve(parent_name) if parent_name else None
-
-        logging.debug(" --> %s %s", parent_path, node_path)
-
-        # Produce a resultant resolved path by joining the parent-path and
-        # current-path if they are both set. Otherwise, return the one that is
-        # set (or None if neither).
-        if parent_path and node_path:
-            return os.path.join(parent_path, node_path)
-        elif parent_path:
-            return parent_path
-        elif node_path:
-            return node_path
-        else:
-            return None
 
     def walk(self) -> Iterator[GraphNode]:
         """
@@ -199,3 +180,67 @@ class Graph(__Debug__):
         # GraphNodes that were not visited.
         if not_visited:
             raise GraphWalkError(dict(not_visited))
+
+    def resolve_device(self, name: str) -> Optional[str]:
+        """
+        Resolve the name of a GraphNode to a devicepath whose parts are produced
+        by an explicit chain of "parent" GraphNodes.
+        """
+
+        logging.debug("Graph.resolve_device %s", name)
+
+        return self._resolve(
+            name,
+            lambda node: node.resolve_device(),
+            lambda name: self.resolve_device(name),
+        )
+
+    def resolve_path(self, name: str) -> Optional[str]:
+        """
+        Resolve the name of a GraphNode to a filepath whose parts are produced
+        by an explicit chain of "parent" GraphNodes.
+        """
+
+        logging.debug("Graph.resolve_path %s", name)
+
+        return self._resolve(
+            name,
+            lambda node: node.resolve_path(),
+            lambda name: self.resolve_path(name),
+        )
+
+    def _resolve(
+        self,
+        name: str,
+        node_resolve: Callable[[str], ResolveLink],
+        graph_resolve: Callable[[str], Optional[str]],
+    ) -> Optional[str]:
+        # Ensure that the node exists.
+        try:
+            node = self._nodes[name]
+        except KeyError:
+            raise GraphResolveError(name)
+
+        # Ensure that the "parent" node is declared as a dependency or reference
+        # of the input node.
+        link = node_resolve(node)
+        if (
+            link.parent and link.parent not in node.dependencies and
+            link.parent not in node.references
+        ):
+            raise GraphResolveError(link.parent)
+        parent_path = graph_resolve(link.parent) if link.parent else None
+
+        logging.debug(" --> %s %s", parent_path, link.value)
+
+        # Produce a resultant resolved path by joining the parent-path and
+        # current-path if they are both set. Otherwise, return the one that is
+        # set (or None if neither).
+        if parent_path and link.value:
+            return link.join(parent_path, link.value)
+        elif parent_path:
+            return parent_path
+        elif link.value:
+            return link.value
+        else:
+            return None

@@ -1,7 +1,8 @@
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List
 
 from .specification import Specification
 from ..command import Command, CommandGenerator
+from ..graph import ResolveLink
 
 
 class Filesystem(Specification):
@@ -19,5 +20,8 @@ class Filesystem(Specification):
         self.type = type
         self.options = options
 
-    def resolve(self) -> Tuple[Optional[str], Optional[str]]:
-        return self.mountpoint, None
+    def resolve_device(self) -> ResolveLink:
+        return ResolveLink(self.device, None)
+
+    def resolve_path(self) -> ResolveLink:
+        return ResolveLink(self.mountpoint, None)

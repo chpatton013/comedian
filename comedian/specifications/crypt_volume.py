@@ -1,6 +1,7 @@
 from typing import Iterator, Optional
 
 from .specification import Specification
+from ..graph import ResolveLink
 
 
 class CryptVolume(Specification):
@@ -27,3 +28,10 @@ class CryptVolume(Specification):
         self.keyfile = keyfile
         self.keysize = keysize
         self.password = password
+
+    def resolve_device(self) -> ResolveLink:
+        return ResolveLink(None, _cryptdevice(self.name))
+
+
+def _cryptdevice(name: str) -> str:
+    return f"/dev/mapper/{name}"
