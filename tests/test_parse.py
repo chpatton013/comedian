@@ -310,6 +310,7 @@ class ParseRootTest(ParseTestBase):
                 name="lvmlv",
                 lvm_volume_group="lvmvg",
                 size="10",
+                lvm_physical_volumes=[],
                 args=[],
             ),
             CryptVolume(

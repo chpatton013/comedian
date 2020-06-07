@@ -43,6 +43,7 @@ LvmLogicalVolume:
     "name": str
     "size": str
     "args": str *
+    "lvm_physical_volumes": str *
     *: BlockDevice
 
 BlockDevice:
@@ -541,7 +542,7 @@ def parse_lvm_logical_volume(
         name,
         spec,
         required={"name", "lvm_volume_group", "size"},
-        allowed={"args"},
+        allowed={"lvm_physical_volumes", "args"},
         ignore=True,
     )
 
@@ -550,6 +551,9 @@ def parse_lvm_logical_volume(
         name=lvm_logical_volume_name,
         lvm_volume_group=lvm_logical_volume_spec["lvm_volume_group"],
         size=lvm_logical_volume_spec["size"],
+        lvm_physical_volumes=lvm_logical_volume_spec.get(
+            "lvm_physical_volumes", []
+        ),
         args=lvm_logical_volume_spec.get("args", []),
     )
 
