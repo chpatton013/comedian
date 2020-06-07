@@ -1,0 +1,177 @@
+{
+  "physical_devices": [
+    {
+      "name": "sda",
+      "gpt_partition_table": {
+        "gpt_partitions": [
+          {
+            "type": "primary",
+            "start": "1MB",
+            "end": "2MB",
+            "label": "bios_a",
+            "flags": ["bios_boot"]
+          },
+          {
+            "type": "primary",
+            "start": "2MB",
+            "end": "262MB",
+            "label": "efi_a",
+            "flags": ["esp"]
+          },
+          {
+            "type": "primary",
+            "start": "262MB",
+            "end": "1024MB",
+            "label": "boot_a"
+          },
+          {
+            "type": "primary",
+            "start": "1024MB",
+            "end": "-1",
+            "label": "root_a"
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdb",
+      "gpt_partition_table": {
+        "gpt_partitions": [
+          {
+            "type": "primary",
+            "start": "1MB",
+            "end": "2MB",
+            "label": "bios_b",
+            "flags": ["bios_boot"]
+          },
+          {
+            "type": "primary",
+            "start": "2MB",
+            "end": "262MB",
+            "label": "efi_b",
+            "flags": ["esp"]
+          },
+          {
+            "type": "primary",
+            "start": "262MB",
+            "end": "1024MB",
+            "label": "boot_b"
+          },
+          {
+            "type": "primary",
+            "start": "1024MB",
+            "end": "-1",
+            "label": "root_b"
+          }
+        ]
+      }
+    }
+  ],
+  "raid_volumes": [
+    {
+      "name": "raidbios",
+      "devices": ["sda:gpt:1", "sdb:gpt:1"],
+      "level": "1",
+      "metadata": "1.0"
+    },
+    {
+      "name": "raidefi",
+      "devices": ["sda:gpt:2", "sdb:gpt:2"],
+      "level": "1",
+      "metadata": "1.0",
+      "filesystem": {
+        "name": "fsefi",
+        "mountpoint": "fsboot:efi",
+        "type": "vfat"
+      }
+    },
+    {
+      "name": "raidboot",
+      "devices": ["sda:gpt:3", "sdb:gpt:3"],
+      "level": "1",
+      "metadata": "1.0",
+      "crypt_volume": {
+        "name": "cryptroot",
+        "type": "luks1",
+        "keyfile": "fsboot:keys/cryptboot.keyfile",
+        "keysize": "2048",
+        "password": "hunter2",
+        "filesystem": {
+          "name": "fsboot",
+          "mountpoint": "fsroot:boot",
+          "type": "ext4",
+          "directories": [
+            {
+              "relative_path": "efi",
+              "mode": "0700"
+            },
+            {
+              "relative_path": "keys",
+              "mode": "0000"
+            }
+          ],
+          "files": [
+            {
+              "relative_path": "keys/cryptboot.keyfile",
+              "mode": "0000"
+            },
+            {
+              "relative_path": "keys/cryptroot.keyfile",
+              "mode": "0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "raidroot",
+      "devices": ["sda:gpt:4", "sdb:gpt:4"],
+      "level": "0",
+      "metadata": "1.2",
+      "crypt_volume": {
+        "name": "cryptroot",
+        "type": "luks2",
+        "keyfile": "fsboot:keys/cryptroot.keyfile",
+        "keysize": "2048",
+        "lvm_physical_volume": {
+          "name": "LvmPvRoot"
+        }
+      }
+    }
+  ],
+  "lvm_volume_groups": [
+    {
+      "name": "LvmVgRoot",
+      "lvm_physical_volumes": ["LvmPvRoot"],
+      "lvm_logical_volumes": [
+        {
+          "name": "LvmLvRoot",
+          "size": "100%",
+          "filesystem": {
+            "name": "fsroot",
+            "mountpoint": "/",
+            "type": "ext4",
+            "directories": [
+              {
+                "relative_path": "boot",
+                "mode": "0700"
+              }
+            ],
+            "files": [
+              {
+                "relative_path": "swapfile",
+                "owner": "root",
+                "group": "root",
+                "mode": "0000",
+                "size": "1G",
+                "swap_volume": {
+                  "name": "swap"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
