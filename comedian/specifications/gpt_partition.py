@@ -22,11 +22,15 @@ class GptPartitionApplyCommandGenerator(CommandGenerator):
             self.specification.end,
         ]
         if self.specification.label:
-            cmd += ["name", self.specification.number, self.specification.label]
+            cmd += [
+                "name",
+                str(self.specification.number),
+                self.specification.label,
+            ]
         if self.specification.unit:
             cmd += ["unit", self.specification.unit]
         for flag in self.specification.flags:
-            cmd += ["set", self.specification.number, flag, "on"]
+            cmd += ["set", str(self.specification.number), flag, "on"]
 
         yield Command(_parted(*cmd))
 

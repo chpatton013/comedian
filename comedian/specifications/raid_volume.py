@@ -25,7 +25,7 @@ class RaidVolumeApplyCommandGenerator(CommandGenerator):
             "--metadata",
             self.specification.metadata,
             "--raid-devices",
-            len(self.specification.devices),
+            str(len(self.specification.devices)),
             _raid_device(self.specification.name),
         ]
 
