@@ -91,7 +91,7 @@
       "level": "1",
       "metadata": "1.0",
       "crypt_volume": {
-        "name": "cryptroot",
+        "name": "cryptboot",
         "type": "luks1",
         "keyfile": "fsboot:keys/cryptboot.keyfile",
         "keysize": "2048",
