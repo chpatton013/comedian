@@ -1,7 +1,8 @@
 import argparse
 import json
+import logging
 import sys
-from typing import Any, Callable, Dict, Iterator, Optional
+from typing import Any, Dict, Optional
 
 from .action import make_action
 from .command import Command, CommandContext
@@ -29,7 +30,25 @@ def main():
         default=None,
         help="Path to input configuration file",
     )
+    log_level_group = parser.add_mutually_exclusive_group()
+    log_level_group.add_argument(
+        "--debug",
+        action="store_const",
+        const=logging.DEBUG,
+        dest="log_level",
+        help="Show debug log messages",
+    )
+    log_level_group.add_argument(
+        "--quiet",
+        action="store_const",
+        const=logging.WARNING,
+        dest="log_level",
+        help="Only show warning and error log messages",
+    )
+    parser.set_defaults(level=logging.INFO)
     args = parser.parse_args()
+
+    logging.basicConfig(level=args.log_level)
 
     config = Configuration()
 
