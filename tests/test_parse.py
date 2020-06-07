@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from context import comedian
 
-from comedian.declaration import Declaration
 from comedian.specifications import (
     CryptVolume,
     Directory,

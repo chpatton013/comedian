@@ -4,112 +4,129 @@ import unittest
 
 from context import comedian
 
-from comedian.declaration import Declaration
-from comedian.graph import Graph, GraphEdgeError, GraphWalkError
+from comedian.graph import (
+    Graph,
+    GraphEdgeError,
+    GraphNode,
+    GraphWalkError,
+)
 
 
 class TestDeclaration(Declaration):
     pass
 
 
-class GraphTest(unittest.TestCase):
+
+class GraphEdgeTest(unittest.TestCase):
+    def test_unknown_dependency(self):
+        a = TestGraphNode("a", ["b"])
+
+        nodes = [a]
+        with self.assertRaises(GraphEdgeError) as context:
+            graph = Graph(nodes)
+
+        self.assertEqual("a", context.exception.name)
+        self.assertEqual("b", context.exception.dependency)
+
+    def test_unknown_reference(self):
+        a = TestGraphNode("a", [], ["b"])
+
+        nodes = [a]
+        with self.assertRaises(GraphEdgeError) as context:
+            graph = Graph(nodes)
+
+        self.assertEqual("a", context.exception.name)
+        self.assertEqual("b", context.exception.dependency)
+
+
+class GraphWalkTest(unittest.TestCase):
     def test_empty(self):
         graph = Graph([])
         with self.assertRaises(StopIteration):
             next(graph.walk())
 
-    def test_unknown_dependency(self):
-        a = TestDeclaration("a", ["b"])
-
-        declarations = [a]
-        with self.assertRaises(GraphEdgeError) as context:
-            graph = Graph(declarations)
-
-        self.assertEqual("a", context.exception.name)
-        self.assertEqual("b", context.exception.dependency)
-
     def test_no_deps(self):
-        a = TestDeclaration("a", [])
-        b = TestDeclaration("b", [])
-        c = TestDeclaration("c", [])
+        a = TestGraphNode("a", [])
+        b = TestGraphNode("b", [])
+        c = TestGraphNode("c", [])
 
-        declarations = [a, b, c]
-        graph = Graph(declarations)
+        nodes = [a, b, c]
+        graph = Graph(nodes)
 
         expected = [a, b, c]
         actual = list(graph.walk())
         self.assertListEqual(expected, actual)
 
     def test_forward_chain(self):
-        a = TestDeclaration("a", [])
-        b = TestDeclaration("b", ["a"])
-        c = TestDeclaration("c", ["b"])
+        a = TestGraphNode("a", [])
+        b = TestGraphNode("b", ["a"])
+        c = TestGraphNode("c", ["b"])
 
-        declarations = [a, b, c]
-        graph = Graph(declarations)
+        nodes = [a, b, c]
+        graph = Graph(nodes)
 
         expected = [a, b, c]
         actual = list(graph.walk())
         self.assertListEqual(expected, actual)
 
     def test_reverse_chain(self):
-        a = TestDeclaration("a", ["b"])
-        b = TestDeclaration("b", ["c"])
-        c = TestDeclaration("c", [])
+        a = TestGraphNode("a", ["b"])
+        b = TestGraphNode("b", ["c"])
+        c = TestGraphNode("c", [])
 
-        declarations = [a, b, c]
-        graph = Graph(declarations)
+        nodes = [a, b, c]
+        graph = Graph(nodes)
 
         expected = [c, b, a]
         actual = list(graph.walk())
         self.assertListEqual(expected, actual)
 
     def test_forward_branch(self):
-        a = TestDeclaration("a", [])
-        b = TestDeclaration("b", ["a"])
-        c = TestDeclaration("c", ["b"])
-        d = TestDeclaration("d", ["a"])
-        e = TestDeclaration("e", ["d"])
+        a = TestGraphNode("a", [])
+        b = TestGraphNode("b", ["a"])
+        c = TestGraphNode("c", ["b"])
+        d = TestGraphNode("d", ["a"])
+        e = TestGraphNode("e", ["d"])
 
-        declarations = [a, b, c, d, e]
-        graph = Graph(declarations)
+        nodes = [a, b, c, d, e]
+        graph = Graph(nodes)
 
         expected = [a, b, d, c, e]
         actual = list(graph.walk())
         self.assertListEqual(expected, actual)
 
     def test_reverse_branch(self):
-        a = TestDeclaration("a", ["b"])
-        b = TestDeclaration("b", ["e"])
-        c = TestDeclaration("c", ["d"])
-        d = TestDeclaration("d", ["e"])
-        e = TestDeclaration("e", [])
+        a = TestGraphNode("a", ["b"])
+        b = TestGraphNode("b", ["e"])
+        c = TestGraphNode("c", ["d"])
+        d = TestGraphNode("d", ["e"])
+        e = TestGraphNode("e", [])
 
-        declarations = [a, b, c, d, e]
-        graph = Graph(declarations)
+        nodes = [a, b, c, d, e]
+        graph = Graph(nodes)
 
         expected = [e, b, d, a, c]
         actual = list(graph.walk())
         self.assertListEqual(expected, actual)
 
     def test_diamond(self):
-        a = TestDeclaration("a", [])
-        b = TestDeclaration("b", ["a"])
-        c = TestDeclaration("c", ["a"])
-        d = TestDeclaration("d", ["b", "c"])
+        a = TestGraphNode("a", [])
+        b = TestGraphNode("b", ["a"])
+        c = TestGraphNode("c", ["a"])
+        d = TestGraphNode("d", ["b", "c"])
 
-        declarations = [a, b, c, d]
-        graph = Graph(declarations)
+        nodes = [a, b, c, d]
+        graph = Graph(nodes)
 
         expected = [a, b, c, d]
         actual = list(graph.walk())
         self.assertListEqual(expected, actual)
 
     def test_self_reference(self):
-        a = TestDeclaration("a", ["a"])
+        a = TestGraphNode("a", ["a"])
 
-        declarations = [a]
-        graph = Graph(declarations)
+        nodes = [a]
+        graph = Graph(nodes)
 
         with self.assertRaises(GraphWalkError) as context:
             next(graph.walk())
@@ -118,13 +135,13 @@ class GraphTest(unittest.TestCase):
         self.assertEqual(expected, context.exception.not_visited)
 
     def test_cycle(self):
-        a = TestDeclaration("a", [])
-        b = TestDeclaration("b", ["a", "c"])
-        c = TestDeclaration("c", ["b"])
-        d = TestDeclaration("d", ["c"])
+        a = TestGraphNode("a", [])
+        b = TestGraphNode("b", ["a", "c"])
+        c = TestGraphNode("c", ["b"])
+        d = TestGraphNode("d", ["c"])
 
-        declarations = [a, b, c, d]
-        graph = Graph(declarations)
+        nodes = [a, b, c, d]
+        graph = Graph(nodes)
         walk = graph.walk()
 
         self.assertEqual(a, next(walk))

@@ -2,10 +2,10 @@ from typing import List, Optional
 
 from ..action import ActionCommandGenerator
 from ..command import CommandGenerator
-from ..declaration import Declaration
+from ..graph import GraphNode
 
 
-class Specification(ActionCommandGenerator, Declaration):
+class Specification(ActionCommandGenerator, GraphNode):
     """
     Composite base class for all Specifications.
     """
@@ -26,4 +26,4 @@ class Specification(ActionCommandGenerator, Declaration):
             up=up,
             down=down,
         )
-        Declaration.__init__(self, name, dependencies, references=references)
+        GraphNode.__init__(self, name, dependencies, references=references)
