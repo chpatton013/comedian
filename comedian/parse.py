@@ -95,8 +95,8 @@ LoopDevice:
 CryptVolume:
     "name": str
     "type": str
-    "keysize": [str &]
-    "keyfile": [str &]
+    "keysize": str
+    "keyfile": str
     "password": [str]
 
 SwapVolume:
@@ -453,9 +453,8 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     crypt_volume_spec, block_device_spec = partition_spec(
         name,
         spec,
-        required={"name", "device", "type"},
-        allowed={"keyfile", "keysize", "password"},
-        inclusive={"keyfile", "keysize"},
+        required={"name", "device", "type", "keyfile", "keysize"},
+        allowed={"password"},
         ignore=True,
     )
 
@@ -464,8 +463,8 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
         name=crypt_volume_name,
         device=crypt_volume_spec["device"],
         type=crypt_volume_spec["type"],
-        keyfile=crypt_volume_spec.get("keyfile"),
-        keysize=crypt_volume_spec.get("keysize"),
+        keyfile=crypt_volume_spec["keyfile"],
+        keysize=crypt_volume_spec["keysize"],
         password=crypt_volume_spec.get("password"),
     )
 

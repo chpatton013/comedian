@@ -9,8 +9,8 @@ class CryptVolume(Specification):
         name: str,
         device: str,
         type: str,
-        keyfile: Optional[str],
-        keysize: Optional[str],
+        keyfile: str,
+        keysize: str,
         password: Optional[str],
     ):
         super().__init__(
