@@ -12,11 +12,10 @@ from .traits import __Debug__, __Eq__
 
 class Command(__Debug__, __Eq__):
     """
-    A container for the arguments and CWD of a shell command.
+    A container for the arguments of a shell command.
     """
-    def __init__(self, cmd: List[str], cwd: str = None):
+    def __init__(self, cmd: List[str]):
         self.cmd = cmd
-        self.cwd = cwd
 
 
 class CommandContext(__Debug__):
