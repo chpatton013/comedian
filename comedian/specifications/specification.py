@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Iterator, List, Optional, Set
 
 from ..action import ActionCommandGenerator
 from ..command import CommandGenerator
@@ -27,3 +27,9 @@ class Specification(ActionCommandGenerator, GraphNode):
             down=down,
         )
         GraphNode.__init__(self, name, dependencies, references=references)
+
+    def __fields__(self) -> Iterator[str]:
+        excluded_fields: Set[str] = {"apply", "post_apply", "up", "down"}
+        for field in GraphNode.__fields__(self):
+            if field not in excluded_fields:
+                yield field

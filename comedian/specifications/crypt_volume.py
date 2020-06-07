@@ -27,27 +27,3 @@ class CryptVolume(Specification):
         self.keyfile = keyfile
         self.keysize = keysize
         self.password = password
-
-    def debug_fields(self) -> Iterator[str]:
-        yield from (
-            "name",
-            "dependencies",
-            "references",
-            "device",
-            "type",
-            "keyfile",
-            "keysize",
-            "password",
-        )
-
-    def eq_fields(self) -> Iterator[str]:
-        yield from (
-            "name",
-            "dependencies",
-            "references",
-            "device",
-            "type",
-            "keyfile",
-            "keysize",
-            "password",
-        )
