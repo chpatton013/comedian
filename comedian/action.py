@@ -7,8 +7,6 @@ from typing import Iterator, Optional
 
 from .command import Command, CommandContext, CommandGenerator
 
-__all__ = ("make_action", "ActionCommandGenerator")
-
 
 class ActionCommandGenerator:
     """

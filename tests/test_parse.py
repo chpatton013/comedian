@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import copy
 import unittest
 from unittest.mock import patch
@@ -753,7 +751,3 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmLogicalVolume")
         self.assertSetEqual(context.exception.keys, {"name", "size"})
-
-
-if __name__ == "__main__":
-    unittest.main()

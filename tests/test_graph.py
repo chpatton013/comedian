@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import unittest
 from typing import (
     Any,
@@ -287,7 +285,3 @@ class GraphWalkTest(unittest.TestCase):
             "d": {"c"},
         }
         self.assertEqual(expected, context.exception.not_visited)
-
-
-if __name__ == "__main__":
-    unittest.main()
