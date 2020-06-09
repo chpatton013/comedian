@@ -1,8 +1,8 @@
 from typing import Iterator
 
-from .specification import Specification
 from ..command import Command, CommandContext, CommandGenerator
 from ..graph import ResolveLink
+from ..specification import Specification
 
 
 class GptPartitionTableApplyCommandGenerator(CommandGenerator):

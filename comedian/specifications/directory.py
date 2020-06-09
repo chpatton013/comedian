@@ -1,6 +1,5 @@
 from typing import Iterator, Optional
 
-from .specification import Specification
 from ..command import (
     Command,
     CommandContext,
@@ -10,6 +9,7 @@ from ..command import (
     mkdir,
 )
 from ..graph import ResolveLink
+from ..specification import Specification
 
 
 class DirectoryApplyCommandGenerator(CommandGenerator):

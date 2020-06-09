@@ -113,6 +113,7 @@ LvmPhysicalVolume:
 import logging
 from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
+from .specification import Specification
 from .specifications import (
     CryptVolume,
     Directory,
@@ -127,7 +128,6 @@ from .specifications import (
     PhysicalDevice,
     RaidVolume,
     Root,
-    Specification,
     SwapVolume,
 )
 

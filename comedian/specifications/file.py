@@ -1,6 +1,5 @@
 from typing import Iterator, Optional, Tuple
 
-from .specification import Specification
 from ..command import (
     Command,
     CommandContext,
@@ -9,6 +8,7 @@ from ..command import (
     chown,
 )
 from ..graph import ResolveLink
+from ..specification import Specification
 
 
 class FileApplyCommandGenerator(CommandGenerator):

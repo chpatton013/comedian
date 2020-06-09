@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Iterable
 
 from .command import Command
-from .specifications import Specification
+from .specification import Specification
 
 __all__ = ("make_mode")
 

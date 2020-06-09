@@ -5,7 +5,7 @@ from context import comedian
 
 from comedian.command import Command
 from comedian.mode import make_mode, ExecMode, DryrunMode, ShellMode
-from comedian.specifications import Specification
+from comedian.specification import Specification
 
 
 class ModeTest(unittest.TestCase):

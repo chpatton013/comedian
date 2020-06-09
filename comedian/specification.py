@@ -1,8 +1,8 @@
 from typing import Iterator, List, Optional, Set
 
-from ..action import ActionCommandGenerator
-from ..command import CommandGenerator
-from ..graph import GraphNode
+from .action import ActionCommandGenerator
+from .command import CommandGenerator
+from .graph import GraphNode
 
 
 class Specification(ActionCommandGenerator, GraphNode):

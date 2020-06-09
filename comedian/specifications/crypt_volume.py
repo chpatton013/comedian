@@ -1,8 +1,8 @@
 from typing import Iterable, Iterator, List, Optional
 
-from .specification import Specification
 from ..command import Command, CommandContext, CommandGenerator, mkdir
 from ..graph import ResolveLink
+from ..specification import Specification
 
 
 class CryptVolumeApplyCommandGenerator(CommandGenerator):
