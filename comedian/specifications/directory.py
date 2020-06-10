@@ -1,6 +1,6 @@
 from typing import Iterator, Optional
 
-from ..command import (
+from comedian.command import (
     Command,
     CommandContext,
     CommandGenerator,
@@ -8,8 +8,8 @@ from ..command import (
     chown,
     mkdir,
 )
-from ..graph import ResolveLink
-from ..specification import Specification
+from comedian.graph import ResolveLink
+from comedian.specification import Specification
 
 
 class DirectoryApplyCommandGenerator(CommandGenerator):

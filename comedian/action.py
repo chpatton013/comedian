@@ -5,7 +5,7 @@ Action API for encapsulating the command-generation of different named tasks.
 from abc import ABC, abstractmethod
 from typing import Iterator, Optional
 
-from .command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator
 
 
 class ActionCommandGenerator:

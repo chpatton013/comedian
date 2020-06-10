@@ -1,8 +1,8 @@
 from typing import Iterator, List, Optional, Set
 
-from .action import ActionCommandGenerator
-from .command import CommandGenerator
-from .graph import GraphNode
+from comedian.action import ActionCommandGenerator
+from comedian.command import CommandGenerator
+from comedian.graph import GraphNode
 
 
 class Specification(ActionCommandGenerator, GraphNode):

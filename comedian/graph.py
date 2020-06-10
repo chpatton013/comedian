@@ -24,7 +24,7 @@ from typing import (
     Set,
 )
 
-from .traits import __Debug__, __Eq__
+from comedian.traits import __Debug__, __Eq__
 
 __all__ = (
     "Graph",

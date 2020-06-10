@@ -113,8 +113,8 @@ LvmPhysicalVolume:
 import logging
 from typing import Any, Dict, Iterator, Mapping, Set, Tuple
 
-from .specification import Specification
-from .specifications import (
+from comedian.specification import Specification
+from comedian.specifications import (
     CryptVolume,
     Directory,
     File,

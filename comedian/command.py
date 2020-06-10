@@ -5,9 +5,9 @@ Command API for generating shell commands to be run on a system.
 from abc import ABC, abstractmethod
 from typing import Iterable, Iterator, List, Optional
 
-from .configuration import Configuration
-from .graph import Graph
-from .traits import __Debug__, __Eq__
+from comedian.configuration import Configuration
+from comedian.graph import Graph
+from comedian.traits import __Debug__, __Eq__
 
 
 class Command(__Debug__, __Eq__):

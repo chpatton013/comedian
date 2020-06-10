@@ -1,6 +1,6 @@
 import os
 
-from .traits import __Debug__, __Eq__
+from comedian.traits import __Debug__, __Eq__
 
 
 class Configuration(__Debug__, __Eq__):

@@ -1,7 +1,7 @@
 from typing import Iterator
 
-from ..command import Command, CommandContext, CommandGenerator
-from ..specification import Specification
+from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.specification import Specification
 
 
 class SwapVolumeApplyCommandGenerator(CommandGenerator):

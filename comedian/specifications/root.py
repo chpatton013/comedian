@@ -1,6 +1,6 @@
-from ..command import Command, CommandGenerator
-from ..graph import ResolveLink
-from ..specification import Specification
+from comedian.command import Command, CommandGenerator
+from comedian.graph import ResolveLink
+from comedian.specification import Specification
 
 
 class Root(Specification):

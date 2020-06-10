@@ -2,9 +2,9 @@ import os
 import shlex
 from typing import Iterable, Iterator, List, Optional
 
-from ..command import Command, CommandContext, CommandGenerator, mkdir
-from ..graph import ResolveLink
-from ..specification import Specification
+from comedian.command import Command, CommandContext, CommandGenerator, mkdir
+from comedian.graph import ResolveLink
+from comedian.specification import Specification
 
 
 class CryptVolumeApplyCommandGenerator(CommandGenerator):

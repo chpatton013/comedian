@@ -9,8 +9,8 @@ import subprocess
 from abc import ABC, abstractmethod
 from typing import Iterable
 
-from .command import Command
-from .specification import Specification
+from comedian.command import Command
+from comedian.specification import Specification
 
 __all__ = ("make_mode")
 

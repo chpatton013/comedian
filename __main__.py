@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import json
 import logging
@@ -5,12 +7,12 @@ import os
 import sys
 from typing import Any, Dict, Optional
 
-from .action import make_action
-from .command import Command, CommandContext
-from .configuration import Configuration
-from .graph import Graph
-from .mode import make_mode
-from .parse import parse
+from comedian.action import make_action
+from comedian.command import Command, CommandContext
+from comedian.configuration import Configuration
+from comedian.graph import Graph
+from comedian.mode import make_mode
+from comedian.parse import parse
 
 
 def load_config(configuration: str) -> Configuration:
@@ -86,4 +88,5 @@ def main():
             mode.on_command(command)
 
 
-main()
+if __name__ == "__main__":
+    main()
