@@ -46,7 +46,7 @@ class LoopDevice(Specification):
         self.args = args
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(None, _loop_device(self.specification.name))
+        return ResolveLink(None, _loop_device(self.name))
 
 
 def _loop_device(name: str) -> str:

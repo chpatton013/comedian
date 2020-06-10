@@ -100,6 +100,9 @@ class ResolveLink(__Debug__, __Eq__):
     def __iter__(self) -> Iterator[Any]:
         yield from (self.parent, self.value, self.join)
 
+    def __fields__(self) -> Iterator[str]:
+        yield from ("parent", "value")
+
 
 class GraphNode(__Debug__, __Eq__):
     """

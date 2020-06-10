@@ -1,3 +1,4 @@
+import os
 from typing import Iterator, Optional, Tuple
 
 from ..command import (
@@ -6,6 +7,7 @@ from ..command import (
     CommandGenerator,
     chmod,
     chown,
+    mkdir,
 )
 from ..graph import ResolveLink
 from ..specification import Specification
@@ -20,6 +22,7 @@ class FileApplyCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.name)
         )
 
+        yield mkdir(os.path.dirname(file_path))
         yield Command([
             "fallocate",
             "--length",

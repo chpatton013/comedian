@@ -24,7 +24,7 @@ class LvmVolumeGroupUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command(["vgcreate", "--activate", "y", self.specification.name])
+        yield Command(["vgchange", "--activate", "y", self.specification.name])
 
 
 class LvmVolumeGroupDownCommandGenerator(CommandGenerator):
@@ -32,7 +32,7 @@ class LvmVolumeGroupDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command(["vgcreate", "--activate", "n", self.specification.name])
+        yield Command(["vgchange", "--activate", "n", self.specification.name])
 
 
 class LvmVolumeGroup(Specification):

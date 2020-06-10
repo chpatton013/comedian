@@ -1,3 +1,5 @@
+import os
+import shlex
 from typing import Iterable, Iterator, List, Optional
 
 from ..command import Command, CommandContext, CommandGenerator, mkdir
@@ -95,10 +97,10 @@ class CryptVolume(Specification):
         self.password = password
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(None, _cryptdevice(self.name))
+        return ResolveLink(None, _crypt_device(self.name))
 
 
-def _cryptdevice(name: str) -> str:
+def _crypt_device(name: str) -> str:
     return f"/dev/mapper/{name}"
 
 
@@ -149,7 +151,7 @@ def _randomize_device(
     yield Command(
         _dd(
             f"if=/dev/zero",
-            f"of={_cryptdevice(cryptname)}",
+            f"of={_crypt_device(cryptname)}",
             f"bs={context.config.dd_bs}",
         )
     )
@@ -161,7 +163,7 @@ def _create_keyfile(
     keysize: str,
     context: CommandContext,
 ) -> Iterator[Command]:
-    yield mkdir(keyfile)
+    yield mkdir(os.path.dirname(keyfile))
     yield Command(
         _dd(
             f"if={context.config.random_device}",
@@ -191,10 +193,14 @@ def _format_crypt(
         )
     )
     if password:
-        yield Command(["echo", password, "|"] + _cryptsetup(
+        add_key_args = _cryptsetup(
             "--key-file",
             keyfile,
             "luksAddKey",
             device,
-        ))
+        )
+        add_key_cmd = " ".join([shlex.quote(arg) for arg in add_key_args])
+        yield Command([
+            context.config.shell, "-c", f"echo {password} | {add_key_cmd}"
+        ])
     yield Command(_open_crypt(name, device, keyfile))
