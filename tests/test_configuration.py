@@ -8,6 +8,7 @@ from comedian.configuration import Configuration
 class ConfigurationTest(unittest.TestCase):
     def setUp(self):
         self.configuration = Configuration(
+            shell="shell",
             dd_bs="dd_bs",
             random_device="random_device",
             media_dir="media_dir",
@@ -15,6 +16,7 @@ class ConfigurationTest(unittest.TestCase):
         )
 
     def test_values(self):
+        self.assertEqual("shell", self.configuration.shell)
         self.assertEqual("dd_bs", self.configuration.dd_bs)
         self.assertEqual("random_device", self.configuration.random_device)
         self.assertEqual("media_dir", self.configuration.media_dir)

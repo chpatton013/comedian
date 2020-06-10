@@ -26,6 +26,7 @@ class TestCommandGenerator(CommandGenerator):
 class ActionTest(unittest.TestCase):
     def setUp(self):
         configuration = Configuration(
+            shell="shell",
             dd_bs="dd_bs",
             random_device="random_device",
             media_dir="media_dir",

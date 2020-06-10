@@ -13,6 +13,7 @@ class CommandTest(unittest.TestCase):
 
     def test_command_context(self):
         configuration = Configuration(
+            shell="shell",
             dd_bs="dd_bs",
             random_device="random_device",
             media_dir="media_dir",
