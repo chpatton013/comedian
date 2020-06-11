@@ -39,6 +39,13 @@ not run them.
 `shell`: This mode outputs the commands that would be run to stdout in the
 format of a shell script.
 
+### Output
+
+By default `comedian` will product some modest output while running. You can
+control this with one of the `--debug` or `--quiet` command-line flags.
+`--debug` will enable far more logging output, while `--quiet` will trim the
+output down to error-reporting only.
+
 ### Actions
 
 `comedian` can perform one of three actions: `apply`, `up`, or `down`. The
