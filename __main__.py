@@ -28,7 +28,10 @@ def load_spec(specification: Optional[str]) -> Dict[str, Any]:
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog="comedian",
+        description="Configuration-driven media preparation",
+    )
     parser.add_argument(
         "action",
         choices=("apply", "up", "down"),
