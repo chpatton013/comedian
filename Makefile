@@ -6,15 +6,15 @@ clean:
 	rm --force ./comedian.spec
 
 dist:
-	@pip3 install --requirement requirements.txt
-	@python3 -OO -m PyInstaller \
+	pip3 install --requirement requirements.txt
+	python3 -OO -m PyInstaller \
       --onefile \
       --add-data=default.config.json:. \
       --name=comedian \
       ./__main__.py
 
 example:
-	@./__main__.py apply ./example.spec.json --mode=shell --quiet
+	./__main__.py apply ./example.spec.json --mode=shell --quiet
 
 test:
-	@cd tests && python3 -m unittest
+	cd tests && python3 -m unittest
