@@ -71,21 +71,17 @@ def main():
     logging.basicConfig(level=args.log_level)
 
     config = load_config(args.config)
+    graph = Graph(parse(load_spec(args.specification)))
 
-    spec = load_spec(args.specification)
-    specifications = list(parse(spec))
-
-    graph = Graph(specifications)
-
-    context = CommandContext(config, graph)
-    action = make_action(args.action, context)
-
+    action = make_action(args.action, CommandContext(config, graph))
     mode = make_mode(args.mode)
 
+    mode.on_begin()
     for specification in graph.walk():
         mode.on_specification(specification)
         for command in action(specification):
             mode.on_command(command)
+    mode.on_end()
 
 
 if __name__ == "__main__":
