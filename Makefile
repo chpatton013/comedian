@@ -10,6 +10,7 @@ dist:
 	python3 -OO -m PyInstaller \
       --onefile \
       --add-data=default.config.json:. \
+      --add-data=README.md:. \
       --name=comedian \
       ./__main__.py
 

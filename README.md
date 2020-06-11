@@ -14,8 +14,8 @@ configuration imaginable, and mutate the media to match.
 directly (`comedian ...`), or with Python (`python comedian ...`).
 
 ```
-comedian [-h] [--config CONFIG] [--mode {exec,dryrun,shell}]
-         [--debug | --quiet]
+comedian [-h] [--doc] [--version] [--config CONFIG]
+         [--mode {exec,dryrun,shell}] [--debug | --quiet]
          {apply,up,down} specification
 ```
 

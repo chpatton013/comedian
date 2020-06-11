@@ -12,11 +12,37 @@ from comedian.configuration import Configuration
 from comedian.graph import Graph
 from comedian.parse import parse
 
+COMEDIAN_VERSION = "0.0.1"
 
-def parse_args(default_config_path: str, argv: List[str]) -> argparse.Namespace:
+README_PATH = os.path.join(os.path.dirname(__file__), "README.md")
+
+DEFAULT_CONFIG_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "default.config.json",
+)
+
+
+class DocumentationAction(argparse.Action):
+    def __init__(self, option_strings, dest, **kwargs):
+        super().__init__(option_strings, dest, nargs=0, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        with open(README_PATH, "r") as f:
+            print(f.read())
+        parser.exit()
+
+
+def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="comedian",
         description="Configuration-driven media preparation",
+    )
+    parser.register("action", "doc", DocumentationAction)
+    parser.add_argument("--doc", action="doc")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {COMEDIAN_VERSION}",
     )
     parser.add_argument(
         "action",
@@ -30,8 +56,8 @@ def parse_args(default_config_path: str, argv: List[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--config",
-        default=default_config_path,
-        help=f"Path to configuration file (default: {default_config_path})",
+        default=DEFAULT_CONFIG_PATH,
+        help=f"Path to configuration file (default: {DEFAULT_CONFIG_PATH})",
     )
     parser.add_argument(
         "--mode",
@@ -72,11 +98,7 @@ def load_spec(specification: Optional[str]) -> Dict[str, Any]:
 
 
 def main(argv):
-    default_config_path = os.path.join(
-        os.path.dirname(__file__),
-        "default.config.json",
-    )
-    args = parse_args(default_config_path, argv)
+    args = parse_args(argv)
 
     logging.basicConfig(level=args.log_level)
 
