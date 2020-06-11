@@ -5,14 +5,58 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
-from comedian.action import make_action
-from comedian.command import Command, CommandContext
+from comedian import run
 from comedian.configuration import Configuration
 from comedian.graph import Graph
-from comedian.mode import make_mode
 from comedian.parse import parse
+
+
+def parse_args(default_config_path: str, argv: List[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="comedian",
+        description="Configuration-driven media preparation",
+    )
+    parser.add_argument(
+        "action",
+        choices=("apply", "up", "down"),
+        help="Action to perform",
+    )
+    parser.add_argument(
+        "specification",
+        default=None,
+        help="Path to specification file (default: stdin)",
+    )
+    parser.add_argument(
+        "--config",
+        default=default_config_path,
+        help=f"Path to configuration file (default: {default_config_path})",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=("exec", "dryrun", "shell"),
+        default="shell",
+        help="Operational mode for the chosen action (default: shell)",
+    )
+    log_level_group = parser.add_mutually_exclusive_group()
+    log_level_group.add_argument(
+        "--debug",
+        action="store_const",
+        const=logging.DEBUG,
+        dest="log_level",
+        help="Show debug log messages (default: info, warning, and error)",
+    )
+    log_level_group.add_argument(
+        "--quiet",
+        action="store_const",
+        const=logging.WARNING,
+        dest="log_level",
+        help=
+        "Only show warning and error log messages (default: info, warning, and error)",
+    )
+    parser.set_defaults(log_level=logging.INFO)
+    return parser.parse_args(argv)
 
 
 def load_config(configuration: str) -> Configuration:
@@ -27,65 +71,22 @@ def load_spec(specification: Optional[str]) -> Dict[str, Any]:
         return json.load(f)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog="comedian",
-        description="Configuration-driven media preparation",
+def main(argv):
+    default_config_path = os.path.join(
+        os.path.dirname(__file__),
+        "default.config.json",
     )
-    parser.add_argument(
-        "action",
-        choices=("apply", "up", "down"),
-        help="Action to perform",
-    )
-    parser.add_argument(
-        "specification",
-        default=None,
-        help="Path to specification file",
-    )
-    parser.add_argument(
-        "--config",
-        default=os.path.join(os.path.dirname(__file__), "default.config.json"),
-        help="Path to configuration file",
-    )
-    parser.add_argument(
-        "--mode",
-        choices=("exec", "dryrun", "shell"),
-        default="shell",
-        help="Operational mode of comedian tool",
-    )
-    log_level_group = parser.add_mutually_exclusive_group()
-    log_level_group.add_argument(
-        "--debug",
-        action="store_const",
-        const=logging.DEBUG,
-        dest="log_level",
-        help="Show debug log messages",
-    )
-    log_level_group.add_argument(
-        "--quiet",
-        action="store_const",
-        const=logging.WARNING,
-        dest="log_level",
-        help="Only show warning and error log messages",
-    )
-    parser.set_defaults(log_level=logging.INFO)
-    args = parser.parse_args()
+    args = parse_args(default_config_path, argv)
 
     logging.basicConfig(level=args.log_level)
 
     config = load_config(args.config)
     graph = Graph(parse(load_spec(args.specification)))
 
-    action = make_action(args.action, CommandContext(config, graph))
-    mode = make_mode(args.mode)
+    run(config, graph, args.action, args.mode)
 
-    mode.on_begin()
-    for specification in graph.walk():
-        mode.on_specification(specification)
-        for command in action(specification):
-            mode.on_command(command)
-    mode.on_end()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
