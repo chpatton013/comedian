@@ -23,12 +23,13 @@ class FileApplyCommandGenerator(CommandGenerator):
         )
 
         yield mkdir(os.path.dirname(file_path))
-        yield Command([
-            "fallocate",
-            "--length",
-            self.specification.size,
-            file_path,
-        ])
+        if self.specification.size:
+            yield Command([
+                "fallocate",
+                "--length",
+                self.specification.size,
+                file_path,
+            ])
         if self.specification.owner or self.specification.group:
             yield chown(
                 self.specification.owner,
