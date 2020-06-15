@@ -104,6 +104,12 @@ class ResolveLink(__Debug__, __Eq__):
         yield from ("parent", "value")
 
 
+class ResolveResult(__Debug__, __Eq__):
+    def __init__(self, path: Optional[str], join: Callable[[str, str], str]):
+        self.path = path
+        self.join = join
+
+
 class GraphNode(__Debug__, __Eq__):
     """
     A single node within a Graph, consisting of a unique name, a list of
@@ -204,11 +210,7 @@ class Graph(__Debug__):
 
         logging.debug("Graph.resolve_device %s", name)
 
-        return self._resolve(
-            name,
-            lambda node: node.resolve_device(),
-            lambda name: self.resolve_device(name),
-        )
+        return self._resolve_device(name).path
 
     def resolve_path(self, name: str) -> Optional[str]:
         """
@@ -218,18 +220,28 @@ class Graph(__Debug__):
 
         logging.debug("Graph.resolve_path %s", name)
 
+        return self._resolve_path(name).path
+
+    def _resolve_device(self, name: str) -> ResolveResult:
+        return self._resolve(
+            name,
+            lambda node: node.resolve_device(),
+            lambda name: self._resolve_device(name),
+        )
+
+    def _resolve_path(self, name: str) -> ResolveResult:
         return self._resolve(
             name,
             lambda node: node.resolve_path(),
-            lambda name: self.resolve_path(name),
+            lambda name: self._resolve_path(name),
         )
 
     def _resolve(
         self,
         name: str,
         node_resolve: Callable[[str], ResolveLink],
-        graph_resolve: Callable[[str], Optional[str]],
-    ) -> Optional[str]:
+        graph_resolve: Callable[[str], ResolveResult],
+    ) -> ResolveResult:
         # Ensure that the node exists.
         try:
             node = self._nodes[name]
@@ -244,18 +256,24 @@ class Graph(__Debug__):
             link.parent not in node.references
         ):
             raise GraphResolveError(link.parent)
-        parent_path = graph_resolve(link.parent) if link.parent else None
+        if link.parent:
+            parent_result = graph_resolve(link.parent)
+        else:
+            parent_result = ResolveResult(None, link.join)
 
-        logging.debug(" --> %s %s", parent_path, link.value)
+        logging.debug(" --> %s %s", parent_result.path, link.value)
 
         # Produce a resultant resolved path by joining the parent-path and
         # current-path if they are both set. Otherwise, return the one that is
         # set (or None if neither).
-        if parent_path and link.value:
-            return link.join(parent_path, link.value)
-        elif parent_path:
-            return parent_path
+        if parent_result.path and link.value:
+            return ResolveResult(
+                parent_result.join(parent_result.path, link.value),
+                link.join,
+            )
+        elif parent_result.path:
+            return ResolveResult(parent_result.path, link.join)
         elif link.value:
-            return link.value
+            return ResolveResult(link.value, link.join)
         else:
-            return None
+            return ResolveResult(None, link.join)

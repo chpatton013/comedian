@@ -14,6 +14,7 @@ class GptPartitionTableTest(SpecificationTestBase, unittest.TestCase):
             GptPartitionTable(
                 name="name",
                 device="device",
+                glue="glue",
             ),
         )
         unittest.TestCase.__init__(self, *args, **kwargs)
@@ -23,10 +24,11 @@ class GptPartitionTableTest(SpecificationTestBase, unittest.TestCase):
         self.assertListEqual(["device"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
+        self.assertEqual("glue", self.specification.glue)
 
     def test_resolve(self):
         self.assertEqual(
-            ResolveLink("device", None),
+            ResolveLink("device", None, "glue"),
             self.specification.resolve_device(),
         )
         self.assertEqual(

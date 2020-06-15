@@ -55,6 +55,7 @@ BlockDevice:
 
 GptPartitionTable:
     "name": str
+    "glue": str ?
     "gpt_partitions": GptPartition +
 
 GptPartition:
@@ -385,6 +386,7 @@ def parse_gpt_partition_table(
         "GptPartitionTable",
         spec,
         required={"name", "device", "gpt_partitions"},
+        allowed={"glue"},
     )
 
     partition_table_name = spec["name"]
@@ -392,6 +394,7 @@ def parse_gpt_partition_table(
     yield GptPartitionTable(
         name=partition_table_name,
         device=device_name,
+        glue=spec.get("glue"),
     )
 
     for index, partition_spec in enumerate(spec["gpt_partitions"]):

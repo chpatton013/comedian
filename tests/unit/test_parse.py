@@ -86,6 +86,8 @@ SPEC = {
         {
             "name": "sda",
             "gpt_partition_table": {
+                "glue":
+                    "p",
                 "gpt_partitions": [
                     {
                         "type": "primary",
@@ -182,7 +184,7 @@ class ParseRootTest(ParseTestBase):
         expected = [
             Root(),
             PhysicalDevice("sda"),
-            GptPartitionTable(name="sda:gpt", device="sda"),
+            GptPartitionTable(name="sda:gpt", device="sda", glue="p"),
             GptPartition(
                 name="sda:gpt:1",
                 partition_table="sda:gpt",

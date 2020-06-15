@@ -168,6 +168,24 @@ class GraphResolveTest(unittest.TestCase):
 
                 self.assertEqual("x/y", graph_resolve(graph, "a"))
 
+    def test_successful_recursive_resolve_with_join(self):
+        for msg, kw, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+            node_factory = make_node_factory(kw)
+            with self.subTest(msg=msg, kw=kw):
+                a = node_factory(
+                    "a", ["b"],
+                    resolve=ResolveLink("b", "y", lambda l, r: f"{l}j{r}")
+                )
+                b = node_factory(
+                    "b", [],
+                    resolve=ResolveLink(None, "x", lambda l, r: f"{l}i{r}")
+                )
+
+                nodes = [a, b]
+                graph = Graph(nodes)
+
+                self.assertEqual("xiy", graph_resolve(graph, "a"))
+
 
 class GraphWalkTest(unittest.TestCase):
     def test_empty(self):

@@ -63,9 +63,7 @@ class GptPartition(Specification):
         self.flags = flags
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(
-            self.partition_table, str(self.number), lambda x, y: x + y
-        )
+        return ResolveLink(self.partition_table, str(self.number))
 
 
 def _parted(*args: Iterable[str]) -> List[str]:
