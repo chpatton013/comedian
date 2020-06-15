@@ -1,3 +1,4 @@
 /build/
-/dist/
 /comedian.spec
+/dist/
+__pycache__/
