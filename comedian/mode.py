@@ -91,7 +91,7 @@ class ShellMode(Mode):
     """
     def on_begin(self):
         print("#!/usr/bin/bash")
-        print("set -euo pipefail")
+        print("set -xeuo pipefail")
 
     def on_specification(self, spec: Specification):
         logging.info("%s", spec)

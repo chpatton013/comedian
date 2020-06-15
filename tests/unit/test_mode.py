@@ -111,7 +111,7 @@ class ModeTest(unittest.TestCase):
         self.subprocess_check_call.assert_not_called()
         self.print.assert_called()
         self.assertEqual(
-            f"#!/usr/bin/bash\nset -euo pipefail\n",
+            f"#!/usr/bin/bash\nset -xeuo pipefail\n",
             self.print.side_effect.buffer,
         )
 
