@@ -1,4 +1,4 @@
-from typing import Iterator, List
+from typing import Iterable, Iterator, List
 
 from comedian.command import Command, CommandContext, CommandGenerator
 from comedian.graph import ResolveLink
@@ -15,8 +15,13 @@ class FilesystemApplyCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.mountpoint)
         )
 
-        yield Command(["mkfs", "--type", self.specification.type] +
-                      self.specification.options + [device_path])
+        yield Command(
+            _mkfs(
+                device_path,
+                self.specification.type,
+                self.specification.options,
+            )
+        )
         yield Command(_mount_fs(device_path, mountpoint_path))
 
 
@@ -25,7 +30,7 @@ class FilesystemUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = context.graph.resolve_path(self.specification.device)
+        device_path = context.graph.resolve_device(self.specification.device)
         mountpoint_path = context.config.media_path(
             context.graph.resolve_path(self.specification.mountpoint)
         )
@@ -38,9 +43,11 @@ class FilesystemDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = context.graph.resolve_path(self.specification.device)
+        mountpoint_path = context.config.media_path(
+            context.graph.resolve_path(self.specification.mountpoint)
+        )
 
-        yield Command(_umount_fs(device_path))
+        yield Command(_umount_fs(mountpoint_path))
 
 
 class Filesystem(Specification):
@@ -69,6 +76,10 @@ class Filesystem(Specification):
 
     def resolve_path(self) -> ResolveLink:
         return ResolveLink(self.mountpoint, None)
+
+
+def _mkfs(device: str, type: str, options: Iterable[str]) -> List[str]:
+    return ["mkfs", "--type", type] + list(options) + [device]
 
 
 def _mount_fs(device: str, mountpoint: str) -> List[str]:

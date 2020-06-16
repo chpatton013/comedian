@@ -62,7 +62,7 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
 
     def test_down_commands(self):
         expected = [
-            Command(["umount", "device"]),
+            Command(["umount", "media_dir/mountpoint"]),
         ]
         self.assertListEqual(
             expected,
