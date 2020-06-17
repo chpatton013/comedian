@@ -1,0 +1,23 @@
+{
+  "physical_devices": [
+    {
+      "name": "{{sda}}",
+      "gpt_partition_table": {
+        "glue": "p",
+        "gpt_partitions": [
+          {
+            "type": "primary",
+            "start": "1MB",
+            "end": "-1",
+            "label": "root",
+            "filesystem": {
+              "name": "fsroot",
+              "mountpoint": "/",
+              "type": "ext4"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
