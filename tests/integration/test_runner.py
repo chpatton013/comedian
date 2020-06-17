@@ -9,6 +9,8 @@ from typing import Dict, Iterable
 COMEDIAN_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..")
 )
+RUNTIME_DATA_DIR = COMEDIAN_ROOT
+SRC_DIR = os.path.join(COMEDIAN_ROOT, "src")
 TEST_CASES_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "cases")
 )
@@ -128,7 +130,7 @@ class TestRunner(unittest.TestCase, TestCase):
         if os.path.isfile(self._test_case.config_path()):
             return self._test_case.config_path()
         else:
-            return os.path.join(COMEDIAN_ROOT, "default.config.json")
+            return os.path.join(RUNTIME_DATA_DIR, "default.config.json")
 
     def find_assertion_file(self, path) -> str:
         assertion_file = os.path.join(COMEDIAN_ROOT, path)
@@ -164,7 +166,7 @@ class TestRunner(unittest.TestCase, TestCase):
 
         def _comedian_command(mode: str, action: str):
             return comedian_command(
-                COMEDIAN_ROOT,
+                SRC_DIR,
                 config_file,
                 mode,
                 action,

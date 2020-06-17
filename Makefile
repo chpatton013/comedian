@@ -7,7 +7,7 @@ dist:
 	  --add-data=default.config.json:. \
 	  --add-data=README.md:. \
 	  --name=comedian \
-	  ./__main__.py
+	  ./src/__main__.py
 
 clean:
 	rm --recursive --force ./build
