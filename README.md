@@ -79,6 +79,36 @@ make dist
 This will create (among other things) the output file `./dist/comedian` which is
 a self-contained executable that you can redeploy to any Linux machine.
 
+## Tests
+
+`comedian` has several different test suites, each with their own intent and
+requirements. Some of these test suites must be run as `root` because they make
+changes to the system they are running on. It is recommended that you run these
+tests in VM - such as the one provided by this project's [Vagrantfile]().
+
+You can use Vagrant for this purpose with the following commands:
+
+```
+vagrant up --provision
+vagrant ssh
+cd /vagrant
+sudo su
+```
+
+You can invoke all tests with a single command:
+
+```
+make test
+```
+
+Or you can invoke specific test suites explicitly:
+
+```
+make unit_test
+make integration_test
+make dist_test
+```
+
 ## License
 
 `comedian` is licensed under either of
