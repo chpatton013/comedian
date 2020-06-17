@@ -28,7 +28,7 @@ class DocumentationAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         with open(README_PATH, "r") as f:
-            print(f.read())
+            print(f.read().rstrip())
         parser.exit()
 
 
