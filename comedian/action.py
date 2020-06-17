@@ -3,9 +3,30 @@ Action API for encapsulating the command-generation of different named tasks.
 """
 
 from abc import ABC, abstractmethod
-from typing import Iterator, Optional
+from typing import Iterable, Iterator, Optional
 
 from comedian.command import Command, CommandContext, CommandGenerator
+
+
+class ActionCommandHandler(ABC):
+    """
+    Base class for all objects that will handle commands for Actions.
+    """
+    @abstractmethod
+    def on_begin(self):
+        pass
+
+    @abstractmethod
+    def on_generator(self, generator: CommandGenerator):
+        pass
+
+    @abstractmethod
+    def on_command(self, command: Command):
+        pass
+
+    @abstractmethod
+    def on_end(self):
+        pass
 
 
 class ActionCommandGenerator:
@@ -58,7 +79,11 @@ class Action(ABC):
     Base class for all objects that will encapsule command-generation.
     """
     @abstractmethod
-    def __call__(self, generator: ActionCommandGenerator) -> Iterator[Command]:
+    def __call__(
+        self,
+        handler: ActionCommandHandler,
+        generators: ActionCommandGenerator,
+    ):
         pass
 
 
@@ -83,9 +108,28 @@ class ApplyAction(Action):
     def __init__(self, context: CommandContext):
         self.context = context
 
-    def __call__(self, generator: ActionCommandGenerator) -> Iterator[Command]:
-        yield from generator.generate_apply_commands(self.context)
-        yield from generator.generate_post_apply_commands(self.context)
+    def __call__(
+        self,
+        handler: ActionCommandHandler,
+        generators: Iterable[ActionCommandGenerator],
+    ):
+        generators_sequence = list(generators)
+
+        handler.on_begin()
+
+        for specification in generators_sequence:
+            handler.on_generator(specification)
+            for command in specification.generate_apply_commands(self.context):
+                handler.on_command(command)
+
+        for specification in generators_sequence:
+            handler.on_generator(specification)
+            for command in specification.generate_post_apply_commands(
+                self.context
+            ):
+                handler.on_command(command)
+
+        handler.on_end()
 
 
 class UpAction(Action):
@@ -95,8 +139,19 @@ class UpAction(Action):
     def __init__(self, context: CommandContext):
         self.context = context
 
-    def __call__(self, generator: ActionCommandGenerator) -> Iterator[Command]:
-        yield from generator.generate_up_commands(self.context)
+    def __call__(
+        self,
+        handler: ActionCommandHandler,
+        generators: Iterable[ActionCommandGenerator],
+    ):
+        handler.on_begin()
+
+        for generator in generators:
+            handler.on_generator(generator)
+            for command in generator.generate_up_commands(self.context):
+                handler.on_command(command)
+
+        handler.on_end()
 
 
 class DownAction(Action):
@@ -106,5 +161,16 @@ class DownAction(Action):
     def __init__(self, context: CommandContext):
         self.context = context
 
-    def __call__(self, generator: ActionCommandGenerator) -> Iterator[Command]:
-        yield from generator.generate_down_commands(self.context)
+    def __call__(
+        self,
+        handler: ActionCommandHandler,
+        generators: Iterable[ActionCommandGenerator],
+    ):
+        handler.on_begin()
+
+        for generator in reversed(list(generators)):
+            handler.on_generator(generator)
+            for command in generator.generate_down_commands(self.context):
+                handler.on_command(command)
+
+        handler.on_end()

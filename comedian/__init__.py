@@ -13,10 +13,4 @@ def run(
 ):
     action = make_action(action_name, CommandContext(config, graph))
     mode = make_mode(mode_name)
-
-    mode.on_begin()
-    for specification in graph.walk():
-        mode.on_specification(specification)
-        for command in action(specification):
-            mode.on_command(command)
-    mode.on_end()
+    action(mode, graph.walk())

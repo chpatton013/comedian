@@ -1,6 +1,6 @@
 """
-Mode API for encapsulating the Specification and Command handling of different
-named operational modes.
+Mode API for encapsulating the Generator and Command handling of different named
+operational modes.
 """
 
 import logging
@@ -9,31 +9,17 @@ import subprocess
 from abc import ABC, abstractmethod
 from typing import Iterable
 
+from comedian.action import ActionCommandHandler, ActionCommandGenerator
 from comedian.command import Command
-from comedian.specification import Specification
 
 __all__ = ("make_mode")
 
 
-class Mode(ABC):
+class Mode(ActionCommandHandler):
     """
-    Base class for all objects that will handle Specifications and Commands.
+    Base class for all objects that will handle Generators and Commands.
     """
-    @abstractmethod
-    def on_begin(self):
-        pass
-
-    @abstractmethod
-    def on_specification(self, spec: Specification):
-        pass
-
-    @abstractmethod
-    def on_command(self, command: Command):
-        pass
-
-    @abstractmethod
-    def on_end(self):
-        pass
+    pass
 
 
 def make_mode(name: str) -> Mode:
@@ -57,8 +43,8 @@ class ExecMode(Mode):
     def on_begin(self):
         pass
 
-    def on_specification(self, spec: Specification):
-        logging.info("%s", spec)
+    def on_generator(self, generator: ActionCommandGenerator):
+        logging.info("%s", generator)
 
     def on_command(self, command: Command):
         logging.info("%s", command)
@@ -75,8 +61,8 @@ class DryrunMode(Mode):
     def on_begin(self):
         pass
 
-    def on_specification(self, spec: Specification):
-        logging.info("%s", spec)
+    def on_generator(self, generator: ActionCommandGenerator):
+        logging.info("%s", generator)
 
     def on_command(self, command: Command):
         logging.info("%s", command)
@@ -93,10 +79,10 @@ class ShellMode(Mode):
         print("#!/usr/bin/bash")
         print("set -xeuo pipefail")
 
-    def on_specification(self, spec: Specification):
-        logging.info("%s", spec)
+    def on_generator(self, generator: ActionCommandGenerator):
+        logging.info("%s", generator)
         print()
-        print("#", spec)
+        print("#", generator)
 
     def on_command(self, command: Command):
         logging.info("%s", command)

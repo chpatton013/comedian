@@ -1,5 +1,6 @@
 import unittest
-from typing import Iterable, Iterator
+from unittest.mock import MagicMock, call
+from typing import Any, Iterable, Iterator, Mapping
 
 from context import comedian
 
@@ -13,6 +14,16 @@ from comedian.action import (
 from comedian.command import Command, CommandContext, CommandGenerator
 from comedian.configuration import Configuration
 from comedian.graph import Graph
+from comedian.traits import __Debug__, __Eq__
+
+
+class TestActionCommandGenerator(ActionCommandGenerator, __Debug__, __Eq__):
+    def __init__(self, name: str, **kwargs: Mapping[str, Any]):
+        super().__init__(**kwargs)
+        self.name = name
+
+    def __fields__(self) -> Iterator[str]:
+        yield "name"
 
 
 class TestCommandGenerator(CommandGenerator):
@@ -35,12 +46,46 @@ class ActionTest(unittest.TestCase):
         graph = Graph([])
         self.context = CommandContext(configuration, graph)
 
-        self.generator = ActionCommandGenerator(
-            apply=TestCommandGenerator([Command(["apply"])]),
-            post_apply=TestCommandGenerator([Command(["post_apply"])]),
-            up=TestCommandGenerator([Command(["up"])]),
-            down=TestCommandGenerator([Command(["down"])]),
-        )
+        self.generators = [
+            TestActionCommandGenerator(
+                "gen_1",
+                apply=TestCommandGenerator([
+                    Command(["apply_1"]),
+                    Command(["apply_2"]),
+                ]),
+                post_apply=TestCommandGenerator([
+                    Command(["post_apply_1"]),
+                    Command(["post_apply_2"]),
+                ]),
+                up=TestCommandGenerator([
+                    Command(["up_1"]),
+                    Command(["up_2"]),
+                ]),
+                down=TestCommandGenerator([
+                    Command(["down_1"]),
+                    Command(["down_2"]),
+                ]),
+            ),
+            TestActionCommandGenerator(
+                "gen_2",
+                apply=TestCommandGenerator([
+                    Command(["apply_3"]),
+                    Command(["apply_4"]),
+                ]),
+                post_apply=TestCommandGenerator([
+                    Command(["post_apply_3"]),
+                    Command(["post_apply_4"]),
+                ]),
+                up=TestCommandGenerator([
+                    Command(["up_3"]),
+                    Command(["up_4"]),
+                ]),
+                down=TestCommandGenerator([
+                    Command(["down_3"]),
+                    Command(["down_4"]),
+                ]),
+            ),
+        ]
 
     def test_empty_generator(self):
         generator = ActionCommandGenerator()
@@ -53,41 +98,84 @@ class ActionTest(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(generator.generate_down_commands(self.context))
 
-    def test_full_generator(self):
+    def test_non_empty_generator(self):
         self.assertListEqual(
-            [Command(["apply"])],
-            list(self.generator.generate_apply_commands(self.context)),
+            [Command(["apply_1"]), Command(["apply_2"])],
+            list(self.generators[0].generate_apply_commands(self.context)),
         )
         self.assertListEqual(
-            [Command(["post_apply"])],
-            list(self.generator.generate_post_apply_commands(self.context)),
+            [Command(["post_apply_1"]),
+             Command(["post_apply_2"])],
+            list(self.generators[0].generate_post_apply_commands(self.context)),
         )
         self.assertListEqual(
-            [Command(["up"])],
-            list(self.generator.generate_up_commands(self.context)),
+            [Command(["up_1"]), Command(["up_2"])],
+            list(self.generators[0].generate_up_commands(self.context)),
         )
         self.assertListEqual(
-            [Command(["down"])],
-            list(self.generator.generate_down_commands(self.context)),
+            [Command(["down_1"]), Command(["down_2"])],
+            list(self.generators[0].generate_down_commands(self.context)),
         )
 
     def test_apply_commands(self):
-        self.assertListEqual(
-            [Command(["apply"]), Command(["post_apply"])],
-            list(ApplyAction(self.context)(self.generator)),
-        )
+        handler = MagicMock()
+
+        ApplyAction(self.context)(handler, self.generators)
+
+        handler.on_begin.assert_called_once_with()
+        handler.on_generator.assert_has_calls([
+            call(TestActionCommandGenerator("gen_1")),
+            call(TestActionCommandGenerator("gen_2")),
+            call(TestActionCommandGenerator("gen_1")),
+            call(TestActionCommandGenerator("gen_2")),
+        ])
+        handler.on_command.assert_has_calls([
+            call(Command(["apply_1"])),
+            call(Command(["apply_2"])),
+            call(Command(["apply_3"])),
+            call(Command(["apply_4"])),
+            call(Command(["post_apply_1"])),
+            call(Command(["post_apply_2"])),
+            call(Command(["post_apply_3"])),
+            call(Command(["post_apply_4"])),
+        ])
+        handler.on_end.assert_called_once_with()
 
     def test_up_commands(self):
-        self.assertListEqual(
-            [Command(["up"])],
-            list(UpAction(self.context)(self.generator)),
-        )
+        handler = MagicMock()
+
+        UpAction(self.context)(handler, self.generators)
+
+        handler.on_begin.assert_called_once_with()
+        handler.on_generator.assert_has_calls([
+            call(TestActionCommandGenerator("gen_1")),
+            call(TestActionCommandGenerator("gen_2")),
+        ])
+        handler.on_command.assert_has_calls([
+            call(Command(["up_1"])),
+            call(Command(["up_2"])),
+            call(Command(["up_3"])),
+            call(Command(["up_4"])),
+        ])
+        handler.on_end.assert_called_once_with()
 
     def test_down_commands(self):
-        self.assertListEqual(
-            [Command(["down"])],
-            list(DownAction(self.context)(self.generator)),
-        )
+        handler = MagicMock()
+
+        DownAction(self.context)(handler, self.generators)
+
+        handler.on_begin.assert_called_once_with()
+        handler.on_generator.assert_has_calls([
+            call(TestActionCommandGenerator("gen_2")),
+            call(TestActionCommandGenerator("gen_1")),
+        ])
+        handler.on_command.assert_has_calls([
+            call(Command(["down_3"])),
+            call(Command(["down_4"])),
+            call(Command(["down_1"])),
+            call(Command(["down_2"])),
+        ])
+        handler.on_end.assert_called_once_with()
 
     def test_make_action(self):
         self.assertEqual(
