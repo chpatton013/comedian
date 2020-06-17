@@ -13,7 +13,7 @@ from comedian.graph import Graph
 from comedian.parse import parse
 
 
-def runtime_data_dir():
+def runtime_dir():
     script_dir = os.path.abspath(os.path.dirname(__file__))
     if getattr(sys, "frozen", False):
         return script_dir
@@ -23,9 +23,9 @@ def runtime_data_dir():
 
 COMEDIAN_VERSION = "0.0.1"
 
-README_PATH = os.path.join(runtime_data_dir(), "README.md")
+README_PATH = os.path.join(runtime_dir(), "README.md")
 
-DEFAULT_CONFIG_PATH = os.path.join(runtime_data_dir(), "default.config.json")
+DEFAULT_CONFIG_PATH = os.path.join(runtime_dir(), "data", "default.config.json")
 
 
 class DocumentationAction(argparse.Action):

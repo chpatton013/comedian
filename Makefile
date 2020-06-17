@@ -4,7 +4,7 @@ dist:
 	pip3 install --requirement dist_requirements.txt
 	python3 -OO -m PyInstaller \
 	  --onefile \
-	  --add-data=default.config.json:. \
+	  --add-data=data/default.config.json:data/ \
 	  --add-data=README.md:. \
 	  --name=comedian \
 	  ./src/__main__.py

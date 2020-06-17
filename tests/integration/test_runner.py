@@ -9,7 +9,7 @@ from typing import Dict, Iterable
 COMEDIAN_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..")
 )
-RUNTIME_DATA_DIR = COMEDIAN_ROOT
+RUNTIME_DATA_DIR = os.path.join(COMEDIAN_ROOT, "data")
 SRC_DIR = os.path.join(COMEDIAN_ROOT, "src")
 TEST_CASES_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "cases")
