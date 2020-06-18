@@ -23,7 +23,7 @@ comedian [-h] [--doc] [--version] [--config CONFIG]
 
 `comedian` can be configured with a JSON config file, which can be specified
 with the `--config` command-line argument. By default a [standard config
-file](comedian/default.config.json) is loaded if no other file is specified.
+file](data/default.config.json) is loaded if no other file is specified.
 
 ### Modes
 
@@ -66,7 +66,7 @@ deactivating, etc ell elements in the specification.
 positional command-line argument. This file describes the way to identify and
 prepare your media. The complete specification format is documented
 [here](SPECIFICATION_FORMAT.md). An [example specification
-file](example.spec.json) has been provided.
+file](data/example.spec.json) has been provided.
 
 ## Packaging / Distribution
 
@@ -85,7 +85,8 @@ a self-contained executable that you can redeploy to any Linux machine.
 `comedian` has several different test suites, each with their own intent and
 requirements. Some of these test suites must be run as `root` because they make
 changes to the system they are running on. It is recommended that you run these
-tests in VM - such as the one provided by this project's [Vagrantfile]().
+tests in VM - such as the one provided by this project's
+[Vagrantfile](Vagrantfile).
 
 You can use Vagrant for this purpose with the following commands:
 
@@ -112,10 +113,11 @@ make dist_test
 
 ## License
 
-`comedian` is licensed under either of
+`comedian` is licensed under either of the following, at your option:
 
-* Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT) at your option.
+* Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+  http://www.apache.org/licenses/LICENSE-2.0)
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 ## Contributing
 
