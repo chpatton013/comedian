@@ -62,10 +62,11 @@ deactivating, etc ell elements in the specification.
 
 ### Specification
 
-`comedian` loads a specification from a JSON that you provide using last
+`comedian` loads a specification from a JSON file that you provide using last
 positional command-line argument. This file describes the way to identify and
-prepare your media. An example specification file can be found at
-[](example.spec.json).
+prepare your media. The complete specification format is documented
+[here](SPECIFICATION_FORMAT.md). An [example specification
+file](example.spec.json) has been provided.
 
 ## Packaging / Distribution
 
