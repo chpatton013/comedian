@@ -65,7 +65,7 @@ deactivating, etc ell elements in the specification.
 `comedian` loads a specification from a JSON file that you provide using last
 positional command-line argument. This file describes the way to identify and
 prepare your media. The complete specification format is documented
-[here](SPECIFICATION_FORMAT.md). An [example specification
+[here](doc/SPECIFICATION_FORMAT.md). An [example specification
 file](data/example.spec.json) has been provided.
 
 ## Packaging / Distribution
@@ -115,9 +115,10 @@ make dist_test
 
 `comedian` is licensed under either of the following, at your option:
 
-* Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+* Apache License, Version 2.0 ([LICENSE-APACHE](license/LICENSE-APACHE) or
   http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+* MIT license ([LICENSE-MIT](license/LICENSE-MIT) or
+  http://opensource.org/licenses/MIT)
 
 ## Contributing
 
@@ -125,4 +126,4 @@ Contributions are welcome in the form of bug reports, feature requests, or pull
 requests.
 
 Contribution to `comedian` is organized under the terms of the [Contributor
-Covenant](CONTRIBUTOR_COVENANT.md).
+Covenant](doc/CONTRIBUTOR_COVENANT.md).
