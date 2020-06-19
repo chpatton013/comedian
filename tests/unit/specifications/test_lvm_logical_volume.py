@@ -13,26 +13,53 @@ class LvmLogicalVolumeTest(SpecificationTestBase, unittest.TestCase):
             self,
             LvmLogicalVolume(
                 name="name",
-                lvm_volume_group="lvm_volume_group",
                 size="size",
-                lvm_physical_volumes=["lvm_physical_volume"],
+                type="type",
                 args=["args"],
+                lvm_volume_group="lvm_volume_group",
+                lvm_physical_volumes=["lvm_physical_volume"],
+                lvm_poolmetadata_volume="lvm_poolmetadata_volume",
+                lvm_cachepool_volume="lvm_cachepool_volume",
+                lvm_thinpool_volume="lvm_thinpool_volume",
             ),
         )
         unittest.TestCase.__init__(self, *args, **kwargs)
 
     def test_properties(self):
         self.assertEqual("name", self.specification.name)
-        self.assertListEqual(["lvm_volume_group", "lvm_physical_volume"],
-                             self.specification.dependencies)
+        self.assertListEqual(
+            [
+                "lvm_volume_group",
+                "lvm_physical_volume",
+                "lvm_poolmetadata_volume",
+                "lvm_cachepool_volume",
+                "lvm_thinpool_volume",
+            ],
+            self.specification.dependencies,
+        )
         self.assertListEqual([], self.specification.references)
+        self.assertEqual("size", self.specification.size)
+        self.assertEqual("type", self.specification.type)
+        self.assertListEqual(["args"], self.specification.args)
         self.assertEqual(
             "lvm_volume_group", self.specification.lvm_volume_group
         )
-        self.assertEqual("size", self.specification.size)
-        self.assertEqual(["lvm_physical_volume"],
-                         self.specification.lvm_physical_volumes)
-        self.assertEqual(["args"], self.specification.args)
+        self.assertEqual(
+            ["lvm_physical_volume"],
+            self.specification.lvm_physical_volumes,
+        )
+        self.assertEqual(
+            "lvm_poolmetadata_volume",
+            self.specification.lvm_poolmetadata_volume,
+        )
+        self.assertEqual(
+            "lvm_cachepool_volume",
+            self.specification.lvm_cachepool_volume,
+        )
+        self.assertEqual(
+            "lvm_thinpool_volume",
+            self.specification.lvm_thinpool_volume,
+        )
 
     def test_resolve(self):
         self.assertEqual(
@@ -48,10 +75,12 @@ class LvmLogicalVolumeTest(SpecificationTestBase, unittest.TestCase):
         expected = [
             Command([
                 "lvcreate",
-                "--name",
-                "name",
-                "--size",
-                "size",
+                "--name=name",
+                "--size=size",
+                "--type=type",
+                "--poolmetadata=lvm_poolmetadata_volume",
+                "--cachepool=lvm_cachepool_volume",
+                "--thinpool=lvm_thinpool_volume",
                 "args",
                 "lvm_volume_group",
                 "lvm_physical_volume",

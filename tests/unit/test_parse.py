@@ -308,10 +308,14 @@ class ParseRootTest(ParseTestBase):
             LvmVolumeGroup(name="lvmvg", lvm_physical_volumes=["lvmpv"]),
             LvmLogicalVolume(
                 name="lvmlv",
-                lvm_volume_group="lvmvg",
                 size="10",
-                lvm_physical_volumes=[],
+                type=None,
                 args=[],
+                lvm_volume_group="lvmvg",
+                lvm_physical_volumes=[],
+                lvm_poolmetadata_volume=None,
+                lvm_cachepool_volume=None,
+                lvm_thinpool_volume=None,
             ),
             CryptVolume(
                 name="crypt_lvm",
@@ -753,3 +757,21 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmLogicalVolume")
         self.assertSetEqual(context.exception.keys, {"name", "size"})
+
+    def test_exclusive_keys(self):
+        spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
+        spec["lvm_poolmetadata_volume"] = "lvm_poolmetadata_volume"
+        spec["lvm_cachepool_volume"] = "lvm_cachepool_volume"
+        spec["lvm_thinpool_volume"] = "lvm_thinpool_volume"
+
+        with self.assertRaises(FoundIncompatibleKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "LvmLogicalVolume")
+        self.assertSetEqual(
+            context.exception.keys,
+            {
+                "lvm_poolmetadata_volume",
+                "lvm_cachepool_volume",
+                "lvm_thinpool_volume",
+            },
+        )

@@ -103,6 +103,8 @@ with the following syntax:
 * A plus (`+`) after a type indicates that the rule is repeated 1 or more times
 * A carrot (`^`) after a type indicates that the rule is mutually-exclusive with
   all other carrots
+* An ampersand (`&`) after a type indicates that the rule is mutually-inclusive
+  with all other ampersands
 * A question-mark (`?`) after a type indicates that the rule is optional
 
 The grammar begins parsing at `Root`.
@@ -253,8 +255,13 @@ Inherits `file` properties from its parent `File`.
 ```
 "name": str
 "size": str
+"type": str ?
 "args": str *
+"lvm_volume_group": str,
 "lvm_physical_volumes": str *
+"lvm_poolmetadata_volume": str ^ ?
+"lvm_cachepool_volume": str ^ ?
+"lvm_thinpool_volume": str ^ ?
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
 "gpt_partition_table": GptPartitionTable ^

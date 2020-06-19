@@ -49,6 +49,8 @@ class SpecificationTestBase(ABC):
             TestSpecification("keyfile"),
             TestSpecification("lvm_logical_volume"),
             TestSpecification("lvm_physical_volume"),
+            TestSpecification("lvm_cachedata_volume"),
+            TestSpecification("lvm_cachemeta_volume"),
             TestSpecification("mountpoint"),
             TestSpecification("name"),
             TestSpecification("partition_table"),
