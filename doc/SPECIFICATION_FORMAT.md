@@ -325,6 +325,9 @@ Inherits `device` properties from its parent specification.
 
 ```
 "name": str
+"label": str ?
+"pagesize": str ?
+"uuid": str ?
 ```
 
 #### Implicit Fields

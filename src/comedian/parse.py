@@ -625,9 +625,17 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
 def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     logging.debug("parse_swap_volume")
 
-    validate_spec("SwapVolume", spec, required={"name", "device"})
+    validate_spec(
+        "SwapVolume",
+        spec,
+        required={"name", "device"},
+        allowed={"label", "pagesize", "uuid"},
+    )
 
     yield SwapVolume(
         name=spec["name"],
         device=spec["device"],
+        label=spec.get("label"),
+        pagesize=spec.get("pagesize"),
+        uuid=spec.get("uuid"),
     )

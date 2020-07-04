@@ -14,6 +14,9 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
             SwapVolume(
                 name="name",
                 device="device",
+                label="label",
+                pagesize="pagesize",
+                uuid="uuid",
             ),
         )
         unittest.TestCase.__init__(self, *args, **kwargs)
@@ -23,6 +26,9 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
         self.assertListEqual(["device"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
+        self.assertEqual("label", self.specification.label)
+        self.assertEqual("pagesize", self.specification.pagesize)
+        self.assertEqual("uuid", self.specification.uuid)
 
     def test_resolve(self):
         self.assertEqual(
@@ -36,7 +42,13 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command(["mkswap", "device"]),
+            Command([
+                "mkswap",
+                "device",
+                "--label=label",
+                "--pagesize=pagesize",
+                "--uuid=uuid",
+            ]),
         ]
         self.assertListEqual(
             expected,
