@@ -18,14 +18,10 @@ class RaidVolumeApplyCommandGenerator(CommandGenerator):
         cmd = [
             "mdadm",
             "--create",
-            "--name",
-            self.specification.name,
-            "--level",
-            self.specification.level,
-            "--metadata",
-            self.specification.metadata,
-            "--raid-devices",
-            str(len(self.specification.devices)),
+            f"--name={self.specification.name}",
+            f"--level={self.specification.level}",
+            f"--metadata={self.specification.metadata}",
+            f"--raid-devices={len(self.specification.devices)}",
             _raid_device(self.specification.name),
         ]
 
