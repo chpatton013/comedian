@@ -1,6 +1,6 @@
 from typing import Iterable, Iterator, List, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, parted
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -32,7 +32,7 @@ class GptPartitionApplyCommandGenerator(CommandGenerator):
         for flag in self.specification.flags:
             cmd += ["set", str(self.specification.number), flag, "on"]
 
-        yield Command(_parted(*cmd))
+        yield parted(*cmd, align=self.specification.align)
 
 
 class GptPartition(Specification):
@@ -40,6 +40,7 @@ class GptPartition(Specification):
         self,
         name: str,
         partition_table: str,
+        align: Optional[str],
         number: int,
         type: str,
         start: str,
@@ -54,6 +55,7 @@ class GptPartition(Specification):
             apply=GptPartitionApplyCommandGenerator(self),
         )
         self.partition_table = partition_table
+        self.align = align
         self.number = number
         self.type = type
         self.start = start
@@ -64,7 +66,3 @@ class GptPartition(Specification):
 
     def resolve_device(self) -> ResolveLink:
         return ResolveLink(self.partition_table, str(self.number))
-
-
-def _parted(*args: Iterable[str]) -> List[str]:
-    return ["parted", "--script", "--align=optimal", "--"] + list(args)

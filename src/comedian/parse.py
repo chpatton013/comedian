@@ -316,7 +316,7 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
         name,
         spec,
         required={"name", "partition_table", "number", "type", "start", "end"},
-        allowed={"label", "unit", "flags"},
+        allowed={"align", "label", "unit", "flags"},
         ignore=True,
     )
 
@@ -324,6 +324,7 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
     yield GptPartition(
         name=partition_name,
         partition_table=gpt_partition_spec["partition_table"],
+        align=gpt_partition_spec.get("align"),
         number=gpt_partition_spec["number"],
         type=gpt_partition_spec["type"],
         start=gpt_partition_spec["start"],

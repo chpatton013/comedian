@@ -38,7 +38,7 @@ class GptPartitionTableTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command(["parted", "--script", "device", "mklabel", "gpt"]),
+            Command(["parted", "--script", "--", "device", "mklabel", "gpt"]),
         ]
         self.assertListEqual(
             expected,

@@ -188,6 +188,7 @@ class ParseRootTest(ParseTestBase):
             GptPartition(
                 name="sda:gpt:1",
                 partition_table="sda:gpt",
+                align=None,
                 number=1,
                 type="primary",
                 start="1",
@@ -199,6 +200,7 @@ class ParseRootTest(ParseTestBase):
             GptPartition(
                 name="sda:gpt:2",
                 partition_table="sda:gpt",
+                align=None,
                 number=2,
                 type="primary",
                 start="3",

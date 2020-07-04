@@ -59,3 +59,11 @@ def chown(
 
 def mkdir(*paths: Iterable[str]) -> Command:
     return Command(["mkdir", "--parents"] + list(paths))
+
+
+def parted(*args: Iterable[str], align: Optional[str] = None) -> Command:
+    cmd = ["parted", "--script"]
+    if align:
+        cmd.append(f"--align={align}")
+    cmd.append("--")
+    return Command(cmd + list(args))

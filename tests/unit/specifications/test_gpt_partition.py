@@ -14,6 +14,7 @@ class GptPartitionTest(SpecificationTestBase, unittest.TestCase):
             GptPartition(
                 name="name",
                 partition_table="partition_table",
+                align=None,
                 number=1,
                 type="type",
                 start="start",
@@ -53,7 +54,6 @@ class GptPartitionTest(SpecificationTestBase, unittest.TestCase):
             Command([
                 "parted",
                 "--script",
-                "--align=optimal",
                 "--",
                 "partition_table",
                 "mkpart",

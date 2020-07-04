@@ -195,6 +195,7 @@ Inherits `device` properties from its parent specification.
 ### GptPartition
 
 ```
+"align": str ?
 "type": str
 "start": str
 "end": str,
