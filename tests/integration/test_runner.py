@@ -39,7 +39,7 @@ def render_template(template: str, replacements: Dict[str, str]) -> str:
 
 def comedian_command(
     comedian: str, config: str, mode: str, action: str, spec: str
-):
+) -> str:
     return f"python {comedian} --config={config} --mode={mode} {action} {spec}"
 
 
@@ -85,8 +85,9 @@ class TempFile:
 
 
 class TempLoopDevice:
-    def __init__(self, size: str):
+    def __init__(self, size: str, **kwargs):
         self.size = size
+        self.kwargs = kwargs
         self.path = None
         self.loop = None
         self.open()
@@ -96,7 +97,7 @@ class TempLoopDevice:
 
     def open(self):
         if not self.path:
-            _, self.path = tempfile.mkstemp()
+            _, self.path = tempfile.mkstemp(**self.kwargs)
             subprocess.check_call([
                 "fallocate", "--offset", "0", "--length", self.size, self.path
             ])
@@ -114,12 +115,15 @@ class TempLoopDevice:
             self.path = None
 
 
-class TestRunner(unittest.TestCase, TestCase):
+class TestRunner(unittest.TestCase):
     def setUp(self):
         self.devices = {}
         self.resources = []
         for device in self._test_case.devices:
-            loop = TempLoopDevice(str(size_to_bytes(device["size"])))
+            loop = TempLoopDevice(
+                str(size_to_bytes(device["size"])),
+                dir="/mnt",
+            )
             name = os.path.relpath(loop.loop, start="/dev")
             self.devices[device["name"]] = name
             self.resources.append(loop)

@@ -15,7 +15,7 @@ clean:
 	rm --force ./comedian.spec
 
 example:
-	./__main__.py apply ./example.spec.json --mode=shell --quiet
+	./src/__main__.py apply ./example.spec.json --mode=shell --quiet
 
 test: unit_test integration_test dist_test
 

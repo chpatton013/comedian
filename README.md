@@ -41,7 +41,7 @@ format of a shell script.
 
 ### Output
 
-By default `comedian` will product some modest output while running. You can
+By default `comedian` will produce some modest output while running. You can
 control this with one of the `--debug` or `--quiet` command-line flags.
 `--debug` will enable far more logging output, while `--quiet` will trim the
 output down to error-reporting only.
