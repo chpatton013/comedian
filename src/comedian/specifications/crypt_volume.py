@@ -154,6 +154,7 @@ def _randomize_device(
     )
     dd_cmd = " ".join([shlex.quote(arg) for arg in dd_args])
     yield Command([context.config.shell, "-c", f"{dd_cmd} || true"])
+    yield Command(["sync"])
     yield Command(_close_crypt(cryptname))
 
 

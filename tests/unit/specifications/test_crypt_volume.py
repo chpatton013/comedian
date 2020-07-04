@@ -58,6 +58,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 "-c",
                 "dd status=progress conv=sync,noerror if=/dev/zero of=/dev/mapper/randomize_name bs=dd_bs || true",
             ]),
+            Command(["sync"]),
             Command(["cryptsetup", "--batch-mode", "close", "randomize_name"]),
             Command(["mkdir", "--parents", "tmp_dir"]),
             Command([
