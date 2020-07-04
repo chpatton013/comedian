@@ -80,6 +80,10 @@ make dist
 This will create (among other things) the output file `./dist/comedian` which is
 a self-contained executable that you can redeploy to any Linux machine.
 
+Note that PyInstaller requires that `ldd` and `objcopy` be available on your
+PATH. Install them through your distribution's package manager. They are usually
+found in the `binutils` package.
+
 ## Tests
 
 `comedian` has several different test suites, each with their own intent and
