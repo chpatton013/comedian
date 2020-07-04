@@ -12,19 +12,20 @@ class CryptVolumeApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
+        device_path = context.graph.resolve_device(self.specification.device)
         tmp_keyfile = context.config.tmp_path(
             context.graph.resolve_path(self.specification.keyfile)
         )
 
         yield from _randomize_device(
-            self.specification.name, self.specification.device, context
+            self.specification.name, device_path, context
         )
         yield from _create_keyfile(
             tmp_keyfile, self.specification.keysize, context
         )
         yield from _format_crypt(
             self.specification.name,
-            self.specification.device,
+            device_path,
             tmp_keyfile,
             self.specification.type,
             self.specification.password,
@@ -105,7 +106,7 @@ def _crypt_device(name: str) -> str:
 
 
 def _dd(*args: Iterable[str]) -> List[str]:
-    return ["dd", "status=progress"] + list(args)
+    return ["dd", "status=progress", "conv=sync,noerror"] + list(args)
 
 
 def _cryptsetup(*args: Iterable[str]) -> List[str]:
@@ -119,8 +120,7 @@ def _open_crypt(
     *args: Iterable[str],
 ) -> List[str]:
     return _cryptsetup(
-        "--key-file",
-        keyfile,
+        f"--key-file={keyfile}",
         "open",
         device,
         name,
@@ -144,17 +144,16 @@ def _randomize_device(
             cryptname,
             device,
             context.config.random_device,
-            "--type",
-            "plain",
+            "--type=plain",
         )
     )
-    yield Command(
-        _dd(
-            f"if=/dev/zero",
-            f"of={_crypt_device(cryptname)}",
-            f"bs={context.config.dd_bs}",
-        )
+    dd_args = _dd(
+        f"if=/dev/zero",
+        f"of={_crypt_device(cryptname)}",
+        f"bs={context.config.dd_bs}",
     )
+    dd_cmd = " ".join([shlex.quote(arg) for arg in dd_args])
+    yield Command([context.config.shell, "-c", f"{dd_cmd} || true"])
     yield Command(_close_crypt(cryptname))
 
 
@@ -184,18 +183,15 @@ def _format_crypt(
 ) -> Iterator[Command]:
     yield Command(
         _cryptsetup(
-            "--key-file",
-            keyfile,
+            f"--key-file={keyfile}",
             "luksFormat",
-            "--type",
-            type,
+            f"--type={type}",
             device,
         )
     )
     if password:
         add_key_args = _cryptsetup(
-            "--key-file",
-            keyfile,
+            f"--key-file={keyfile}",
             "luksAddKey",
             device,
         )
