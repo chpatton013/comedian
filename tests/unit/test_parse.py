@@ -635,6 +635,21 @@ class ParseFileTest(ParseTestBase):
         self.assertEqual(context.exception.name, "File")
         self.assertSetEqual(context.exception.keys, {"relative_path"})
 
+    def test_exclusive_keys(self):
+        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
+        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = spec["files"][0]
+        spec["loop_device"] = "loop_device"
+        spec["swap_volume"] = "swap_volume"
+
+        with self.assertRaises(FoundIncompatibleKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "File")
+        self.assertSetEqual(
+            context.exception.keys,
+            {"loop_device", "swap_volume"},
+        )
+
 
 class ParseSwapVolumeTest(ParseTestBase):
     def test_illegal_key_1(self):
