@@ -255,14 +255,15 @@ Inherits `file` properties from its parent `File`.
 
 ```
 "name": str
-"size": str
+"size": str ^1
+"extents": str ^1
 "type": str ?
 "args": str *
 "lvm_volume_group": str,
 "lvm_physical_volumes": str *
-"lvm_poolmetadata_volume": str ^ ?
-"lvm_cachepool_volume": str ^ ?
-"lvm_thinpool_volume": str ^ ?
+"lvm_poolmetadata_volume": str ^2 ?
+"lvm_cachepool_volume": str ^2 ?
+"lvm_thinpool_volume": str ^2 ?
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
 "gpt_partition_table": GptPartitionTable ^

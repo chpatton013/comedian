@@ -18,8 +18,11 @@ class LvmLogicalVolumeApplyCommandGenerator(CommandGenerator):
         cmd = [
             "lvcreate",
             f"--name={self.specification.name}",
-            f"--size={self.specification.size}",
         ]
+        if self.specification.size:
+            cmd.append(f"--size={self.specification.size}")
+        if self.specification.extents:
+            cmd.append(f"--extents={self.specification.extents}")
         if self.specification.type:
             cmd.append(f"--type={self.specification.type}")
         if self.specification.lvm_poolmetadata_volume:
@@ -41,7 +44,8 @@ class LvmLogicalVolume(Specification):
     def __init__(
         self,
         name: str,
-        size: str,
+        size: Optional[str],
+        extents: Optional[str],
         type: Optional[str],
         args: List[str],
         lvm_volume_group: str,
@@ -63,6 +67,7 @@ class LvmLogicalVolume(Specification):
             apply=LvmLogicalVolumeApplyCommandGenerator(self),
         )
         self.size = size
+        self.extents = extents
         self.type = type
         self.args = args
         self.lvm_volume_group = lvm_volume_group

@@ -439,8 +439,10 @@ def parse_lvm_logical_volume(
     lvm_logical_volume_spec, block_device_spec = partition_spec(
         name,
         spec,
-        required={"name", "size", "lvm_volume_group"},
+        required={"name", "lvm_volume_group"},
         allowed={
+            "size",
+            "extents",
             "type",
             "args",
             "lvm_physical_volumes",
@@ -448,6 +450,17 @@ def parse_lvm_logical_volume(
             "lvm_cachepool_volume",
             "lvm_thinpool_volume",
         },
+        ignore=True,
+    )
+    partition_spec(
+        name,
+        spec,
+        exclusive={"size", "extents"},
+        ignore=True,
+    )
+    partition_spec(
+        name,
+        spec,
         exclusive={
             "lvm_poolmetadata_volume",
             "lvm_cachepool_volume",
@@ -468,7 +481,8 @@ def parse_lvm_logical_volume(
     lvm_thinpool_volume = lvm_logical_volume_spec.get("lvm_thinpool_volume")
     yield LvmLogicalVolume(
         name=lvm_logical_volume_name,
-        size=lvm_logical_volume_spec["size"],
+        size=lvm_logical_volume_spec.get("size"),
+        extents=lvm_logical_volume_spec.get("extents"),
         type=lvm_logical_volume_spec.get("type"),
         args=lvm_logical_volume_spec.get("args", []),
         lvm_volume_group=lvm_logical_volume_spec["lvm_volume_group"],

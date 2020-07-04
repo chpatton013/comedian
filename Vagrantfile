@@ -3,7 +3,7 @@ mirrorlist_params = "country=US&protocol=https&use_mirror_status=on"
 $provision = <<-PROVISION
 curl --silent '#{mirrorlist_url}/?#{mirrorlist_params}' |
   sed --expression 's/^#Server/Server/' >/etc/pacman.d/mirrorlist
-pacman --sync --refresh --noconfirm binutils cryptsetup make mdadm parted python python-pip
+pacman --sync --refresh --noconfirm binutils cryptsetup lvm2 make mdadm parted python python-pip
 
 cat <<PROFILE >/etc/profile.d/comedian.sh
 export PYTHONDONTWRITEBYTECODE=1

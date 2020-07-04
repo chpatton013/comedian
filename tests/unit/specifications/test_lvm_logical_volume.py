@@ -14,6 +14,7 @@ class LvmLogicalVolumeTest(SpecificationTestBase, unittest.TestCase):
             LvmLogicalVolume(
                 name="name",
                 size="size",
+                extents="extents",
                 type="type",
                 args=["args"],
                 lvm_volume_group="lvm_volume_group",
@@ -39,6 +40,7 @@ class LvmLogicalVolumeTest(SpecificationTestBase, unittest.TestCase):
         )
         self.assertListEqual([], self.specification.references)
         self.assertEqual("size", self.specification.size)
+        self.assertEqual("extents", self.specification.extents)
         self.assertEqual("type", self.specification.type)
         self.assertListEqual(["args"], self.specification.args)
         self.assertEqual(
@@ -77,6 +79,7 @@ class LvmLogicalVolumeTest(SpecificationTestBase, unittest.TestCase):
                 "lvcreate",
                 "--name=name",
                 "--size=size",
+                "--extents=extents",
                 "--type=type",
                 "--poolmetadata=lvm_poolmetadata_volume",
                 "--cachepool=lvm_cachepool_volume",

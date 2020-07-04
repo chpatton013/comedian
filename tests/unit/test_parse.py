@@ -144,7 +144,6 @@ SPEC = {
         "lvm_physical_volumes": ["lvmpv"],
         "lvm_logical_volumes": [{
             "name": "lvmlv",
-            "size": "10",
             "crypt_volume": {
                 "name": "crypt_lvm",
                 "type": "luks2",
@@ -322,7 +321,8 @@ class ParseRootTest(ParseTestBase):
             LvmVolumeGroup(name="lvmvg", lvm_physical_volumes=["lvmpv"]),
             LvmLogicalVolume(
                 name="lvmlv",
-                size="10",
+                size=None,
+                extents=None,
                 type=None,
                 args=[],
                 lvm_volume_group="lvmvg",
@@ -780,14 +780,26 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
         del spec["name"]
-        del spec["size"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "LvmLogicalVolume")
-        self.assertSetEqual(context.exception.keys, {"name", "size"})
+        self.assertSetEqual(context.exception.keys, {"name"})
 
-    def test_exclusive_keys(self):
+    def test_exclusive_keys_1(self):
+        spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
+        spec["size"] = "size"
+        spec["extents"] = "extents"
+
+        with self.assertRaises(FoundIncompatibleKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "LvmLogicalVolume")
+        self.assertSetEqual(
+            context.exception.keys,
+            {"size", "extents"},
+        )
+
+    def test_exclusive_keys_2(self):
         spec = self.spec["lvm_volume_groups"][0]["lvm_logical_volumes"][0]
         spec["lvm_poolmetadata_volume"] = "lvm_poolmetadata_volume"
         spec["lvm_cachepool_volume"] = "lvm_cachepool_volume"
