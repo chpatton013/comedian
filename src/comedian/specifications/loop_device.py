@@ -10,7 +10,9 @@ class LoopDeviceUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        file_path = context.graph.resolve_path(self.specification.file)
+        file_path = context.config.media_path(
+            context.graph.resolve_path(self.specification.file)
+        )
 
         cmd = ["losetup"]
         cmd += self.specification.args
