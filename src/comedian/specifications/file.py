@@ -30,6 +30,8 @@ class FileApplyCommandGenerator(CommandGenerator):
                 self.specification.size,
                 file_path,
             ])
+        else:
+            yield Command(["touch", file_path])
         if self.specification.owner or self.specification.group:
             yield chown(
                 self.specification.owner,
