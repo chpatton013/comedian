@@ -7,19 +7,34 @@ import logging
 import shlex
 import subprocess
 from abc import ABC, abstractmethod
-from typing import Iterable
+from typing import Iterable, Optional
 
 from comedian.action import ActionCommandHandler, ActionCommandGenerator
-from comedian.command import Command
+from comedian.command import Command, CommandContext
+from comedian.traits import __Debug__, __Eq__
 
-__all__ = ("make_mode")
+__all__ = ["make_mode"]
 
 
 class Mode(ActionCommandHandler):
     """
     Base class for all objects that will handle Generators and Commands.
     """
-    pass
+    @abstractmethod
+    def on_begin(self, context: CommandContext):
+        pass
+
+    @abstractmethod
+    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
+        pass
+
+    @abstractmethod
+    def on_command(self, context: CommandContext, command: Command):
+        pass
+
+    @abstractmethod
+    def on_end(self, context: CommandContext):
+        pass
 
 
 def make_mode(name: str) -> Mode:
@@ -40,17 +55,29 @@ class ExecMode(Mode):
     """
     Object encapsulating the handlers for the "exec" mode.
     """
-    def on_begin(self):
+    def on_begin(self, context: CommandContext):
         pass
 
-    def on_generator(self, generator: ActionCommandGenerator):
+    def on_generator(context: CommandContext, self, generator: ActionCommandGenerator):
         logging.info("%s", generator)
 
-    def on_command(self, command: Command):
+    def on_command(self, context: CommandContext, command: Command):
         logging.info("%s", command)
-        subprocess.check_call(_shlex_join(command.cmd), shell=True)
+        if command.capture:
+            result = subprocess.check_output(
+                _shlex_join(command.cmd),
+                env=context.env.copy(),
+                shell=True,
+            )
+            context.env[command.capture] = result.decode()
+        else:
+            subprocess.check_call(
+                _shlex_join(command.cmd),
+                env=context.env,
+                shell=True,
+            )
 
-    def on_end(self):
+    def on_end(self, context: CommandContext):
         pass
 
 
@@ -58,16 +85,16 @@ class DryrunMode(Mode):
     """
     Object encapsulating the handlers for the "dryrun" mode.
     """
-    def on_begin(self):
+    def on_begin(self, context: CommandContext):
         pass
 
-    def on_generator(self, generator: ActionCommandGenerator):
+    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
         logging.info("%s", generator)
 
-    def on_command(self, command: Command):
+    def on_command(self, context: CommandContext, command: Command):
         logging.info("%s", command)
 
-    def on_end(self):
+    def on_end(self, context: CommandContext):
         pass
 
 
@@ -75,20 +102,24 @@ class ShellMode(Mode):
     """
     Object encapsulating the handlers for the "shell" mode.
     """
-    def on_begin(self):
+    def on_begin(self, context: CommandContext):
         print("#!/usr/bin/bash")
         print("set -xeuo pipefail")
 
-    def on_generator(self, generator: ActionCommandGenerator):
+    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
         logging.info("%s", generator)
         print()
         print("#", generator)
 
-    def on_command(self, command: Command):
+    def on_command(self, context: CommandContext, command: Command):
         logging.info("%s", command)
-        print(_shlex_join(command.cmd))
+        cmd_str = _shlex_join(command.cmd)
+        if command.capture:
+            print(f"{command.capture}=\"$({cmd_str})\"")
+        else:
+            print(cmd_str)
 
-    def on_end(self):
+    def on_end(self, context: CommandContext):
         pass
 
 

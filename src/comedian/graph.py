@@ -26,7 +26,7 @@ from typing import (
 
 from comedian.traits import __Debug__, __Eq__
 
-__all__ = (
+__all__ = [
     "Graph",
     "GraphEdgeError",
     "GraphError",
@@ -34,7 +34,7 @@ __all__ = (
     "GraphNode",
     "GraphResolveError",
     "GraphWalkError",
-)
+]
 
 
 class GraphError(Exception):

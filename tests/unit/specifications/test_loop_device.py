@@ -28,7 +28,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_resolve(self):
         self.assertEqual(
-            ResolveLink(None, "/dev/name"),
+            ResolveLink(None, "$loop_device_name"),
             self.specification.resolve_device(),
         )
         self.assertEqual(
@@ -38,7 +38,10 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command(["losetup", "args", "/dev/name", "file"]),
+            Command(
+                cmd=["losetup", "args", "--find", "media_dir/file"],
+                capture="loop_device_name",
+            ),
         ]
         self.assertListEqual(
             expected,
@@ -47,7 +50,10 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_up_commands(self):
         expected = [
-            Command(["losetup", "args", "/dev/name", "file"]),
+            Command(
+                cmd=["losetup", "args", "--find", "media_dir/file"],
+                capture="loop_device_name",
+            ),
         ]
         self.assertListEqual(
             expected,
@@ -56,7 +62,11 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_down_commands(self):
         expected = [
-            Command(["losetup", "--detach", "/dev/name"]),
+            Command([
+                "shell",
+                "-c",
+                "losetup --detach \"$loop_device_name\"",
+            ]),
         ]
         self.assertListEqual(
             expected,

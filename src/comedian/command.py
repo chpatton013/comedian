@@ -3,7 +3,7 @@ Command API for generating shell commands to be run on a system.
 """
 
 from abc import ABC, abstractmethod
-from typing import Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from comedian.configuration import Configuration
 from comedian.graph import Graph
@@ -14,8 +14,9 @@ class Command(__Debug__, __Eq__):
     """
     A container for the arguments of a shell command.
     """
-    def __init__(self, cmd: List[str]):
+    def __init__(self, cmd: List[str], capture: Optional[str] = None):
         self.cmd = cmd
+        self.capture = capture
 
 
 class CommandContext(__Debug__):
@@ -29,6 +30,7 @@ class CommandContext(__Debug__):
     ):
         self.config = config
         self.graph = graph
+        self.env: Dict[str, str] = dict()
 
 
 class CommandGenerator(ABC):

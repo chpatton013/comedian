@@ -17,7 +17,7 @@ from comedian.configuration import Configuration
 from comedian.graph import Graph, ResolveLink
 from comedian.specification import Specification
 
-__all__ = ("SpecificationTestBase", "comedian")
+__all__ = ["SpecificationTestBase", "comedian"]
 
 
 class TestSpecification(Specification):

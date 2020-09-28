@@ -26,14 +26,14 @@ from comedian.specifications import (
     SwapVolume,
 )
 
-__all__ = (
+__all__ = [
     "FoundIllegalKeysError",
     "FoundIncompatibleKeysError",
     "MissingRequiredKeysError",
     "MissingVariantKeysError",
     "ParseError",
     "parse",
-)
+]
 
 # Public interface
 

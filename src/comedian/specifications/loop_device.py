@@ -1,3 +1,4 @@
+import shlex
 from typing import Iterator, List
 
 from comedian.command import Command, CommandContext, CommandGenerator
@@ -16,12 +17,9 @@ class LoopDeviceUpCommandGenerator(CommandGenerator):
 
         cmd = ["losetup"]
         cmd += self.specification.args
-        cmd += [
-            _loop_device(self.specification.name),
-            file_path,
-        ]
+        cmd += ["--find", file_path]
 
-        yield Command(cmd)
+        yield Command(cmd, capture=self.specification.capture)
 
 
 class LoopDeviceDownCommandGenerator(CommandGenerator):
@@ -30,8 +28,7 @@ class LoopDeviceDownCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         yield Command([
-            "losetup", "--detach",
-            _loop_device(self.specification.name)
+            context.config.shell, "-c", f"losetup --detach \"${self.specification.capture}\""
         ])
 
 
@@ -47,9 +44,9 @@ class LoopDevice(Specification):
         self.file = file
         self.args = args
 
+    @property
+    def capture(self) -> str:
+        return f"loop_device_{self.name}"
+
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(None, _loop_device(self.name))
-
-
-def _loop_device(name: str) -> str:
-    return f"/dev/{name}"
+        return ResolveLink(None, f"${self.capture}")

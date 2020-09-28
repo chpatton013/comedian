@@ -115,21 +115,21 @@ class ApplyAction(Action):
     ):
         generators_sequence = list(generators)
 
-        handler.on_begin()
+        handler.on_begin(self.context)
 
         for specification in generators_sequence:
             handler.on_generator(specification)
             for command in specification.generate_apply_commands(self.context):
-                handler.on_command(command)
+                handler.on_command(self.context, command)
 
         for specification in generators_sequence:
             handler.on_generator(specification)
             for command in specification.generate_post_apply_commands(
                 self.context
             ):
-                handler.on_command(command)
+                handler.on_command(self.context, command)
 
-        handler.on_end()
+        handler.on_end(self.context)
 
 
 class UpAction(Action):
@@ -144,14 +144,14 @@ class UpAction(Action):
         handler: ActionCommandHandler,
         generators: Iterable[ActionCommandGenerator],
     ):
-        handler.on_begin()
+        handler.on_begin(self.context)
 
         for generator in generators:
             handler.on_generator(generator)
             for command in generator.generate_up_commands(self.context):
-                handler.on_command(command)
+                handler.on_command(self.context, command)
 
-        handler.on_end()
+        handler.on_end(self.context)
 
 
 class DownAction(Action):
@@ -166,11 +166,11 @@ class DownAction(Action):
         handler: ActionCommandHandler,
         generators: Iterable[ActionCommandGenerator],
     ):
-        handler.on_begin()
+        handler.on_begin(self.context)
 
         for generator in reversed(list(generators)):
             handler.on_generator(generator)
             for command in generator.generate_down_commands(self.context):
-                handler.on_command(command)
+                handler.on_command(self.context, command)
 
-        handler.on_end()
+        handler.on_end(self.context)

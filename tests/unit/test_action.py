@@ -122,7 +122,7 @@ class ActionTest(unittest.TestCase):
 
         ApplyAction(self.context)(handler, self.generators)
 
-        handler.on_begin.assert_called_once_with()
+        handler.on_begin.assert_called_once_with(self.context)
         handler.on_generator.assert_has_calls([
             call(TestActionCommandGenerator("gen_1")),
             call(TestActionCommandGenerator("gen_2")),
@@ -130,52 +130,52 @@ class ActionTest(unittest.TestCase):
             call(TestActionCommandGenerator("gen_2")),
         ])
         handler.on_command.assert_has_calls([
-            call(Command(["apply_1"])),
-            call(Command(["apply_2"])),
-            call(Command(["apply_3"])),
-            call(Command(["apply_4"])),
-            call(Command(["post_apply_1"])),
-            call(Command(["post_apply_2"])),
-            call(Command(["post_apply_3"])),
-            call(Command(["post_apply_4"])),
+            call(self.context, Command(["apply_1"])),
+            call(self.context, Command(["apply_2"])),
+            call(self.context, Command(["apply_3"])),
+            call(self.context, Command(["apply_4"])),
+            call(self.context, Command(["post_apply_1"])),
+            call(self.context, Command(["post_apply_2"])),
+            call(self.context, Command(["post_apply_3"])),
+            call(self.context, Command(["post_apply_4"])),
         ])
-        handler.on_end.assert_called_once_with()
+        handler.on_end.assert_called_once_with(self.context)
 
     def test_up_commands(self):
         handler = MagicMock()
 
         UpAction(self.context)(handler, self.generators)
 
-        handler.on_begin.assert_called_once_with()
+        handler.on_begin.assert_called_once_with(self.context)
         handler.on_generator.assert_has_calls([
             call(TestActionCommandGenerator("gen_1")),
             call(TestActionCommandGenerator("gen_2")),
         ])
         handler.on_command.assert_has_calls([
-            call(Command(["up_1"])),
-            call(Command(["up_2"])),
-            call(Command(["up_3"])),
-            call(Command(["up_4"])),
+            call(self.context, Command(["up_1"])),
+            call(self.context, Command(["up_2"])),
+            call(self.context, Command(["up_3"])),
+            call(self.context, Command(["up_4"])),
         ])
-        handler.on_end.assert_called_once_with()
+        handler.on_end.assert_called_once_with(self.context)
 
     def test_down_commands(self):
         handler = MagicMock()
 
         DownAction(self.context)(handler, self.generators)
 
-        handler.on_begin.assert_called_once_with()
+        handler.on_begin.assert_called_once_with(self.context)
         handler.on_generator.assert_has_calls([
             call(TestActionCommandGenerator("gen_2")),
             call(TestActionCommandGenerator("gen_1")),
         ])
         handler.on_command.assert_has_calls([
-            call(Command(["down_3"])),
-            call(Command(["down_4"])),
-            call(Command(["down_1"])),
-            call(Command(["down_2"])),
+            call(self.context, Command(["down_3"])),
+            call(self.context, Command(["down_4"])),
+            call(self.context, Command(["down_1"])),
+            call(self.context, Command(["down_2"])),
         ])
-        handler.on_end.assert_called_once_with()
+        handler.on_end.assert_called_once_with(self.context)
 
     def test_make_action(self):
         self.assertEqual(
