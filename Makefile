@@ -1,7 +1,12 @@
-.PHONY: clean dist dist_test example integration_test test unit_test
+.PHONY: clean dev_requirements dist dist_requirements dist_test example integration_test style_test test unit_test
 
-dist:
+dev_requirements: dev_requirements.txt
+	pip3 install --requirement dev_requirements.txt
+
+dist_requirements: dist_requirements.txt
 	pip3 install --requirement dist_requirements.txt
+
+dist: dist_requirements
 	python3 -OO -m PyInstaller \
 	  --onefile \
 	  --add-data=data/default.config.json:data/ \
@@ -17,7 +22,10 @@ clean:
 example:
 	./src/__main__.py apply ./example.spec.json --mode=shell --quiet
 
-test: unit_test integration_test dist_test
+test: style_test unit_test integration_test dist_test
+
+style_test: dev_requirements
+	black --check .
 
 unit_test:
 	cd tests/unit && python3 -m unittest
