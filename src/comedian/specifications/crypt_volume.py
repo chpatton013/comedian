@@ -1,5 +1,4 @@
 import os
-import shlex
 from typing import Iterable, Iterator, List, Optional
 
 from comedian.command import Command, CommandContext, CommandGenerator, mkdir
@@ -147,12 +146,13 @@ def _randomize_device(
             "--type=plain",
         )
     )
-    dd_args = _dd(
-        f"if=/dev/zero",
-        f"of={_crypt_device(cryptname)}",
-        f"bs={context.config.dd_bs}",
+    dd_cmd = " ".join(
+        _dd(
+            f"if=/dev/zero",
+            f"of={_crypt_device(cryptname)}",
+            f"bs={context.config.dd_bs}",
+        )
     )
-    dd_cmd = " ".join([shlex.quote(arg) for arg in dd_args])
     yield Command([context.config.shell, "-c", f"{dd_cmd} || true"])
     yield Command(["sync"])
     yield Command(_close_crypt(cryptname))
@@ -191,12 +191,13 @@ def _format_crypt(
         )
     )
     if password:
-        add_key_args = _cryptsetup(
-            f"--key-file={keyfile}",
-            "luksAddKey",
-            device,
+        add_key_cmd = " ".join(
+            _cryptsetup(
+                f"--key-file={keyfile}",
+                "luksAddKey",
+                device,
+            )
         )
-        add_key_cmd = " ".join([shlex.quote(arg) for arg in add_key_args])
         yield Command([
             context.config.shell, "-c", f"echo {password} | {add_key_cmd}"
         ])

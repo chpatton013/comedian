@@ -1,4 +1,3 @@
-import shlex
 from typing import Iterator, List
 
 from comedian.command import Command, CommandContext, CommandGenerator
@@ -49,4 +48,4 @@ class LoopDevice(Specification):
         return f"loop_device_{self.name}"
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(None, f"${self.capture}")
+        return ResolveLink(None, f"\"${self.capture}\"")

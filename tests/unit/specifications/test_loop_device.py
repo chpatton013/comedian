@@ -28,7 +28,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_resolve(self):
         self.assertEqual(
-            ResolveLink(None, "$loop_device_name"),
+            ResolveLink(None, "\"$loop_device_name\""),
             self.specification.resolve_device(),
         )
         self.assertEqual(

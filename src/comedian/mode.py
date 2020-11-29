@@ -110,4 +110,4 @@ class ShellMode(Mode):
 
 
 def _shlex_join(args: Iterable[str]) -> str:
-    return " ".join([shlex.quote(arg) for arg in args])
+    return " ".join([arg if "$" in arg else shlex.quote(arg) for arg in args])
