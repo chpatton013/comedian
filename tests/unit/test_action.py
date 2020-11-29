@@ -124,10 +124,10 @@ class ActionTest(unittest.TestCase):
 
         handler.on_begin.assert_called_once_with(self.context)
         handler.on_generator.assert_has_calls([
-            call(TestActionCommandGenerator("gen_1")),
-            call(TestActionCommandGenerator("gen_2")),
-            call(TestActionCommandGenerator("gen_1")),
-            call(TestActionCommandGenerator("gen_2")),
+            call(self.context, TestActionCommandGenerator("gen_1")),
+            call(self.context, TestActionCommandGenerator("gen_2")),
+            call(self.context, TestActionCommandGenerator("gen_1")),
+            call(self.context, TestActionCommandGenerator("gen_2")),
         ])
         handler.on_command.assert_has_calls([
             call(self.context, Command(["apply_1"])),
@@ -148,8 +148,8 @@ class ActionTest(unittest.TestCase):
 
         handler.on_begin.assert_called_once_with(self.context)
         handler.on_generator.assert_has_calls([
-            call(TestActionCommandGenerator("gen_1")),
-            call(TestActionCommandGenerator("gen_2")),
+            call(self.context, TestActionCommandGenerator("gen_1")),
+            call(self.context, TestActionCommandGenerator("gen_2")),
         ])
         handler.on_command.assert_has_calls([
             call(self.context, Command(["up_1"])),
@@ -166,8 +166,8 @@ class ActionTest(unittest.TestCase):
 
         handler.on_begin.assert_called_once_with(self.context)
         handler.on_generator.assert_has_calls([
-            call(TestActionCommandGenerator("gen_2")),
-            call(TestActionCommandGenerator("gen_1")),
+            call(self.context, TestActionCommandGenerator("gen_2")),
+            call(self.context, TestActionCommandGenerator("gen_1")),
         ])
         handler.on_command.assert_has_calls([
             call(self.context, Command(["down_3"])),

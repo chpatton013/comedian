@@ -20,21 +20,7 @@ class Mode(ActionCommandHandler):
     """
     Base class for all objects that will handle Generators and Commands.
     """
-    @abstractmethod
-    def on_begin(self, context: CommandContext):
-        pass
-
-    @abstractmethod
-    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
-        pass
-
-    @abstractmethod
-    def on_command(self, context: CommandContext, command: Command):
-        pass
-
-    @abstractmethod
-    def on_end(self, context: CommandContext):
-        pass
+    pass
 
 
 def make_mode(name: str) -> Mode:

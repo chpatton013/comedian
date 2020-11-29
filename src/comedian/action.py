@@ -13,19 +13,19 @@ class ActionCommandHandler(ABC):
     Base class for all objects that will handle commands for Actions.
     """
     @abstractmethod
-    def on_begin(self):
+    def on_begin(self, context: CommandContext):
         pass
 
     @abstractmethod
-    def on_generator(self, generator: CommandGenerator):
+    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
         pass
 
     @abstractmethod
-    def on_command(self, command: Command):
+    def on_command(self, context: CommandContext, command: Command):
         pass
 
     @abstractmethod
-    def on_end(self):
+    def on_end(self, context: CommandContext):
         pass
 
 
@@ -118,12 +118,12 @@ class ApplyAction(Action):
         handler.on_begin(self.context)
 
         for specification in generators_sequence:
-            handler.on_generator(specification)
+            handler.on_generator(self.context, specification)
             for command in specification.generate_apply_commands(self.context):
                 handler.on_command(self.context, command)
 
         for specification in generators_sequence:
-            handler.on_generator(specification)
+            handler.on_generator(self.context, specification)
             for command in specification.generate_post_apply_commands(
                 self.context
             ):
@@ -147,7 +147,7 @@ class UpAction(Action):
         handler.on_begin(self.context)
 
         for generator in generators:
-            handler.on_generator(generator)
+            handler.on_generator(self.context, generator)
             for command in generator.generate_up_commands(self.context):
                 handler.on_command(self.context, command)
 
