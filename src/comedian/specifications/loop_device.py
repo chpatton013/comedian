@@ -14,8 +14,11 @@ class LoopDeviceUpCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.file)
         )
 
-        cmd = ["losetup"] + self.specification.args + ["--find", file_path]
-        yield Command(cmd, capture=self.specification.capture)
+        create_cmd = ["losetup"] + self.specification.args + ["--find", file_path]
+        capture_cmd = [context.config.shell, "-c", _find_loop_device(file_path)]
+
+        yield Command(create_cmd)
+        yield Command(capture_cmd, capture=self.specification.capture)
 
 
 class LoopDevicePreDownCommandGenerator(CommandGenerator):
@@ -27,12 +30,8 @@ class LoopDevicePreDownCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.file)
         )
 
-        cmd = [
-            context.config.shell,
-            "-c",
-            f"losetup --associated \"{file_path}\" | sed 's#:.*##'",
-        ]
-        yield Command(cmd, capture=self.specification.capture)
+        capture_cmd = [context.config.shell, "-c", _find_loop_device(file_path)]
+        yield Command(capture_cmd, capture=self.specification.capture)
 
 
 class LoopDeviceDownCommandGenerator(CommandGenerator):
@@ -68,3 +67,7 @@ class LoopDevice(Specification):
 
     def resolve_device(self) -> ResolveLink:
         return ResolveLink(None, f'"${self.capture}"')
+
+
+def _find_loop_device(file_path: str) -> str:
+    return f"losetup --associated \"{file_path}\" | sed 's#:.*##'"

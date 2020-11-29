@@ -40,6 +40,13 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
         expected = [
             Command(
                 cmd=["losetup", "args", "--find", "media_dir/file"],
+            ),
+            Command(
+                cmd=[
+                    "shell",
+                    "-c",
+                    "losetup --associated \"media_dir/file\" | sed 's#:.*##'",
+                ],
                 capture="loop_device_name",
             ),
         ]
@@ -52,6 +59,13 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
         expected = [
             Command(
                 cmd=["losetup", "args", "--find", "media_dir/file"],
+            ),
+            Command(
+                cmd=[
+                    "shell",
+                    "-c",
+                    "losetup --associated \"media_dir/file\" | sed 's#:.*##'",
+                ],
                 capture="loop_device_name",
             ),
         ]
