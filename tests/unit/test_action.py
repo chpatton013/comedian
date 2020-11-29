@@ -61,6 +61,10 @@ class ActionTest(unittest.TestCase):
                     Command(["up_1"]),
                     Command(["up_2"]),
                 ]),
+                pre_down=TestCommandGenerator([
+                    Command(["pre_down_1"]),
+                    Command(["pre_down_2"]),
+                ]),
                 down=TestCommandGenerator([
                     Command(["down_1"]),
                     Command(["down_2"]),
@@ -79,6 +83,10 @@ class ActionTest(unittest.TestCase):
                 up=TestCommandGenerator([
                     Command(["up_3"]),
                     Command(["up_4"]),
+                ]),
+                pre_down=TestCommandGenerator([
+                    Command(["pre_down_3"]),
+                    Command(["pre_down_4"]),
                 ]),
                 down=TestCommandGenerator([
                     Command(["down_3"]),
@@ -170,6 +178,10 @@ class ActionTest(unittest.TestCase):
             call(self.context, TestActionCommandGenerator("gen_1")),
         ])
         handler.on_command.assert_has_calls([
+            call(self.context, Command(["pre_down_3"])),
+            call(self.context, Command(["pre_down_4"])),
+            call(self.context, Command(["pre_down_1"])),
+            call(self.context, Command(["pre_down_2"])),
             call(self.context, Command(["down_3"])),
             call(self.context, Command(["down_4"])),
             call(self.context, Command(["down_1"])),
