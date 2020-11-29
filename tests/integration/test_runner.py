@@ -6,27 +6,23 @@ import tempfile
 import unittest
 from typing import Dict, Iterable
 
-COMEDIAN_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")
-)
+COMEDIAN_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RUNTIME_DATA_DIR = os.path.join(COMEDIAN_ROOT, "data")
 SRC_DIR = os.path.join(COMEDIAN_ROOT, "src")
-TEST_CASES_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "cases")
-)
+TEST_CASES_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "cases"))
 
 
 def size_to_bytes(size: str) -> int:
     magnitude = {
-        "TB": 2**40,
-        "GB": 2**30,
-        "MB": 2**20,
-        "KB": 2**10,
+        "TB": 2 ** 40,
+        "GB": 2 ** 30,
+        "MB": 2 ** 20,
+        "KB": 2 ** 10,
         "B": 1,
     }
     for suffix, multiplier in magnitude.items():
         if size.endswith(suffix):
-            return int(size[:-len(suffix)]) * multiplier
+            return int(size[: -len(suffix)]) * multiplier
     return int(size)
 
 
@@ -98,13 +94,15 @@ class TempLoopDevice:
     def open(self):
         if not self.path:
             _, self.path = tempfile.mkstemp(**self.kwargs)
-            subprocess.check_call([
-                "fallocate", "--offset", "0", "--length", self.size, self.path
-            ])
+            subprocess.check_call(
+                ["fallocate", "--offset", "0", "--length", self.size, self.path]
+            )
         if not self.loop:
-            self.loop = subprocess.check_output([
-                "losetup", "--find", "--show", self.path
-            ]).decode("utf-8").strip()
+            self.loop = (
+                subprocess.check_output(["losetup", "--find", "--show", self.path])
+                .decode("utf-8")
+                .strip()
+            )
 
     def close(self):
         if self.loop:
@@ -148,9 +146,7 @@ class TestRunner(unittest.TestCase):
         return TempFile(json.dumps(config_content), suffix=".json")
 
     def render_spec_file(self) -> TempFile:
-        spec_template_file = os.path.join(
-            COMEDIAN_ROOT, self._test_case.spec_path()
-        )
+        spec_template_file = os.path.join(COMEDIAN_ROOT, self._test_case.spec_path())
         with open(spec_template_file, "r") as f:
             spec_content = render_template(f.read(), self.devices)
         return TempFile(spec_content, suffix=".json")
@@ -158,15 +154,9 @@ class TestRunner(unittest.TestCase):
     def render_integration_test_file(
         self, config_file: str, spec_file: str
     ) -> TempFile:
-        after_apply_file = self.find_assertion_file(
-            self._test_case.after_apply_path()
-        )
-        after_down_file = self.find_assertion_file(
-            self._test_case.after_down_path()
-        )
-        after_up_file = self.find_assertion_file(
-            self._test_case.after_up_path()
-        )
+        after_apply_file = self.find_assertion_file(self._test_case.after_apply_path())
+        after_down_file = self.find_assertion_file(self._test_case.after_down_path())
+        after_up_file = self.find_assertion_file(self._test_case.after_up_path())
 
         def _comedian_command(mode: str, action: str):
             return comedian_command(
@@ -223,7 +213,7 @@ for case in generate_test_cases(TEST_CASES_ROOT):
     classname = f"Test_{case.name}"
     globals()[classname] = type(
         classname,
-        (TestRunner, ),
+        (TestRunner,),
         {
             f"test_{case.name}": make_test_fn(),
             "_test_case": case,

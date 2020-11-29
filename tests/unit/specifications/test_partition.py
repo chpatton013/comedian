@@ -28,8 +28,7 @@ class PartitionTest(SpecificationTestBase, unittest.TestCase):
 
     def test_properties(self):
         self.assertEqual("name", self.specification.name)
-        self.assertListEqual(["partition_table"],
-                             self.specification.dependencies)
+        self.assertListEqual(["partition_table"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual(1, self.specification.number)
         self.assertEqual("type", self.specification.type)
@@ -51,25 +50,27 @@ class PartitionTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command([
-                "parted",
-                "--script",
-                "--",
-                "partition_table",
-                "mkpart",
-                "type",
-                "start",
-                "end",
-                "name",
-                "1",
-                "label",
-                "unit",
-                "unit",
-                "set",
-                "1",
-                "flags",
-                "on",
-            ]),
+            Command(
+                [
+                    "parted",
+                    "--script",
+                    "--",
+                    "partition_table",
+                    "mkpart",
+                    "type",
+                    "start",
+                    "end",
+                    "name",
+                    "1",
+                    "label",
+                    "unit",
+                    "unit",
+                    "set",
+                    "1",
+                    "flags",
+                    "on",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,

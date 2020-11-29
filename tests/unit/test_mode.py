@@ -235,7 +235,7 @@ class ShellModeTest(ModeTest):
         self.subprocess_check_call.assert_not_called()
         self.subprocess_check_output.assert_not_called()
         self.print.assert_called_once_with(
-            "{}=\"$({})\"".format(
+            '{}="$({})"'.format(
                 self.capture_command.capture,
                 " ".join(self.capture_command.cmd),
             )

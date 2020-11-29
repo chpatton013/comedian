@@ -25,6 +25,5 @@ class __Eq__(__Fields__):
         if not isinstance(other, self.__class__):
             return NotImplemented
         return all(
-            self.__dict__[field] == other.__dict__[field]
-            for field in self.__fields__()
+            self.__dict__[field] == other.__dict__[field] for field in self.__fields__()
         )

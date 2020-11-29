@@ -42,19 +42,21 @@ class SpecificationTestBase(ABC):
             media_dir="media_dir",
             tmp_dir="tmp_dir",
         )
-        graph = Graph([
-            TestSpecification("device"),
-            TestSpecification("file"),
-            TestSpecification("filesystem"),
-            TestSpecification("keyfile"),
-            TestSpecification("lvm_logical_volume"),
-            TestSpecification("lvm_physical_volume"),
-            TestSpecification("lvm_cachedata_volume"),
-            TestSpecification("lvm_cachemeta_volume"),
-            TestSpecification("mountpoint"),
-            TestSpecification("name"),
-            TestSpecification("partition_table"),
-        ])
+        graph = Graph(
+            [
+                TestSpecification("device"),
+                TestSpecification("file"),
+                TestSpecification("filesystem"),
+                TestSpecification("keyfile"),
+                TestSpecification("lvm_logical_volume"),
+                TestSpecification("lvm_physical_volume"),
+                TestSpecification("lvm_cachedata_volume"),
+                TestSpecification("lvm_cachemeta_volume"),
+                TestSpecification("mountpoint"),
+                TestSpecification("name"),
+                TestSpecification("partition_table"),
+            ]
+        )
         self.context = CommandContext(configuration, graph)
         self.specification = specification
 

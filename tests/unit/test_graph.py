@@ -46,7 +46,7 @@ def make_node_factory(resolve_name: str) -> Callable[..., TestGraphNode]:
     def fn(
         *args: Iterable[Any],
         resolve: ResolveLink = ResolveLink(None, None),
-        **kwargs: Mapping[str, Any]
+        **kwargs: Mapping[str, Any],
     ):
         return TestGraphNode(*args, **{resolve_name: resolve, **kwargs})
 
@@ -173,12 +173,10 @@ class GraphResolveTest(unittest.TestCase):
             node_factory = make_node_factory(kw)
             with self.subTest(msg=msg, kw=kw):
                 a = node_factory(
-                    "a", ["b"],
-                    resolve=ResolveLink("b", "y", lambda l, r: f"{l}j{r}")
+                    "a", ["b"], resolve=ResolveLink("b", "y", lambda l, r: f"{l}j{r}")
                 )
                 b = node_factory(
-                    "b", [],
-                    resolve=ResolveLink(None, "x", lambda l, r: f"{l}i{r}")
+                    "b", [], resolve=ResolveLink(None, "x", lambda l, r: f"{l}i{r}")
                 )
 
                 nodes = [a, b]

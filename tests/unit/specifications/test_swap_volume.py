@@ -42,13 +42,15 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command([
-                "mkswap",
-                "device",
-                "--label=label",
-                "--pagesize=pagesize",
-                "--uuid=uuid",
-            ]),
+            Command(
+                [
+                    "mkswap",
+                    "device",
+                    "--label=label",
+                    "--pagesize=pagesize",
+                    "--uuid=uuid",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,

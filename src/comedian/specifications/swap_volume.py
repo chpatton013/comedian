@@ -65,7 +65,5 @@ class SwapVolume(Specification):
 def _device_path(context: CommandContext, device: str) -> Optional[str]:
     device_path = context.graph.resolve_device(device)
     if not device_path:
-        device_path = context.config.media_path(
-            context.graph.resolve_path(device)
-        )
+        device_path = context.config.media_path(context.graph.resolve_path(device))
     return device_path

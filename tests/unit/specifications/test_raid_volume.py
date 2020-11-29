@@ -40,16 +40,18 @@ class RaidVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command([
-                "mdadm",
-                "--create",
-                "--name=name",
-                "--level=level",
-                "--metadata=metadata",
-                "--raid-devices=1",
-                "/dev/md/name",
-                "device",
-            ]),
+            Command(
+                [
+                    "mdadm",
+                    "--create",
+                    "--name=name",
+                    "--level=level",
+                    "--metadata=metadata",
+                    "--raid-devices=1",
+                    "/dev/md/name",
+                    "device",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,

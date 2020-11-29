@@ -124,30 +124,36 @@ SPEC = {
             "name": "sdd",
         },
     ],
-    "raid_volumes": [{
-        "name": "raidarray",
-        "devices": ["sdc"],
-        "level": "1",
-        "metadata": "1.2",
-        "filesystem": {
-            "name": "fsraid",
-            "mountpoint": "/raid",
-            "type": "ext4",
-        },
-    }],
-    "lvm_volume_groups": [{
-        "name": "lvmvg",
-        "lvm_physical_volumes": ["lvmpv"],
-        "lvm_logical_volumes": [{
-            "name": "lvmlv",
-            "crypt_volume": {
-                "name": "crypt_lvm",
-                "type": "luks2",
-                "keyfile": "fsroot:randomfile",
-                "keysize": "2048",
+    "raid_volumes": [
+        {
+            "name": "raidarray",
+            "devices": ["sdc"],
+            "level": "1",
+            "metadata": "1.2",
+            "filesystem": {
+                "name": "fsraid",
+                "mountpoint": "/raid",
+                "type": "ext4",
             },
-        }],
-    }],
+        }
+    ],
+    "lvm_volume_groups": [
+        {
+            "name": "lvmvg",
+            "lvm_physical_volumes": ["lvmpv"],
+            "lvm_logical_volumes": [
+                {
+                    "name": "lvmlv",
+                    "crypt_volume": {
+                        "name": "crypt_lvm",
+                        "type": "luks2",
+                        "keyfile": "fsroot:randomfile",
+                        "keysize": "2048",
+                    },
+                }
+            ],
+        }
+    ],
 }
 
 
@@ -190,7 +196,7 @@ class ParseRootTest(ParseTestBase):
                 end="3",
                 label=None,
                 unit=None,
-                flags=["bios_grub"]
+                flags=["bios_grub"],
             ),
             Partition(
                 name="sda:pt:2",
@@ -210,7 +216,7 @@ class ParseRootTest(ParseTestBase):
                 type="luks2",
                 keyfile="fsroot:keyfile",
                 keysize="2048",
-                password="hunter2"
+                password="hunter2",
             ),
             Filesystem(
                 name="fsroot",
@@ -561,9 +567,7 @@ class ParseFilesystemTest(ParseTestBase):
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "Filesystem")
-        self.assertSetEqual(
-            context.exception.keys, {"name", "mountpoint", "type"}
-        )
+        self.assertSetEqual(context.exception.keys, {"name", "mountpoint", "type"})
 
 
 class ParseDirectoryTest(ParseTestBase):

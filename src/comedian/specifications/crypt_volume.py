@@ -16,12 +16,8 @@ class CryptVolumeApplyCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.keyfile)
         )
 
-        yield from _randomize_device(
-            self.specification.name, device_path, context
-        )
-        yield from _create_keyfile(
-            tmp_keyfile, self.specification.keysize, context
-        )
+        yield from _randomize_device(self.specification.name, device_path, context)
+        yield from _create_keyfile(tmp_keyfile, self.specification.keysize, context)
         yield from _format_crypt(
             self.specification.name,
             device_path,
@@ -42,9 +38,7 @@ class CryptVolumePostApplyCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.keyfile)
         )
 
-        yield Command([
-            "cp", tmp_keyfile, dest_keyfile, "--preserve=mode,ownership"
-        ])
+        yield Command(["cp", tmp_keyfile, dest_keyfile, "--preserve=mode,ownership"])
 
 
 class CryptVolumeUpCommandGenerator(CommandGenerator):
@@ -198,7 +192,5 @@ def _format_crypt(
                 device,
             )
         )
-        yield Command([
-            context.config.shell, "-c", f"echo {password} | {add_key_cmd}"
-        ])
+        yield Command([context.config.shell, "-c", f"echo {password} | {add_key_cmd}"])
     yield Command(_open_crypt(name, device, keyfile))

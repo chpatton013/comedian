@@ -84,8 +84,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         action="store_const",
         const=logging.WARNING,
         dest="log_level",
-        help=
-        "Only show warning and error log messages (default: info, warning, and error)",
+        help="Only show warning and error log messages (default: info, warning, and error)",
     )
     parser.set_defaults(log_level=logging.INFO)
     return parser.parse_args(argv)

@@ -42,6 +42,7 @@ class ParseError(Exception):
     """
     Base class for all parse errors.
     """
+
     pass
 
 
@@ -49,6 +50,7 @@ class MissingRequiredKeysError(ParseError):
     """
     Error thrown when required keys are missing from a spec.
     """
+
     def __init__(self, name: str, spec: Dict[str, Any], keys: Set[str]):
         super().__init__(
             f"{name}: Missing required keys {str(keys)} in spec: {str(spec)}"
@@ -62,6 +64,7 @@ class MissingVariantKeysError(ParseError):
     """
     Error thrown when variant keys are missing from a spec.
     """
+
     def __init__(self, name: str, spec: Dict[str, Any], keys: Set[str]):
         super().__init__(
             f"{name}: Missing one of variant keys {str(keys)} in spec: {str(spec)}"
@@ -75,10 +78,9 @@ class FoundIllegalKeysError(ParseError):
     """
     Error thrown when illegal keys are found in a spec.
     """
+
     def __init__(self, name: str, spec: Dict[str, Any], keys: Set[str]):
-        super().__init__(
-            f"{name}: Found illegal keys {str(keys)} in spec: {str(spec)}"
-        )
+        super().__init__(f"{name}: Found illegal keys {str(keys)} in spec: {str(spec)}")
         self.name = name
         self.spec = spec
         self.keys = keys
@@ -88,6 +90,7 @@ class FoundIncompatibleKeysError(ParseError):
     """
     Error thrown when incompatible keys are found in a spec.
     """
+
     def __init__(self, name: str, spec: Dict[str, Any], keys: Set[str]):
         super().__init__(
             f"{name}: Found incompatible keys {str(keys)} in spec: {str(spec)}"
@@ -165,8 +168,9 @@ def validate_spec(
     return valid
 
 
-def split_spec(name: str, spec: Mapping[str, Any],
-                   **kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def split_spec(
+    name: str, spec: Mapping[str, Any], **kwargs
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     valid_keys = validate_spec(name, spec, **kwargs)
 
     lhs = dict()
@@ -201,11 +205,9 @@ def parse_block_device(
             illegal={"name", "device"},
             ignore=True,
         )
-        yield from parse_partition_table({
-            "name": f"{device}:pt",
-            "device": device,
-            **partition_table_spec
-        })
+        yield from parse_partition_table(
+            {"name": f"{device}:pt", "device": device, **partition_table_spec}
+        )
 
     if "filesystem" in spec:
         filesystem_spec = spec["filesystem"]
@@ -245,10 +247,9 @@ def parse_block_device(
             illegal={"device"},
             ignore=True,
         )
-        yield from parse_lvm_physical_volume({
-            "device": device,
-            **lvm_physical_volume_spec
-        })
+        yield from parse_lvm_physical_volume(
+            {"device": device, **lvm_physical_volume_spec}
+        )
 
 
 def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
@@ -266,9 +267,7 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     yield PhysicalDevice(name=physical_device_name)
 
     if block_device_spec:
-        yield from parse_block_device(
-            name, block_device_spec, physical_device_name
-        )
+        yield from parse_block_device(name, block_device_spec, physical_device_name)
 
 
 def parse_partition_table(
@@ -300,12 +299,14 @@ def parse_partition_table(
         )
 
         number = index + 1
-        yield from parse_partition({
-            "name": f"{partition_table_name}:{number}",
-            "partition_table": partition_table_name,
-            "number": number,
-            **partition_spec
-        })
+        yield from parse_partition(
+            {
+                "name": f"{partition_table_name}:{number}",
+                "partition_table": partition_table_name,
+                "number": number,
+                **partition_spec,
+            }
+        )
 
 
 def parse_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
@@ -384,9 +385,7 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     )
 
     if block_device_spec:
-        yield from parse_block_device(
-            name, block_device_spec, crypt_volume_name
-        )
+        yield from parse_block_device(name, block_device_spec, crypt_volume_name)
 
 
 def parse_lvm_physical_volume(
@@ -424,10 +423,9 @@ def parse_lvm_volume_group(spec: Mapping[str, Any]) -> Iterator[Specification]:
             illegal={"lvm_volume_group"},
             ignore=True,
         )
-        yield from parse_lvm_logical_volume({
-            "lvm_volume_group": lvm_volume_group_name,
-            **lvm_logical_volume_spec
-        })
+        yield from parse_lvm_logical_volume(
+            {"lvm_volume_group": lvm_volume_group_name, **lvm_logical_volume_spec}
+        )
 
 
 def parse_lvm_logical_volume(
@@ -493,9 +491,7 @@ def parse_lvm_logical_volume(
     )
 
     if block_device_spec:
-        yield from parse_block_device(
-            name, block_device_spec, lvm_logical_volume_name
-        )
+        yield from parse_block_device(name, block_device_spec, lvm_logical_volume_name)
 
 
 def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
@@ -525,11 +521,13 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
             illegal={"name", "filesystem"},
             ignore=True,
         )
-        yield from parse_directory({
-            "name": f"{filesystem_name}:{directory_spec['relative_path']}",
-            "filesystem": filesystem_name,
-            **directory_spec
-        })
+        yield from parse_directory(
+            {
+                "name": f"{filesystem_name}:{directory_spec['relative_path']}",
+                "filesystem": filesystem_name,
+                **directory_spec,
+            }
+        )
 
     for file_spec in spec.get("files", []):
         validate_spec(
@@ -539,11 +537,13 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
             illegal={"name", "filesystem"},
             ignore=True,
         )
-        yield from parse_file({
-            "name": f"{filesystem_name}:{file_spec['relative_path']}",
-            "filesystem": filesystem_name,
-            **file_spec
-        })
+        yield from parse_file(
+            {
+                "name": f"{filesystem_name}:{file_spec['relative_path']}",
+                "filesystem": filesystem_name,
+                **file_spec,
+            }
+        )
 
 
 def parse_directory(spec: Mapping[str, Any]) -> Iterator[Specification]:
@@ -573,9 +573,7 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
         "File",
         spec,
         required={"name", "filesystem", "relative_path"},
-        allowed={
-            "owner", "group", "mode", "size", "loop_device", "swap_volume"
-        },
+        allowed={"owner", "group", "mode", "size", "loop_device", "swap_volume"},
         exclusive={"loop_device", "swap_volume"},
     )
 

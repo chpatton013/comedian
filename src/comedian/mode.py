@@ -20,6 +20,7 @@ class Mode(ActionCommandHandler):
     """
     Base class for all objects that will handle Generators and Commands.
     """
+
     pass
 
 
@@ -41,6 +42,7 @@ class ExecMode(Mode):
     """
     Object encapsulating the handlers for the "exec" mode.
     """
+
     def on_begin(self, context: CommandContext):
         pass
 
@@ -71,6 +73,7 @@ class DryrunMode(Mode):
     """
     Object encapsulating the handlers for the "dryrun" mode.
     """
+
     def on_begin(self, context: CommandContext):
         pass
 
@@ -88,6 +91,7 @@ class ShellMode(Mode):
     """
     Object encapsulating the handlers for the "shell" mode.
     """
+
     def on_begin(self, context: CommandContext):
         print("#!/usr/bin/bash")
         print("set -xeuo pipefail")
@@ -101,7 +105,7 @@ class ShellMode(Mode):
         logging.info("%s", command)
         cmd_str = _shlex_join(command.cmd)
         if command.capture:
-            print(f"{command.capture}=\"$({cmd_str})\"")
+            print(f'{command.capture}="$({cmd_str})"')
         else:
             print(cmd_str)
 

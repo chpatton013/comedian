@@ -27,17 +27,26 @@ class LoopDevicePreDownCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.file)
         )
 
-        cmd = [context.config.shell, "-c", f"losetup --associated \"{file_path}\" | sed 's#:.*##'"]
+        cmd = [
+            context.config.shell,
+            "-c",
+            f"losetup --associated \"{file_path}\" | sed 's#:.*##'",
+        ]
         yield Command(cmd, capture=self.specification.capture)
+
 
 class LoopDeviceDownCommandGenerator(CommandGenerator):
     def __init__(self, specification: "LoopDevice"):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command([
-            context.config.shell, "-c", f"losetup --detach \"${self.specification.capture}\""
-        ])
+        yield Command(
+            [
+                context.config.shell,
+                "-c",
+                f'losetup --detach "${self.specification.capture}"',
+            ]
+        )
 
 
 class LoopDevice(Specification):
@@ -58,4 +67,4 @@ class LoopDevice(Specification):
         return f"loop_device_{self.name}"
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(None, f"\"${self.capture}\"")
+        return ResolveLink(None, f'"${self.capture}"')

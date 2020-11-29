@@ -15,8 +15,7 @@ class LvmVolumeGroupApplyCommandGenerator(CommandGenerator):
             for lvm_physical_volume in self.specification.lvm_physical_volumes
         ]
 
-        yield Command(["vgcreate", self.specification.name] +
-                      lvm_physical_volume_paths)
+        yield Command(["vgcreate", self.specification.name] + lvm_physical_volume_paths)
 
 
 class LvmVolumeGroupUpCommandGenerator(CommandGenerator):

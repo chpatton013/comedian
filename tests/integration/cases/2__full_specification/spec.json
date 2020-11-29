@@ -1,0 +1,227 @@
+{
+  "physical_devices": [
+    {
+      "name": "{{sda}}",
+      "partition_table": {
+        "type": "gpt",
+        "glue": "p",
+        "partitions": [
+          {
+            "type": "primary",
+            "start": "2",
+            "end": "10",
+            "unit": "s",
+            "label": "bios",
+            "flags": ["bios_grub"]
+          },
+          {
+            "type": "primary",
+            "start": "10",
+            "end": "18",
+            "unit": "s",
+            "label": "boot"
+          },
+          {
+            "type": "primary",
+            "start": "18",
+            "end": "-1",
+            "unit": "s",
+            "label": "root"
+          }
+        ]
+      }
+    },
+    {
+      "name": "{{sdb}}",
+      "partition_table": {
+        "type": "gpt",
+        "glue": "p",
+        "partitions": [
+          {
+            "type": "primary",
+            "start": "2",
+            "end": "10",
+            "unit": "s",
+            "label": "bios",
+            "flags": ["bios_grub"]
+          },
+          {
+            "type": "primary",
+            "start": "10",
+            "end": "18",
+            "unit": "s",
+            "label": "boot"
+          },
+          {
+            "type": "primary",
+            "start": "18",
+            "end": "-1",
+            "unit": "s",
+            "label": "root"
+          }
+        ]
+      }
+    },
+    {
+      "name": "{{sdc}}",
+      "partition_table": {
+        "type": "gpt",
+        "glue": "p",
+        "partitions": [
+          {
+            "align": "optimal",
+            "type": "primary",
+            "start": "1MB",
+            "end": "2MB",
+            "label": "swap",
+            "swap_volume": {
+              "name": "partswap",
+              "label": "partswap"
+            }
+          },
+          {
+            "align": "optimal",
+            "type": "primary",
+            "start": "2MB",
+            "end": "-1",
+            "label": "cache",
+            "crypt_volume": {
+              "name": "cryptcache",
+              "type": "luks2",
+              "keyfile": "fsboot:keys/cryptcache.keyfile",
+              "keysize": "2048",
+              "lvm_physical_volume": {
+                "name": "LvmPvCache"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "raid_volumes": [
+    {
+      "name": "raidbios",
+      "devices": ["{{sda}}:pt:1", "{{sdb}}:pt:1"],
+      "level": "1",
+      "metadata": "1.0"
+    },
+    {
+      "name": "raidboot",
+      "devices": ["{{sda}}:pt:2", "{{sdb}}:pt:2"],
+      "level": "1",
+      "metadata": "1.0",
+      "crypt_volume": {
+        "name": "cryptboot",
+        "type": "luks1",
+        "keyfile": "fsboot:keys/cryptboot.keyfile",
+        "keysize": "2048",
+        "password": "hunter2",
+        "filesystem": {
+          "name": "fsboot",
+          "mountpoint": "fsroot:boot",
+          "type": "ext4",
+          "directories": [
+            {
+              "relative_path": "efi",
+              "mode": "0700"
+            },
+            {
+              "relative_path": "keys",
+              "mode": "0000"
+            }
+          ],
+          "files": [
+            {
+              "relative_path": "keys/cryptboot.keyfile",
+              "mode": "0000"
+            },
+            {
+              "relative_path": "keys/cryptroot.keyfile",
+              "mode": "0000"
+            },
+            {
+              "relative_path": "keys/cryptcache.keyfile",
+              "mode": "0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "raidroot",
+      "devices": ["{{sda}}:pt:3", "{{sdb}}:pt:3"],
+      "level": "0",
+      "metadata": "1.2",
+      "crypt_volume": {
+        "name": "cryptroot",
+        "type": "luks2",
+        "keyfile": "fsboot:keys/cryptroot.keyfile",
+        "keysize": "2048",
+        "lvm_physical_volume": {
+          "name": "LvmPvRoot"
+        }
+      }
+    }
+  ],
+  "lvm_volume_groups": [
+    {
+      "name": "LvmVgRoot",
+      "lvm_physical_volumes": ["LvmPvRoot", "LvmPvCache"],
+      "lvm_logical_volumes": [
+        {
+          "name": "LvmLvCachePool",
+          "type": "cache-pool",
+          "extents": "+100%FREE",
+          "lvm_physical_volumes": ["LvmPvCache"]
+        },
+        {
+          "name": "LvmLvCache",
+          "type": "cache",
+          "extents": "+100%FREE",
+          "args": ["--cachemode=writethrough"],
+          "lvm_physical_volumes": ["LvmPvRoot"],
+          "lvm_cachepool_volume": "LvmLvCachePool",
+          "filesystem": {
+            "name": "fsroot",
+            "mountpoint": "/",
+            "type": "ext4",
+            "directories": [
+              {
+                "relative_path": "boot",
+                "mode": "0700"
+              }
+            ],
+            "files": [
+              {
+                "relative_path": "swapfile",
+                "owner": "root",
+                "group": "root",
+                "mode": "0000",
+                "size": "1M",
+                "swap_volume": {
+                  "name": "lvmswap",
+                  "label": "lvmswap"
+                }
+              },
+              {
+                "relative_path": "loopfile",
+                "owner": "root",
+                "group": "root",
+                "mode": "0000",
+                "size": "1M",
+                "loop_device": {
+                  "name": "lvmloop",
+                  "swap_volume": {
+                    "name": "loopswap",
+                    "label": "loopswap"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -23,8 +23,7 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
 
     def test_properties(self):
         self.assertEqual("name", self.specification.name)
-        self.assertListEqual(["device", "mountpoint"],
-                             self.specification.dependencies)
+        self.assertListEqual(["device", "mountpoint"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
         self.assertEqual("mountpoint", self.specification.mountpoint)

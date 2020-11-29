@@ -28,5 +28,5 @@ class Configuration(__Debug__, __Eq__):
 def _join(head, *tail):
     joined = _join(*tail) if tail else ""
     if joined.startswith(os.path.sep):
-        joined = joined[len(os.path.sep):]
+        joined = joined[len(os.path.sep) :]
     return head + os.path.sep + joined if joined else head

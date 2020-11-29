@@ -12,6 +12,7 @@ class ActionCommandGenerator:
     """
     Base class for all objects that will generate commands for Actions.
     """
+
     def __init__(
         self,
         apply: Optional[CommandGenerator] = None,
@@ -66,6 +67,7 @@ class ActionCommandHandler(ABC):
     """
     Base class for all objects that will handle commands for Actions.
     """
+
     @abstractmethod
     def on_begin(self, context: CommandContext):
         pass
@@ -87,6 +89,7 @@ class Action(ABC):
     """
     Base class for all objects that will encapsule command-generation.
     """
+
     @abstractmethod
     def __call__(
         self,
@@ -114,6 +117,7 @@ class ApplyAction(Action):
     """
     Object encapsulating the command-generation for the "apply" action.
     """
+
     def __init__(self, context: CommandContext):
         self.context = context
 
@@ -133,9 +137,7 @@ class ApplyAction(Action):
 
         for specification in generators_sequence:
             handler.on_generator(self.context, specification)
-            for command in specification.generate_post_apply_commands(
-                self.context
-            ):
+            for command in specification.generate_post_apply_commands(self.context):
                 handler.on_command(self.context, command)
 
         handler.on_end(self.context)
@@ -145,6 +147,7 @@ class UpAction(Action):
     """
     Object encapsulating the command-generation for the "up" action.
     """
+
     def __init__(self, context: CommandContext):
         self.context = context
 
@@ -167,6 +170,7 @@ class DownAction(Action):
     """
     Object encapsulating the command-generation for the "down" action.
     """
+
     def __init__(self, context: CommandContext):
         self.context = context
 

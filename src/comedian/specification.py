@@ -9,6 +9,7 @@ class Specification(ActionCommandGenerator, GraphNode):
     """
     Composite base class for all Specifications.
     """
+
     def __init__(
         self,
         name: str,

@@ -41,6 +41,7 @@ class GraphError(Exception):
     """
     Base class for all graph errors.
     """
+
     pass
 
 
@@ -48,6 +49,7 @@ class GraphNameError(GraphError):
     """
     Error thrown when a GraphNode has a name that already exists.
     """
+
     def __init__(self, name: str):
         super().__init__(f"GraphNode {name} has repeated name")
         self.name = name
@@ -58,6 +60,7 @@ class GraphEdgeError(GraphError):
     Error thrown when a GraphNode has a dependency or reference that does not
     exist.
     """
+
     def __init__(self, name: str, dependency: str):
         super().__init__(
             f"GraphNode {name} has unknown dependency {dependency}",
@@ -70,6 +73,7 @@ class GraphResolveError(GraphError):
     """
     Error thrown when resolving a reference to a GraphNode.
     """
+
     def __init__(self, reference: str):
         super().__init__(f"Failed to resolve reference: {reference}")
         self.reference = reference
@@ -79,6 +83,7 @@ class GraphWalkError(GraphError):
     """
     Error thrown when graph-walking fails to visit all GraphNode.
     """
+
     def __init__(self, not_visited: Dict[str, Set[str]]):
         super().__init__(
             f"Failed to visit all GraphNode during walk: {str(list(not_visited.keys()))}",
@@ -115,6 +120,7 @@ class GraphNode(__Debug__, __Eq__):
     A single node within a Graph, consisting of a unique name, a list of
     dependencies, and a list of non-dependency references.
     """
+
     def __init__(
         self,
         name: str,
@@ -139,6 +145,7 @@ class Graph(__Debug__):
     Creates several mappings upon construction between GraphNodes, their
     names, and their dependencies.
     """
+
     def __init__(self, nodes: Iterable[GraphNode]):
         self._nodes: Mapping[str, GraphNode] = OrderedDict()
         for node in nodes:
@@ -252,8 +259,9 @@ class Graph(__Debug__):
         # of the input node.
         link = node_resolve(node)
         if (
-            link.parent and link.parent not in node.dependencies and
-            link.parent not in node.references
+            link.parent
+            and link.parent not in node.dependencies
+            and link.parent not in node.references
         ):
             raise GraphResolveError(link.parent)
         if link.parent:

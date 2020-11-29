@@ -1,0 +1,14 @@
+[
+  {
+    "name": "sda",
+    "size": "128MB"
+  },
+  {
+    "name": "sdb",
+    "size": "128MB"
+  },
+  {
+    "name": "sdc",
+    "size": "128MB"
+  }
+]

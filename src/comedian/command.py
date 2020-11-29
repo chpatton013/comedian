@@ -14,6 +14,7 @@ class Command(__Debug__, __Eq__):
     """
     A container for the arguments of a shell command.
     """
+
     def __init__(self, cmd: List[str], capture: Optional[str] = None):
         self.cmd = cmd
         self.capture = capture
@@ -23,6 +24,7 @@ class CommandContext(__Debug__):
     """
     A structure holding the arguments necessary for generating Commands.
     """
+
     def __init__(
         self,
         config: Configuration,
@@ -37,6 +39,7 @@ class CommandGenerator(ABC):
     """
     Abstract base class for a Callable that generates a series of Commands.
     """
+
     @abstractmethod
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         pass

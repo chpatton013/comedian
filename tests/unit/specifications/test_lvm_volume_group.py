@@ -20,11 +20,11 @@ class LvmVolumeGroupTest(SpecificationTestBase, unittest.TestCase):
 
     def test_properties(self):
         self.assertEqual("name", self.specification.name)
-        self.assertListEqual(["lvm_physical_volume"],
-                             self.specification.dependencies)
+        self.assertListEqual(["lvm_physical_volume"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
-        self.assertEqual(["lvm_physical_volume"],
-                         self.specification.lvm_physical_volumes)
+        self.assertEqual(
+            ["lvm_physical_volume"], self.specification.lvm_physical_volumes
+        )
 
     def test_resolve(self):
         self.assertEqual(

@@ -33,11 +33,13 @@ class RaidVolumeUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command([
-            "mdadm",
-            "--assemble",
-            _raid_device(self.specification.name),
-        ])
+        yield Command(
+            [
+                "mdadm",
+                "--assemble",
+                _raid_device(self.specification.name),
+            ]
+        )
 
 
 class RaidVolumeDownCommandGenerator(CommandGenerator):
@@ -45,11 +47,13 @@ class RaidVolumeDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command([
-            "mdadm",
-            "--stop",
-            _raid_device(self.specification.name),
-        ])
+        yield Command(
+            [
+                "mdadm",
+                "--stop",
+                _raid_device(self.specification.name),
+            ]
+        )
 
 
 class RaidVolume(Specification):

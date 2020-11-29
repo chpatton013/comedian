@@ -24,12 +24,14 @@ class FileApplyCommandGenerator(CommandGenerator):
 
         yield mkdir(os.path.dirname(file_path))
         if self.specification.size:
-            yield Command([
-                "fallocate",
-                "--length",
-                self.specification.size,
-                file_path,
-            ])
+            yield Command(
+                [
+                    "fallocate",
+                    "--length",
+                    self.specification.size,
+                    file_path,
+                ]
+            )
         else:
             yield Command(["touch", file_path])
         if self.specification.owner or self.specification.group:

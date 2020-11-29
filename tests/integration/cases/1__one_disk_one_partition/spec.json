@@ -3,6 +3,7 @@
     {
       "name": "{{sda}}",
       "partition_table": {
+        "type": "gpt",
         "glue": "p",
         "partitions": [
           {

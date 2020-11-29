@@ -44,53 +44,65 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command([
-                "cryptsetup",
-                "--batch-mode",
-                "--key-file=random_device",
-                "open",
-                "device",
-                "randomize_name",
-                "--type=plain",
-            ]),
-            Command([
-                "shell",
-                "-c",
-                "dd status=progress conv=sync,noerror if=/dev/zero of=/dev/mapper/randomize_name bs=dd_bs || true",
-            ]),
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=random_device",
+                    "open",
+                    "device",
+                    "randomize_name",
+                    "--type=plain",
+                ]
+            ),
+            Command(
+                [
+                    "shell",
+                    "-c",
+                    "dd status=progress conv=sync,noerror if=/dev/zero of=/dev/mapper/randomize_name bs=dd_bs || true",
+                ]
+            ),
             Command(["sync"]),
             Command(["cryptsetup", "--batch-mode", "close", "randomize_name"]),
             Command(["mkdir", "--parents", "tmp_dir"]),
-            Command([
-                "dd",
-                "status=progress",
-                "conv=sync,noerror",
-                "if=random_device",
-                "of=tmp_dir/keyfile",
-                "bs=keysize",
-                "count=1",
-            ]),
-            Command([
-                "cryptsetup",
-                "--batch-mode",
-                "--key-file=tmp_dir/keyfile",
-                "luksFormat",
-                "--type=type",
-                "device",
-            ]),
-            Command([
-                "shell",
-                "-c",
-                "echo password | cryptsetup --batch-mode --key-file=tmp_dir/keyfile luksAddKey device",
-            ]),
-            Command([
-                "cryptsetup",
-                "--batch-mode",
-                "--key-file=tmp_dir/keyfile",
-                "open",
-                "device",
-                "name",
-            ]),
+            Command(
+                [
+                    "dd",
+                    "status=progress",
+                    "conv=sync,noerror",
+                    "if=random_device",
+                    "of=tmp_dir/keyfile",
+                    "bs=keysize",
+                    "count=1",
+                ]
+            ),
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=tmp_dir/keyfile",
+                    "luksFormat",
+                    "--type=type",
+                    "device",
+                ]
+            ),
+            Command(
+                [
+                    "shell",
+                    "-c",
+                    "echo password | cryptsetup --batch-mode --key-file=tmp_dir/keyfile luksAddKey device",
+                ]
+            ),
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=tmp_dir/keyfile",
+                    "open",
+                    "device",
+                    "name",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,
@@ -99,12 +111,14 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_post_apply_commands(self):
         expected = [
-            Command([
-                "cp",
-                "tmp_dir/keyfile",
-                "media_dir/keyfile",
-                "--preserve=mode,ownership",
-            ]),
+            Command(
+                [
+                    "cp",
+                    "tmp_dir/keyfile",
+                    "media_dir/keyfile",
+                    "--preserve=mode,ownership",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,
@@ -113,14 +127,16 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_up_commands(self):
         expected = [
-            Command([
-                "cryptsetup",
-                "--batch-mode",
-                "--key-file=media_dir/keyfile",
-                "open",
-                "device",
-                "name",
-            ]),
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=media_dir/keyfile",
+                    "open",
+                    "device",
+                    "name",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,
@@ -129,12 +145,14 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_down_commands(self):
         expected = [
-            Command([
-                "cryptsetup",
-                "--batch-mode",
-                "close",
-                "name",
-            ]),
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "close",
+                    "name",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,
