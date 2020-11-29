@@ -9,8 +9,8 @@ from comedian.specifications import (
     Directory,
     File,
     Filesystem,
-    GptPartition,
-    GptPartitionTable,
+    Partition,
+    PartitionTable,
     LoopDevice,
     LvmLogicalVolume,
     LvmPhysicalVolume,
@@ -30,12 +30,9 @@ from comedian.parse import (
 )
 
 _FSROOT_SPEC = {
-    "name":
-        "fsroot",
-    "mountpoint":
-        "/",
-    "type":
-        "ext4",
+    "name": "fsroot",
+    "mountpoint": "/",
+    "type": "ext4",
     "directories": [
         {
             "relative_path": "raid",
@@ -85,10 +82,10 @@ SPEC = {
     "physical_devices": [
         {
             "name": "sda",
-            "gpt_partition_table": {
-                "glue":
-                    "p",
-                "gpt_partitions": [
+            "partition_table": {
+                "type": "gpt",
+                "glue": "p",
+                "partitions": [
                     {
                         "type": "primary",
                         "start": "1",
@@ -139,8 +136,7 @@ SPEC = {
         },
     }],
     "lvm_volume_groups": [{
-        "name":
-            "lvmvg",
+        "name": "lvmvg",
         "lvm_physical_volumes": ["lvmpv"],
         "lvm_logical_volumes": [{
             "name": "lvmlv",
@@ -183,10 +179,10 @@ class ParseRootTest(ParseTestBase):
         expected = [
             Root(),
             PhysicalDevice("sda"),
-            GptPartitionTable(name="sda:gpt", device="sda", glue="p"),
-            GptPartition(
-                name="sda:gpt:1",
-                partition_table="sda:gpt",
+            PartitionTable(name="sda:pt", device="sda", type="gpt", glue="p"),
+            Partition(
+                name="sda:pt:1",
+                partition_table="sda:pt",
                 align=None,
                 number=1,
                 type="primary",
@@ -196,9 +192,9 @@ class ParseRootTest(ParseTestBase):
                 unit=None,
                 flags=["bios_grub"]
             ),
-            GptPartition(
-                name="sda:gpt:2",
-                partition_table="sda:gpt",
+            Partition(
+                name="sda:pt:2",
+                partition_table="sda:pt",
                 align=None,
                 number=2,
                 type="primary",
@@ -210,7 +206,7 @@ class ParseRootTest(ParseTestBase):
             ),
             CryptVolume(
                 name="cryptroot",
-                device="sda:gpt:2",
+                device="sda:pt:2",
                 type="luks2",
                 keyfile="fsroot:keyfile",
                 keysize="2048",
@@ -412,75 +408,84 @@ class ParseLvmVolumeGroupTest(ParseTestBase):
         )
 
 
-class ParseGptPartitionTableTest(ParseTestBase):
+class ParsePartitionTableTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the
-        # gpt_partition_table spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
+        # partition_table spec.
+        spec = self.spec["physical_devices"][0]["partition_table"]
         spec["name"] = "name"
         spec["device"] = "device"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "GptPartitionTable")
+        self.assertEqual(context.exception.name, "PartitionTable")
         self.assertSetEqual(context.exception.keys, {"name", "device"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "GptPartitionTable")
+        self.assertEqual(context.exception.name, "PartitionTable")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
-    def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        del spec["gpt_partitions"]
+    def test_missing_key_1(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        del spec["type"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "GptPartitionTable")
-        self.assertSetEqual(context.exception.keys, {"gpt_partitions"})
+        self.assertEqual(context.exception.name, "PartitionTable")
+        self.assertSetEqual(context.exception.keys, {"type"})
+
+    def test_missing_key_2(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        del spec["partitions"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PartitionTable")
+        self.assertSetEqual(context.exception.keys, {"partitions"})
 
 
-class ParseGptPartitionTest(ParseTestBase):
+class ParsePartitionTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the
-        # gpt_partition spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][0]
+        # partition spec.
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][0]
         spec["name"] = "name"
         spec["partition_table"] = "partition_table"
         spec["number"] = 1
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "GptPartition")
+        self.assertEqual(context.exception.name, "Partition")
         self.assertSetEqual(
             context.exception.keys, {"name", "partition_table", "number"}
         )
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][0]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][0]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "GptPartition")
+        self.assertEqual(context.exception.name, "Partition")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][0]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][0]
         del spec["type"]
         del spec["start"]
         del spec["end"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "GptPartition")
+        self.assertEqual(context.exception.name, "Partition")
         self.assertSetEqual(context.exception.keys, {"type", "start", "end"})
 
 
@@ -488,8 +493,8 @@ class ParseCryptVolumeTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the crypt_volume
         # spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]
         spec["device"] = "device"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -498,8 +503,8 @@ class ParseCryptVolumeTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"device"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -508,8 +513,8 @@ class ParseCryptVolumeTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]
         del spec["name"]
         del spec["type"]
         del spec["keyfile"]
@@ -527,8 +532,8 @@ class ParseFilesystemTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the filesystem
         # spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec["device"] = "device"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -537,8 +542,8 @@ class ParseFilesystemTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"device"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -547,8 +552,8 @@ class ParseFilesystemTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         del spec["name"]
         del spec["mountpoint"]
         del spec["type"]
@@ -565,8 +570,8 @@ class ParseDirectoryTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the directory
         # spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["directories"][0]
         spec["name"] = "name"
         spec["filesystem"] = "filesystem"
@@ -577,8 +582,8 @@ class ParseDirectoryTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["directories"][0]
         spec["foo"] = "bar"
 
@@ -588,8 +593,8 @@ class ParseDirectoryTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["directories"][0]
         del spec["relative_path"]
 
@@ -602,8 +607,8 @@ class ParseDirectoryTest(ParseTestBase):
 class ParseFileTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the file spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
         spec["name"] = "name"
         spec["filesystem"] = "filesystem"
@@ -614,8 +619,8 @@ class ParseFileTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
         spec["foo"] = "bar"
 
@@ -625,8 +630,8 @@ class ParseFileTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
         del spec["relative_path"]
 
@@ -636,8 +641,8 @@ class ParseFileTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"relative_path"})
 
     def test_exclusive_keys(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
         spec["loop_device"] = "loop_device"
         spec["swap_volume"] = "swap_volume"
@@ -655,8 +660,8 @@ class ParseSwapVolumeTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the swap_volume
         # spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]["swap_volume"]
         spec["device"] = "device"
 
@@ -666,8 +671,8 @@ class ParseSwapVolumeTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"device"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]["swap_volume"]
         spec["foo"] = "bar"
 
@@ -677,8 +682,8 @@ class ParseSwapVolumeTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]["swap_volume"]
         del spec["name"]
 
@@ -692,8 +697,8 @@ class ParseLoopDeviceTest(ParseTestBase):
     def test_illegal_key_1(self):
         # These keys are restricted before parsing the rest of the loop_device
         # spec.
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][1]["loop_device"]
         spec["file"] = "file"
 
@@ -703,8 +708,8 @@ class ParseLoopDeviceTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"file"})
 
     def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][1]["loop_device"]
         spec["foo"] = "bar"
 
@@ -714,8 +719,8 @@ class ParseLoopDeviceTest(ParseTestBase):
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["gpt_partition_table"]
-        spec = spec["gpt_partitions"][1]["crypt_volume"]["filesystem"]
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][1]["loop_device"]
         del spec["name"]
 

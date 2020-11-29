@@ -2,8 +2,8 @@ from comedian.specifications.crypt_volume import CryptVolume
 from comedian.specifications.directory import Directory
 from comedian.specifications.file import File
 from comedian.specifications.filesystem import Filesystem
-from comedian.specifications.gpt_partition import GptPartition
-from comedian.specifications.gpt_partition_table import GptPartitionTable
+from comedian.specifications.partition import Partition
+from comedian.specifications.partition_table import PartitionTable
 from comedian.specifications.loop_device import LoopDevice
 from comedian.specifications.lvm_logical_volume import LvmLogicalVolume
 from comedian.specifications.lvm_physical_volume import LvmPhysicalVolume

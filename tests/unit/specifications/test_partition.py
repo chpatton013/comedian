@@ -4,14 +4,14 @@ from context import comedian, SpecificationTestBase
 
 from comedian.command import Command
 from comedian.graph import ResolveLink
-from comedian.specifications import GptPartition
+from comedian.specifications import Partition
 
 
-class GptPartitionTest(SpecificationTestBase, unittest.TestCase):
+class PartitionTest(SpecificationTestBase, unittest.TestCase):
     def __init__(self, *args, **kwargs):
         SpecificationTestBase.__init__(
             self,
-            GptPartition(
+            Partition(
                 name="name",
                 partition_table="partition_table",
                 align=None,

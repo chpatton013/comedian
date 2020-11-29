@@ -4,16 +4,17 @@ from context import comedian, SpecificationTestBase
 
 from comedian.command import Command
 from comedian.graph import ResolveLink
-from comedian.specifications import GptPartitionTable
+from comedian.specifications import PartitionTable
 
 
-class GptPartitionTableTest(SpecificationTestBase, unittest.TestCase):
+class PartitionTableTest(SpecificationTestBase, unittest.TestCase):
     def __init__(self, *args, **kwargs):
         SpecificationTestBase.__init__(
             self,
-            GptPartitionTable(
+            PartitionTable(
                 name="name",
                 device="device",
+                type="type",
                 glue="glue",
             ),
         )
@@ -38,7 +39,7 @@ class GptPartitionTableTest(SpecificationTestBase, unittest.TestCase):
 
     def test_apply_commands(self):
         expected = [
-            Command(["parted", "--script", "--", "device", "mklabel", "gpt"]),
+            Command(["parted", "--script", "--", "device", "mklabel", "type"]),
         ]
         self.assertListEqual(
             expected,

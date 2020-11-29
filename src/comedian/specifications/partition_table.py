@@ -5,23 +5,24 @@ from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
 
-class GptPartitionTableApplyCommandGenerator(CommandGenerator):
-    def __init__(self, specification: "GptPartitionTable"):
+class PartitionTableApplyCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "PartitionTable"):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = context.graph.resolve_device(self.specification.device)
-        yield parted(device_path, "mklabel", "gpt")
+        yield parted(device_path, "mklabel", self.specification.type)
 
 
-class GptPartitionTable(Specification):
-    def __init__(self, name: str, device: str, glue: Optional[str]):
+class PartitionTable(Specification):
+    def __init__(self, name: str, device: str, type: str, glue: Optional[str]):
         super().__init__(
             name,
             [device],
-            apply=GptPartitionTableApplyCommandGenerator(self),
+            apply=PartitionTableApplyCommandGenerator(self),
         )
         self.device = device
+        self.type = type
         self.glue = glue
 
     def resolve_device(self) -> ResolveLink:

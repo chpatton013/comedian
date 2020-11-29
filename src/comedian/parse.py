@@ -14,8 +14,8 @@ from comedian.specifications import (
     Directory,
     File,
     Filesystem,
-    GptPartition,
-    GptPartitionTable,
+    Partition,
+    PartitionTable,
     LoopDevice,
     LvmLogicalVolume,
     LvmPhysicalVolume,
@@ -165,7 +165,7 @@ def validate_spec(
     return valid
 
 
-def partition_spec(name: str, spec: Mapping[str, Any],
+def split_spec(name: str, spec: Mapping[str, Any],
                    **kwargs) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     valid_keys = validate_spec(name, spec, **kwargs)
 
@@ -185,7 +185,7 @@ def parse_block_device(
     device: str,
 ) -> Iterator[Specification]:
     keys = {
-        "gpt_partition_table",
+        "partition_table",
         "filesystem",
         "crypt_volume",
         "swap_volume",
@@ -193,18 +193,18 @@ def parse_block_device(
     }
     validate_spec(name, spec, allowed=keys, variant=keys, exclusive=keys)
 
-    if "gpt_partition_table" in spec:
-        gpt_partition_table_spec = spec["gpt_partition_table"]
+    if "partition_table" in spec:
+        partition_table_spec = spec["partition_table"]
         validate_spec(
-            "GptPartitionTable",
-            gpt_partition_table_spec,
+            "PartitionTable",
+            partition_table_spec,
             illegal={"name", "device"},
             ignore=True,
         )
-        yield from parse_gpt_partition_table({
-            "name": f"{device}:gpt",
+        yield from parse_partition_table({
+            "name": f"{device}:pt",
             "device": device,
-            **gpt_partition_table_spec
+            **partition_table_spec
         })
 
     if "filesystem" in spec:
@@ -255,7 +255,7 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     logging.debug("parse_physical_device")
 
     name = "PhysicalDevice"
-    physical_device_spec, block_device_spec = partition_spec(
+    physical_device_spec, block_device_spec = split_spec(
         name,
         spec,
         required={"name"},
@@ -271,36 +271,36 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
         )
 
 
-def parse_gpt_partition_table(
+def parse_partition_table(
     spec: Mapping[str, Any],
 ) -> Iterator[Specification]:
-    logging.debug("parse_gpt_partition_table")
+    logging.debug("parse_partition_table")
 
     validate_spec(
-        "GptPartitionTable",
+        "PartitionTable",
         spec,
-        required={"name", "device", "gpt_partitions"},
+        required={"name", "device", "type", "partitions"},
         allowed={"glue"},
     )
 
     partition_table_name = spec["name"]
-    device_name = spec["device"]
-    yield GptPartitionTable(
+    yield PartitionTable(
         name=partition_table_name,
-        device=device_name,
+        device=spec["device"],
+        type=spec["type"],
         glue=spec.get("glue"),
     )
 
-    for index, partition_spec in enumerate(spec["gpt_partitions"]):
+    for index, partition_spec in enumerate(spec["partitions"]):
         validate_spec(
-            "GptPartition",
+            "Partition",
             partition_spec,
             illegal={"name", "partition_table", "number"},
             ignore=True,
         )
 
         number = index + 1
-        yield from parse_gpt_partition({
+        yield from parse_partition({
             "name": f"{partition_table_name}:{number}",
             "partition_table": partition_table_name,
             "number": number,
@@ -308,11 +308,11 @@ def parse_gpt_partition_table(
         })
 
 
-def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
-    logging.debug("parse_gpt_partition")
+def parse_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_partition")
 
-    name = "GptPartition"
-    gpt_partition_spec, block_device_spec = partition_spec(
+    name = "Partition"
+    partition_spec, block_device_spec = split_spec(
         name,
         spec,
         required={"name", "partition_table", "number", "type", "start", "end"},
@@ -320,18 +320,18 @@ def parse_gpt_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
         ignore=True,
     )
 
-    partition_name = gpt_partition_spec["name"]
-    yield GptPartition(
+    partition_name = partition_spec["name"]
+    yield Partition(
         name=partition_name,
-        partition_table=gpt_partition_spec["partition_table"],
-        align=gpt_partition_spec.get("align"),
-        number=gpt_partition_spec["number"],
-        type=gpt_partition_spec["type"],
-        start=gpt_partition_spec["start"],
-        end=gpt_partition_spec["end"],
-        label=gpt_partition_spec.get("label"),
-        unit=gpt_partition_spec.get("unit"),
-        flags=gpt_partition_spec.get("flags", []),
+        partition_table=partition_spec["partition_table"],
+        align=partition_spec.get("align"),
+        number=partition_spec["number"],
+        type=partition_spec["type"],
+        start=partition_spec["start"],
+        end=partition_spec["end"],
+        label=partition_spec.get("label"),
+        unit=partition_spec.get("unit"),
+        flags=partition_spec.get("flags", []),
     )
 
     if block_device_spec:
@@ -342,7 +342,7 @@ def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     logging.debug("parse_raid_volume")
 
     name = "RaidVolume"
-    raid_volume_spec, block_device_spec = partition_spec(
+    raid_volume_spec, block_device_spec = split_spec(
         name,
         spec,
         required={"name", "devices", "level", "metadata"},
@@ -365,7 +365,7 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     logging.debug("parse_crypt_volume")
 
     name = "CryptVolume"
-    crypt_volume_spec, block_device_spec = partition_spec(
+    crypt_volume_spec, block_device_spec = split_spec(
         name,
         spec,
         required={"name", "device", "type", "keyfile", "keysize"},
@@ -436,7 +436,7 @@ def parse_lvm_logical_volume(
     logging.debug("parse_lvm_logical_volume")
 
     name = "LvmLogicalVolume"
-    lvm_logical_volume_spec, block_device_spec = partition_spec(
+    lvm_logical_volume_spec, block_device_spec = split_spec(
         name,
         spec,
         required={"name", "lvm_volume_group"},
@@ -452,13 +452,13 @@ def parse_lvm_logical_volume(
         },
         ignore=True,
     )
-    partition_spec(
+    split_spec(
         name,
         spec,
         exclusive={"size", "extents"},
         ignore=True,
     )
-    partition_spec(
+    split_spec(
         name,
         spec,
         exclusive={
@@ -617,7 +617,7 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     logging.debug("parse_loop_device")
 
     name = "LoopDevice"
-    loop_device_spec, block_device_spec = partition_spec(
+    loop_device_spec, block_device_spec = split_spec(
         name,
         spec,
         required={"name", "file"},

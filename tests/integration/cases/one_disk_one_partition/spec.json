@@ -2,9 +2,9 @@
   "physical_devices": [
     {
       "name": "{{sda}}",
-      "gpt_partition_table": {
+      "partition_table": {
         "glue": "p",
-        "gpt_partitions": [
+        "partitions": [
           {
             "type": "primary",
             "start": "1MB",

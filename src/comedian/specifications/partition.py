@@ -5,8 +5,8 @@ from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
 
-class GptPartitionApplyCommandGenerator(CommandGenerator):
-    def __init__(self, specification: "GptPartition"):
+class PartitionApplyCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "Partition"):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
@@ -35,7 +35,7 @@ class GptPartitionApplyCommandGenerator(CommandGenerator):
         yield parted(*cmd, align=self.specification.align)
 
 
-class GptPartition(Specification):
+class Partition(Specification):
     def __init__(
         self,
         name: str,
@@ -52,7 +52,7 @@ class GptPartition(Specification):
         super().__init__(
             name,
             [partition_table],
-            apply=GptPartitionApplyCommandGenerator(self),
+            apply=PartitionApplyCommandGenerator(self),
         )
         self.partition_table = partition_table
         self.align = align

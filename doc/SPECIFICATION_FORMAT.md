@@ -19,7 +19,7 @@ Several specification types can contain one or more other specifications in
 their named fields:
 * `File` can contain a `LoopDevice` or a `SwapVolume`
 * `Filesystem` can contain several `Directory`s and `File`s
-* `GptPartitionTable` can contain several `GptPartition`s
+* `PartitionTable` can contain several `Partition`s
 * `LvmVolumeGroup` can contain several `LvmLogicalVolume`s
 * Any block device can contain anything that can be put on a block device
 
@@ -27,7 +27,7 @@ their named fields:
 
 The following specification types are considered to be block devices:
 * `CryptVolume`
-* `GptPartition`
+* `Partition`
 * `LoopDevice`
 * `LvmLogicalVolume`
 * `PhysicalDevice`
@@ -36,7 +36,7 @@ The following specification types are considered to be block devices:
 The following specification types can be put on a block device:
 * `CryptVolume`
 * `Filesystem`
-* `GptPartitionTable`
+* `PartitionTable`
 * `LvmPhysicalVolume`
 * `SwapVolume`
 
@@ -44,9 +44,9 @@ The following specification types can be put on a block device:
 
 Every specification has a unique name within the JSON file. Some of these names
 must be provided explicitly, but others are calculated by `comedian`. For
-example, if a `GptPartitionTable` is put on a device named `sda`, then that
-partition table is given the name `sda:gpt`. And every partition within that
-table is given a name such as `sda:gpt:1`, `sda:gpt:2`, etc.
+example, if a `PartitionTable` is put on a device named `sda`, then that
+partition table is given the name `sda:pt`. And every partition within that
+table is given a name such as `sda:pt:1`, `sda:pt:2`, etc.
 
 Some specifications have fields which reference other specifications. They do
 this by citing the name of the referred-to specification. For example,
@@ -65,8 +65,9 @@ if "B" also refers to "A", etc).
   "physical_devices": [
     {
       "name": "sda",
-      "gpt_partition_table": {
-        "gpt_partitions": [
+      "partition_table": {
+        "type": "gpt",
+        "partitions": [
           {
             "type": "primary",
             "start": "1MB",
@@ -127,7 +128,7 @@ The grammar begins parsing at `Root`.
 "password": str ?
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
-"gpt_partition_table": GptPartitionTable ^
+"partition_table": PartitionTable ^
 "lvm_physical_volume": LvmPhysicalVolume ^
 "swap_volume": SwapVolume ^
 ```
@@ -192,7 +193,7 @@ Inherits `device` properties from its parent specification.
 
 * `device`: `{parent}`
 
-### GptPartition
+### Partition
 
 ```
 "align": str ?
@@ -204,7 +205,7 @@ Inherits `device` properties from its parent specification.
 "unit": str ?
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
-"gpt_partition_table": GptPartitionTable ^
+"partition_table": PartitionTable ^
 "lvm_physical_volume": LvmPhysicalVolume ^
 "swap_volume": SwapVolume ^
 ```
@@ -212,18 +213,19 @@ Inherits `device` properties from its parent specification.
 #### Implicit Fields
 
 Inherits `partition_table`, `number`, and `name` properties from its parent
-`GptPartitionTable`.
+`PartitionTable`.
 
 * `partition_table`: `{parent}`
 * `number`: The index of this partition within the list of partitions in the
-  parent `GptPartitiontTable`; 1-indexed.
+  parent `PartitiontTable`; 1-indexed.
 * `name`: `{partition_table}:{number}`
 
-### GptPartitionTable
+### PartitionTable
 
 ```
+"type": str
 "glue": str ?
-"gpt_partitions": GptPartition +
+"partitions": Partition +
 ```
 
 #### Implicit Fields
@@ -231,7 +233,7 @@ Inherits `partition_table`, `number`, and `name` properties from its parent
 Inherits `name` and `device` properties from its parent specification.
 
 * `device`: `{parent}`
-* `name`: `{device}:gpt`
+* `name`: `{device}:pt`
 
 ### LoopDevice
 
@@ -240,7 +242,7 @@ Inherits `name` and `device` properties from its parent specification.
 "args": str *
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
-"gpt_partition_table": GptPartitionTable ^
+"partition_table": PartitionTable ^
 "lvm_physical_volume": LvmPhysicalVolume ^
 "swap_volume": SwapVolume ^
 ```
@@ -266,7 +268,7 @@ Inherits `file` properties from its parent `File`.
 "lvm_thinpool_volume": str ^2 ?
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
-"gpt_partition_table": GptPartitionTable ^
+"partition_table": PartitionTable ^
 "lvm_physical_volume": LvmPhysicalVolume ^
 "swap_volume": SwapVolume ^
 ```
@@ -303,7 +305,7 @@ Inherits `device` properties from its parent specification.
 "name": str
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
-"gpt_partition_table": GptPartitionTable ^
+"partition_table": PartitionTable ^
 "lvm_physical_volume": LvmPhysicalVolume ^
 "swap_volume": SwapVolume ^
 ```
@@ -317,7 +319,7 @@ Inherits `device` properties from its parent specification.
 "metadata": str
 "crypt_volume": CryptVolume ^
 "filesystem": Filesystem ^
-"gpt_partition_table": GptPartitionTable ^
+"partition_table": PartitionTable ^
 "lvm_physical_volume": LvmPhysicalVolume ^
 "swap_volume": SwapVolume ^
 ```

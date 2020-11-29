@@ -2,8 +2,9 @@
   "physical_devices": [
     {
       "name": "sda",
-      "gpt_partition_table": {
-        "gpt_partitions": [
+      "partition_table": {
+        "type": "gpt",
+        "partitions": [
           {
             "type": "primary",
             "start": "1MB",
@@ -35,8 +36,9 @@
     },
     {
       "name": "sdb",
-      "gpt_partition_table": {
-        "gpt_partitions": [
+      "partition_table": {
+        "type": "gpt",
+        "partitions": [
           {
             "type": "primary",
             "start": "1MB",
@@ -70,13 +72,13 @@
   "raid_volumes": [
     {
       "name": "raidbios",
-      "devices": ["sda:gpt:1", "sdb:gpt:1"],
+      "devices": ["sda:pt:1", "sdb:pt:1"],
       "level": "1",
       "metadata": "1.0"
     },
     {
       "name": "raidefi",
-      "devices": ["sda:gpt:2", "sdb:gpt:2"],
+      "devices": ["sda:pt:2", "sdb:pt:2"],
       "level": "1",
       "metadata": "1.0",
       "filesystem": {
@@ -87,7 +89,7 @@
     },
     {
       "name": "raidboot",
-      "devices": ["sda:gpt:3", "sdb:gpt:3"],
+      "devices": ["sda:pt:3", "sdb:pt:3"],
       "level": "1",
       "metadata": "1.0",
       "crypt_volume": {
@@ -125,7 +127,7 @@
     },
     {
       "name": "raidroot",
-      "devices": ["sda:gpt:4", "sdb:gpt:4"],
+      "devices": ["sda:pt:4", "sdb:pt:4"],
       "level": "0",
       "metadata": "1.2",
       "crypt_volume": {
