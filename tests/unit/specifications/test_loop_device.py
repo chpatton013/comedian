@@ -60,6 +60,22 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
             list(self.specification.up(self.context)),
         )
 
+    def test_pre_down_commands(self):
+        expected = [
+            Command(
+                cmd=[
+                    "shell",
+                    "-c",
+                    "losetup --associated \"media_dir/file\" | sed 's#:.*##'",
+                ],
+                capture="loop_device_name",
+            ),
+        ]
+        self.assertListEqual(
+            expected,
+            list(self.specification.pre_down(self.context)),
+        )
+
     def test_down_commands(self):
         expected = [
             Command([

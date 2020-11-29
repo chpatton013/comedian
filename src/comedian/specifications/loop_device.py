@@ -14,12 +14,21 @@ class LoopDeviceUpCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.file)
         )
 
-        cmd = ["losetup"]
-        cmd += self.specification.args
-        cmd += ["--find", file_path]
-
+        cmd = ["losetup"] + self.specification.args + ["--find", file_path]
         yield Command(cmd, capture=self.specification.capture)
 
+
+class LoopDevicePreDownCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "LoopDevice"):
+        self.specification = specification
+
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        file_path = context.config.media_path(
+            context.graph.resolve_path(self.specification.file)
+        )
+
+        cmd = [context.config.shell, "-c", f"losetup --associated \"{file_path}\" | sed 's#:.*##'"]
+        yield Command(cmd, capture=self.specification.capture)
 
 class LoopDeviceDownCommandGenerator(CommandGenerator):
     def __init__(self, specification: "LoopDevice"):
@@ -38,6 +47,7 @@ class LoopDevice(Specification):
             [file],
             apply=LoopDeviceUpCommandGenerator(self),
             up=LoopDeviceUpCommandGenerator(self),
+            pre_down=LoopDevicePreDownCommandGenerator(self),
             down=LoopDeviceDownCommandGenerator(self),
         )
         self.file = file
