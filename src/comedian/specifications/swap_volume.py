@@ -1,6 +1,6 @@
 from typing import Iterator, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
 from comedian.specification import Specification
 
 
@@ -11,7 +11,7 @@ class SwapVolumeApplyCommandGenerator(CommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(context, self.specification.device)
 
-        cmd = ["mkswap", device_path]
+        cmd = ["mkswap", quote_argument(device_path)]
         if self.specification.label:
             cmd.append(f"--label={self.specification.label}")
         if self.specification.pagesize:
@@ -28,7 +28,7 @@ class SwapVolumeUpCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(context, self.specification.device)
-        yield Command(["swapon", device_path])
+        yield Command(["swapon", quote_argument(device_path)])
 
 
 class SwapVolumeDownCommandGenerator(CommandGenerator):
@@ -37,7 +37,7 @@ class SwapVolumeDownCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(context, self.specification.device)
-        yield Command(["swapoff", device_path])
+        yield Command(["swapoff", quote_argument(device_path)])
 
 
 class SwapVolume(Specification):

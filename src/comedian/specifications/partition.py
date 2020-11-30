@@ -1,6 +1,12 @@
 from typing import Iterable, Iterator, List, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator, parted
+from comedian.command import (
+    Command,
+    CommandContext,
+    CommandGenerator,
+    parted,
+    quote_argument,
+)
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -15,7 +21,7 @@ class PartitionApplyCommandGenerator(CommandGenerator):
         )
 
         cmd = [
-            partition_table_path,
+            quote_argument(partition_table_path),
             "mkpart",
             self.specification.type,
             self.specification.start,

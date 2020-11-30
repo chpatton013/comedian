@@ -1,6 +1,6 @@
 from typing import Iterator, List
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -22,10 +22,10 @@ class RaidVolumeApplyCommandGenerator(CommandGenerator):
             f"--level={self.specification.level}",
             f"--metadata={self.specification.metadata}",
             f"--raid-devices={len(self.specification.devices)}",
-            _raid_device(self.specification.name),
+            quote_argument(_raid_device(self.specification.name)),
         ]
 
-        yield Command(cmd + device_paths)
+        yield Command(cmd + [quote_argument(path) for path in device_paths])
 
 
 class RaidVolumeUpCommandGenerator(CommandGenerator):
@@ -37,7 +37,7 @@ class RaidVolumeUpCommandGenerator(CommandGenerator):
             [
                 "mdadm",
                 "--assemble",
-                _raid_device(self.specification.name),
+                quote_argument(_raid_device(self.specification.name)),
             ]
         )
 
@@ -51,7 +51,7 @@ class RaidVolumeDownCommandGenerator(CommandGenerator):
             [
                 "mdadm",
                 "--stop",
-                _raid_device(self.specification.name),
+                quote_argument(_raid_device(self.specification.name)),
             ]
         )
 

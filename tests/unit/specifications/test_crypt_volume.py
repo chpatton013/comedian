@@ -59,7 +59,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    "dd status=progress conv=sync,noerror if=/dev/zero of=/dev/mapper/randomize_name bs=dd_bs || true",
+                    "'dd status=progress conv=sync,noerror if=/dev/zero of=/dev/mapper/randomize_name bs=dd_bs || true'",
                 ]
             ),
             Command(["sync"]),
@@ -90,7 +90,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    "echo password | cryptsetup --batch-mode --key-file=tmp_dir/keyfile luksAddKey device",
+                    "'echo password | cryptsetup --batch-mode --key-file=tmp_dir/keyfile luksAddKey device'",
                 ]
             ),
             Command(

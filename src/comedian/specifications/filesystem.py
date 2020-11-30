@@ -1,6 +1,6 @@
 from typing import Iterable, Iterator, List
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -79,12 +79,12 @@ class Filesystem(Specification):
 
 
 def _mkfs(device: str, type: str, options: Iterable[str]) -> List[str]:
-    return ["mkfs", "--type", type] + list(options) + [device]
+    return ["mkfs", "--type", type] + list(options) + [quote_argument(device)]
 
 
 def _mount_fs(device: str, mountpoint: str) -> List[str]:
-    return ["mount", device, mountpoint]
+    return ["mount", quote_argument(device), quote_argument(mountpoint)]
 
 
 def _umount_fs(device: str) -> List[str]:
-    return ["umount", device]
+    return ["umount", quote_argument(device)]

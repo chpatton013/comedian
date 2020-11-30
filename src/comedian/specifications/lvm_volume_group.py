@@ -1,6 +1,6 @@
 from typing import Iterator, List
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -15,7 +15,10 @@ class LvmVolumeGroupApplyCommandGenerator(CommandGenerator):
             for lvm_physical_volume in self.specification.lvm_physical_volumes
         ]
 
-        yield Command(["vgcreate", self.specification.name] + lvm_physical_volume_paths)
+        yield Command(
+            ["vgcreate", self.specification.name]
+            + [quote_argument(path) for path in lvm_physical_volume_paths]
+        )
 
 
 class LvmVolumeGroupUpCommandGenerator(CommandGenerator):

@@ -1,7 +1,14 @@
 import os
 from typing import Iterable, Iterator, List, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator, mkdir
+from comedian.command import (
+    Command,
+    CommandContext,
+    CommandGenerator,
+    mkdir,
+    quote_argument,
+    quote_subcommand,
+)
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -33,12 +40,21 @@ class CryptVolumePostApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        tmp_keyfile = context.config.tmp_path(self.specification.keyfile)
+        tmp_keyfile = context.config.tmp_path(
+            context.graph.resolve_path(self.specification.keyfile)
+        )
         dest_keyfile = context.config.media_path(
             context.graph.resolve_path(self.specification.keyfile)
         )
 
-        yield Command(["cp", tmp_keyfile, dest_keyfile, "--preserve=mode,ownership"])
+        yield Command(
+            [
+                "cp",
+                quote_argument(tmp_keyfile),
+                quote_argument(dest_keyfile),
+                "--preserve=mode,ownership",
+            ]
+        )
 
 
 class CryptVolumeUpCommandGenerator(CommandGenerator):
@@ -113,9 +129,9 @@ def _open_crypt(
     *args: Iterable[str],
 ) -> List[str]:
     return _cryptsetup(
-        f"--key-file={keyfile}",
+        f"--key-file={quote_argument(keyfile)}",
         "open",
-        device,
+        quote_argument(device),
         name,
         *args,
     )
@@ -143,11 +159,11 @@ def _randomize_device(
     dd_cmd = " ".join(
         _dd(
             f"if=/dev/zero",
-            f"of={_crypt_device(cryptname)}",
+            f"of={quote_argument(_crypt_device(cryptname))}",
             f"bs={context.config.dd_bs}",
         )
     )
-    yield Command([context.config.shell, "-c", f"{dd_cmd} || true"])
+    yield Command([context.config.shell, "-c", quote_subcommand(f"{dd_cmd} || true")])
     yield Command(["sync"])
     yield Command(_close_crypt(cryptname))
 
@@ -160,8 +176,8 @@ def _create_keyfile(
     yield mkdir(os.path.dirname(keyfile))
     yield Command(
         _dd(
-            f"if={context.config.random_device}",
-            f"of={keyfile}",
+            f"if={quote_argument(context.config.random_device)}",
+            f"of={quote_argument(keyfile)}",
             f"bs={keysize}",
             "count=1",
         )
@@ -178,19 +194,25 @@ def _format_crypt(
 ) -> Iterator[Command]:
     yield Command(
         _cryptsetup(
-            f"--key-file={keyfile}",
+            f"--key-file={quote_argument(keyfile)}",
             "luksFormat",
             f"--type={type}",
-            device,
+            quote_argument(device),
         )
     )
     if password:
         add_key_cmd = " ".join(
             _cryptsetup(
-                f"--key-file={keyfile}",
+                f"--key-file={quote_argument(keyfile)}",
                 "luksAddKey",
-                device,
+                quote_argument(device),
             )
         )
-        yield Command([context.config.shell, "-c", f"echo {password} | {add_key_cmd}"])
+        yield Command(
+            [
+                quote_argument(context.config.shell),
+                "-c",
+                quote_subcommand(f"echo {password} | {add_key_cmd}"),
+            ]
+        )
     yield Command(_open_crypt(name, device, keyfile))

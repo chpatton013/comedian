@@ -25,8 +25,7 @@ class Configuration(__Debug__, __Eq__):
         return _join(self.tmp_dir, path)
 
 
-def _join(head, *tail):
-    joined = _join(*tail) if tail else ""
-    if joined.startswith(os.path.sep):
-        joined = joined[len(os.path.sep) :]
-    return head + os.path.sep + joined if joined else head
+def _join(root: str, path: str) -> str:
+    if os.path.isabs(path):
+        path = path[1:]
+    return os.path.join(root, path)

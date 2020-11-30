@@ -1,6 +1,12 @@
 from typing import Iterator, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator, parted
+from comedian.command import (
+    Command,
+    CommandContext,
+    CommandGenerator,
+    parted,
+    quote_argument,
+)
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -11,7 +17,7 @@ class PartitionTableApplyCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = context.graph.resolve_device(self.specification.device)
-        yield parted(device_path, "mklabel", self.specification.type)
+        yield parted(quote_argument(device_path), "mklabel", self.specification.type)
 
 
 class PartitionTable(Specification):

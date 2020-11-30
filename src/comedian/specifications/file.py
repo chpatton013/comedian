@@ -8,6 +8,7 @@ from comedian.command import (
     chmod,
     chown,
     mkdir,
+    quote_argument,
 )
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
@@ -29,11 +30,11 @@ class FileApplyCommandGenerator(CommandGenerator):
                     "fallocate",
                     "--length",
                     self.specification.size,
-                    file_path,
+                    quote_argument(file_path),
                 ]
             )
         else:
-            yield Command(["touch", file_path])
+            yield Command(["touch", quote_argument(file_path)])
         if self.specification.owner or self.specification.group:
             yield chown(
                 self.specification.owner,

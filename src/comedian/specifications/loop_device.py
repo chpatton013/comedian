@@ -1,6 +1,12 @@
 from typing import Iterator, List
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import (
+    Command,
+    CommandContext,
+    CommandGenerator,
+    quote_argument,
+    quote_subcommand,
+)
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -14,11 +20,15 @@ class LoopDeviceUpCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.file)
         )
 
-        create_cmd = ["losetup"] + self.specification.args + ["--find", file_path]
-        capture_cmd = [context.config.shell, "-c", _find_loop_device(file_path)]
+        cmd = [
+            "losetup",
+            *self.specification.args,
+            "--find",
+            "--show",
+            quote_argument(file_path),
+        ]
 
-        yield Command(create_cmd)
-        yield Command(capture_cmd, capture=self.specification.capture)
+        yield Command(cmd, capture=self.specification.capture)
 
 
 class LoopDevicePreDownCommandGenerator(CommandGenerator):
@@ -30,8 +40,12 @@ class LoopDevicePreDownCommandGenerator(CommandGenerator):
             context.graph.resolve_path(self.specification.file)
         )
 
-        capture_cmd = [context.config.shell, "-c", _find_loop_device(file_path)]
-        yield Command(capture_cmd, capture=self.specification.capture)
+        cmd = [
+            context.config.shell,
+            "-c",
+            quote_subcommand(_find_loop_device(file_path)),
+        ]
+        yield Command(cmd, capture=self.specification.capture)
 
 
 class LoopDeviceDownCommandGenerator(CommandGenerator):
@@ -39,13 +53,9 @@ class LoopDeviceDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command(
-            [
-                context.config.shell,
-                "-c",
-                f'losetup --detach "${self.specification.capture}"',
-            ]
-        )
+        yield Command([
+            "losetup", "--detach", quote_argument(f"${self.specification.capture}")
+        ])
 
 
 class LoopDevice(Specification):
@@ -66,8 +76,10 @@ class LoopDevice(Specification):
         return f"loop_device_{self.name}"
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(None, f'"${self.capture}"')
+        return ResolveLink(None, f"${self.capture}")
 
 
 def _find_loop_device(file_path: str) -> str:
-    return f"losetup --associated \"{file_path}\" | sed 's#:.*##'"
+    quoted_file_path = quote_argument(file_path)
+    quoted_expression = quote_argument("s#:.*##")
+    return f"losetup --associated {quoted_file_path} | sed {quoted_expression}"

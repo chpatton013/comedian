@@ -2,6 +2,7 @@
 Command API for generating shell commands to be run on a system.
 """
 
+import shlex
 from abc import ABC, abstractmethod
 from typing import Dict, Iterable, Iterator, List, Optional
 
@@ -18,6 +19,9 @@ class Command(__Debug__, __Eq__):
     def __init__(self, cmd: List[str], capture: Optional[str] = None):
         self.cmd = cmd
         self.capture = capture
+
+    def join(self) -> str:
+        return " ".join(self.cmd)
 
 
 class CommandContext(__Debug__):
@@ -45,8 +49,16 @@ class CommandGenerator(ABC):
         pass
 
 
+def quote_argument(arg: str) -> str:
+    return arg if shlex.quote(arg) == arg else f'"{arg}"'
+
+
+def quote_subcommand(sub: str) -> str:
+    return f"'{sub}'"
+
+
 def chmod(mode: str, *paths: Iterable[str]) -> Command:
-    return Command(["chmod", mode] + list(paths))
+    return Command(["chmod", mode] + [quote_argument(path) for path in paths])
 
 
 def chown(
@@ -59,11 +71,11 @@ def chown(
         own += owner
     if group:
         own += f":{group}"
-    return Command(["chown", own] + list(paths))
+    return Command(["chown", own] + [quote_argument(path) for path in paths])
 
 
 def mkdir(*paths: Iterable[str]) -> Command:
-    return Command(["mkdir", "--parents"] + list(paths))
+    return Command(["mkdir", "--parents"] + [quote_argument(path) for path in paths])
 
 
 def parted(*args: Iterable[str], align: Optional[str] = None) -> Command:

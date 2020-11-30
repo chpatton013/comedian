@@ -28,7 +28,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_resolve(self):
         self.assertEqual(
-            ResolveLink(None, '"$loop_device_name"'),
+            ResolveLink(None, "$loop_device_name"),
             self.specification.resolve_device(),
         )
         self.assertEqual(
@@ -45,7 +45,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
                 cmd=[
                     "shell",
                     "-c",
-                    "losetup --associated \"media_dir/file\" | sed 's#:.*##'",
+                    "'losetup --associated media_dir/file | sed \"s#:.*##\"'",
                 ],
                 capture="loop_device_name",
             ),
@@ -64,7 +64,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
                 cmd=[
                     "shell",
                     "-c",
-                    "losetup --associated \"media_dir/file\" | sed 's#:.*##'",
+                    "'losetup --associated media_dir/file | sed \"s#:.*##\"'",
                 ],
                 capture="loop_device_name",
             ),
@@ -80,7 +80,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
                 cmd=[
                     "shell",
                     "-c",
-                    "losetup --associated \"media_dir/file\" | sed 's#:.*##'",
+                    "'losetup --associated media_dir/file | sed \"s#:.*##\"'",
                 ],
                 capture="loop_device_name",
             ),
@@ -96,7 +96,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    'losetup --detach "$loop_device_name"',
+                    "'losetup --detach \"$loop_device_name\"'",
                 ]
             ),
         ]

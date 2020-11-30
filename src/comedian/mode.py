@@ -51,19 +51,14 @@ class ExecMode(Mode):
 
     def on_command(self, context: CommandContext, command: Command):
         logging.info("%s", command)
+        cmd_str = command.join()
         if command.capture:
             result = subprocess.check_output(
-                _shlex_join(command.cmd),
-                env=context.env.copy(),
-                shell=True,
+                cmd_str, env=context.env.copy(), shell=True
             )
             context.env[command.capture] = result.decode()
         else:
-            subprocess.check_call(
-                _shlex_join(command.cmd),
-                env=context.env,
-                shell=True,
-            )
+            subprocess.check_call(cmd_str, env=context.env, shell=True)
 
     def on_end(self, context: CommandContext):
         pass
@@ -103,15 +98,11 @@ class ShellMode(Mode):
 
     def on_command(self, context: CommandContext, command: Command):
         logging.info("%s", command)
-        cmd_str = _shlex_join(command.cmd)
+        cmd_str = command.join()
         if command.capture:
-            print(f'{command.capture}="$({cmd_str})"')
+            print(f'export {command.capture}="$({cmd_str})"')
         else:
             print(cmd_str)
 
     def on_end(self, context: CommandContext):
         pass
-
-
-def _shlex_join(args: Iterable[str]) -> str:
-    return " ".join([arg if "$" in arg else shlex.quote(arg) for arg in args])

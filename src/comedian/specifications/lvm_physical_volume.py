@@ -1,6 +1,6 @@
 from typing import Iterator
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -12,7 +12,7 @@ class LvmPhysicalVolumeApplyCommandGenerator(CommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = context.graph.resolve_device(self.specification.device)
 
-        yield Command(["pvcreate", device_path])
+        yield Command(["pvcreate", quote_argument(device_path)])
 
 
 class LvmPhysicalVolume(Specification):

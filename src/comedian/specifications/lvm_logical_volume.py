@@ -1,6 +1,6 @@
 from typing import Iterator, List, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator
+from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -35,7 +35,7 @@ class LvmLogicalVolumeApplyCommandGenerator(CommandGenerator):
             cmd.append(f"--thinpool={self.specification.lvm_thinpool_volume}")
         cmd += self.specification.args
         cmd.append(self.specification.lvm_volume_group)
-        cmd += lvm_physical_volume_paths
+        cmd += [quote_argument(path) for path in lvm_physical_volume_paths]
 
         yield Command(cmd)
 
