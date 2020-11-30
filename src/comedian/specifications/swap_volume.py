@@ -18,8 +18,9 @@ class SwapVolumeApplyCommandGenerator(CommandGenerator):
             cmd.append(f"--pagesize={self.specification.pagesize}")
         if self.specification.uuid:
             cmd.append(f"--uuid={self.specification.uuid}")
-
         yield Command(cmd)
+
+        yield Command(["swapon", quote_argument(device_path)])
 
 
 class SwapVolumeUpCommandGenerator(CommandGenerator):
