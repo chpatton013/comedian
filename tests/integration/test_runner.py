@@ -1,10 +1,11 @@
 import json
 import os
+import shutil
 import stat
 import subprocess
 import tempfile
 import unittest
-from typing import Dict, Iterable
+from typing import Any, Dict, Iterable
 
 COMEDIAN_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RUNTIME_DATA_DIR = os.path.join(COMEDIAN_ROOT, "data")
@@ -70,7 +71,7 @@ class TestCase:
 
 
 class TempFile:
-    def __init__(self, content: str, **kwargs):
+    def __init__(self, content: str, **kwargs: Any):
         fd, self.path = tempfile.mkstemp(text=True, **kwargs)
         os.write(fd, content.encode("utf-8"))
         os.chmod(fd, stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
@@ -80,8 +81,16 @@ class TempFile:
         os.unlink(self.path)
 
 
+class TempDirectory:
+    def __init__(self, **kwargs: Any) -> None:
+        self.path = tempfile.mkdtemp(**kwargs)
+
+    def __del__(self) -> None:
+        shutil.rmtree(self.path)
+
+
 class TempLoopDevice:
-    def __init__(self, size: str, **kwargs):
+    def __init__(self, size: str, **kwargs: Any):
         self.size = size
         self.kwargs = kwargs
         self.path = None
@@ -125,8 +134,10 @@ class TestRunner(unittest.TestCase):
             name = os.path.relpath(loop.loop, start="/dev")
             self.devices[device["name"]] = name
             self.resources.append(loop)
-        self.media_dir = tempfile.TemporaryDirectory()
+        self.media_dir = TempDirectory(prefix="comedian_media_")
+        self.tmp_dir = TempDirectory(prefix="comedian_tmp_")
         self.resources.append(self.media_dir)
+        self.resources.append(self.tmp_dir)
 
     def find_config_file(self) -> str:
         if os.path.isfile(self._test_case.config_path()):
@@ -142,7 +153,8 @@ class TestRunner(unittest.TestCase):
         config_file = self.find_config_file()
         with open(config_file, "r") as f:
             config_content = json.load(f)
-        config_content["media_dir"] = self.media_dir.name
+        config_content["media_dir"] = self.media_dir.path
+        config_content["tmp_dir"] = self.tmp_dir.path
         return TempFile(json.dumps(config_content), suffix=".json")
 
     def render_spec_file(self) -> TempFile:
