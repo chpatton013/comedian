@@ -62,15 +62,12 @@ class CryptVolumeUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        dest_keyfile = context.config.media_path(
+        device_path = context.graph.resolve_device(self.specification.device)
+        keyfile_path = context.config.tmp_path(
             context.graph.resolve_path(self.specification.keyfile)
         )
 
-        yield Command(
-            _open_crypt(
-                self.specification.name, self.specification.device, dest_keyfile
-            )
-        )
+        yield Command(_open_crypt(self.specification.name, device_path, keyfile_path))
 
 
 class CryptVolumeDownCommandGenerator(CommandGenerator):
