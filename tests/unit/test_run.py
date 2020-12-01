@@ -17,11 +17,17 @@ class AnyType:
 
 
 class AnyIter:
-    def __init__(self, iterator: Iterator[Any]):
-        self.iterator = iterator
+    def __init__(self, iterable: Iterable[Any]):
+        self.iterator = iter(iterable)
 
-    def __eq__(self, other: Iterable[Any]):
-        return list(self.iterator) == list(other)
+    def __iter__(self) -> Iterator[Any]:
+        return self
+
+    def __next__(self) -> Any:
+        return next(self.iterator)
+
+    def __eq__(self, other: Any) -> bool:
+        return list(self) == list(other)
 
 
 class TestSpecification(Specification):

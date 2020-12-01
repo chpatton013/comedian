@@ -1,3 +1,4 @@
+import abc
 import json
 import os
 import shutil
@@ -5,7 +6,7 @@ import stat
 import subprocess
 import tempfile
 import unittest
-from typing import Any, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Iterator
 
 COMEDIAN_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RUNTIME_DATA_DIR = os.path.join(COMEDIAN_ROOT, "data")
@@ -40,7 +41,7 @@ def comedian_command(
     return f"python {comedian} --config={config} --mode={mode} {action} {spec}"
 
 
-def pipeline(*commands: Iterable[str]) -> str:
+def pipeline(*commands: str) -> str:
     return " | ".join(commands)
 
 
@@ -122,7 +123,12 @@ class TempLoopDevice:
             self.path = None
 
 
-class TestRunner(unittest.TestCase):
+class TestRunner(abc.ABC, unittest.TestCase):
+    @property
+    @abc.abstractmethod
+    def _test_case(self) -> TestCase:
+        pass
+
     def setUp(self):
         self.devices = {}
         self.resources = []
@@ -201,8 +207,8 @@ class TestRunner(unittest.TestCase):
         return TempFile("\n".join(content), suffix=".sh")
 
 
-def make_test_fn():
-    def test_fn(self):
+def make_test_fn() -> Callable[[TestRunner], None]:
+    def test_fn(self: TestRunner) -> None:
         config_file = self.render_config_file()
         spec_file = self.render_spec_file()
         integration_test_file = self.render_integration_test_file(
@@ -214,7 +220,7 @@ def make_test_fn():
     return test_fn
 
 
-def generate_test_cases(root):
+def generate_test_cases(root) -> Iterator[TestCase]:
     for name in os.listdir(root):
         path = os.path.join(root, name)
         if os.path.isdir(path):

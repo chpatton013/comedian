@@ -19,9 +19,12 @@ class FileApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        file_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.name)
-        )
+        file_path = context.graph.resolve_path(self.specification.name)
+        if not file_path:
+            raise ValueError(
+                "Failed to find file path {}".format(self.specification.name)
+            )
+        media_file_path = context.config.media_path(file_path)
 
         yield mkdir(os.path.dirname(file_path))
         if self.specification.size:
@@ -30,19 +33,19 @@ class FileApplyCommandGenerator(CommandGenerator):
                     "fallocate",
                     "--length",
                     self.specification.size,
-                    quote_argument(file_path),
+                    quote_argument(media_file_path),
                 ]
             )
         else:
-            yield Command(["touch", quote_argument(file_path)])
+            yield Command(["touch", quote_argument(media_file_path)])
         if self.specification.owner or self.specification.group:
             yield chown(
                 self.specification.owner,
                 self.specification.group,
-                file_path,
+                media_file_path,
             )
         if self.specification.mode:
-            yield chmod(self.specification.mode, file_path)
+            yield chmod(self.specification.mode, media_file_path)
 
 
 class File(Specification):

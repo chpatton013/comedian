@@ -57,14 +57,14 @@ def quote_subcommand(sub: str) -> str:
     return f"'{sub}'"
 
 
-def chmod(mode: str, *paths: Iterable[str]) -> Command:
+def chmod(mode: str, *paths: str) -> Command:
     return Command(["chmod", mode] + [quote_argument(path) for path in paths])
 
 
 def chown(
     owner: Optional[str],
     group: Optional[str],
-    *paths: Iterable[str],
+    *paths: str,
 ) -> Command:
     own = ""
     if owner:
@@ -74,11 +74,11 @@ def chown(
     return Command(["chown", own] + [quote_argument(path) for path in paths])
 
 
-def mkdir(*paths: Iterable[str]) -> Command:
+def mkdir(*paths: str) -> Command:
     return Command(["mkdir", "--parents"] + [quote_argument(path) for path in paths])
 
 
-def parted(*args: Iterable[str], align: Optional[str] = None) -> Command:
+def parted(*args: str, align: Optional[str] = None) -> Command:
     cmd = ["parted", "--script"]
     if align:
         cmd.append(f"--align={align}")

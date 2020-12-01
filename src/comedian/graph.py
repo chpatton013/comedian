@@ -16,12 +16,16 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Iterable,
     Iterator,
     List,
     Mapping,
+    MutableMapping,
     Optional,
     Set,
+    Type,
+    TypeVar,
 )
 
 from comedian.traits import __Debug__, __Eq__
@@ -138,7 +142,10 @@ class GraphNode(__Debug__, __Eq__):
         return ResolveLink(None, None)
 
 
-class Graph(__Debug__):
+GraphNodeT = TypeVar("GraphNodeT", bound=GraphNode)
+
+
+class Graph(__Debug__, Generic[GraphNodeT]):
     """
     A graph-representation of a collection of GraphNodes.
 
@@ -146,8 +153,8 @@ class Graph(__Debug__):
     names, and their dependencies.
     """
 
-    def __init__(self, nodes: Iterable[GraphNode]):
-        self._nodes: Mapping[str, GraphNode] = OrderedDict()
+    def __init__(self, nodes: Iterable[GraphNodeT]):
+        self._nodes: Mapping[str, GraphNodeT] = OrderedDict()
         for node in nodes:
             if node.name in self._nodes:
                 raise GraphNameError(node.name)
@@ -170,14 +177,16 @@ class Graph(__Debug__):
                 if reference_name not in self._nodes:
                     raise GraphEdgeError(name, reference_name)
 
-    def walk(self) -> Iterator[GraphNode]:
+    def walk(self) -> Iterator[GraphNodeT]:
         """
         Traverse this Graph, yielding GraphNodes in dependency order.
         """
 
         visited: Set[str] = set()
         visitable: List[str] = list()
-        not_visited: Mapping[str, Set[str]] = copy.deepcopy(self._dependencies)
+        not_visited = {
+            key: copy.deepcopy(value) for key, value in self._dependencies.items()
+        }
 
         # Mark all nodes without dependencies as immediately-visitable.
         for name, dependencies in not_visited.items():
@@ -246,7 +255,7 @@ class Graph(__Debug__):
     def _resolve(
         self,
         name: str,
-        node_resolve: Callable[[str], ResolveLink],
+        node_resolve: Callable[[GraphNodeT], ResolveLink],
         graph_resolve: Callable[[str], ResolveResult],
     ) -> ResolveResult:
         # Ensure that the node exists.

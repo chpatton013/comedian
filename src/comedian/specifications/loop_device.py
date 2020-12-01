@@ -11,21 +11,27 @@ from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
 
+def _file_path(file: str, context: CommandContext) -> str:
+    file_path = context.graph.resolve_path(file)
+    if not file_path:
+        raise ValueError("Failed to find file path {}".format(file))
+    return file_path
+
+
 class LoopDeviceUpCommandGenerator(CommandGenerator):
     def __init__(self, specification: "LoopDevice"):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        file_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.file)
-        )
+        file_path = _file_path(self.specification.file, context)
+        media_file_path = context.config.media_path(file_path)
 
         cmd = [
             "losetup",
             *self.specification.args,
             "--find",
             "--show",
-            quote_argument(file_path),
+            quote_argument(media_file_path),
         ]
 
         yield Command(cmd, capture=self.specification.capture)
@@ -36,14 +42,13 @@ class LoopDevicePreDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        file_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.file)
-        )
+        file_path = _file_path(self.specification.file, context)
+        media_file_path = context.config.media_path(file_path)
 
         cmd = [
             context.config.shell,
             "-c",
-            quote_subcommand(_find_loop_device(file_path)),
+            quote_subcommand(_find_loop_device(media_file_path)),
         ]
         yield Command(cmd, capture=self.specification.capture)
 
@@ -53,9 +58,9 @@ class LoopDeviceDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command([
-            "losetup", "--detach", quote_argument(f"${self.specification.capture}")
-        ])
+        yield Command(
+            ["losetup", "--detach", quote_argument(f"${self.specification.capture}")]
+        )
 
 
 class LoopDevice(Specification):

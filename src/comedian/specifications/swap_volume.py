@@ -9,7 +9,7 @@ class SwapVolumeApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(context, self.specification.device)
+        device_path = _device_path(self.specification.device, context)
 
         cmd = ["mkswap", quote_argument(device_path)]
         if self.specification.label:
@@ -28,7 +28,7 @@ class SwapVolumeUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(context, self.specification.device)
+        device_path = _device_path(self.specification.device, context)
         yield Command(["swapon", quote_argument(device_path)])
 
 
@@ -37,7 +37,7 @@ class SwapVolumeDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(context, self.specification.device)
+        device_path = _device_path(self.specification.device, context)
         yield Command(["swapoff", quote_argument(device_path)])
 
 
@@ -63,8 +63,11 @@ class SwapVolume(Specification):
         self.uuid = uuid
 
 
-def _device_path(context: CommandContext, device: str) -> Optional[str]:
+def _device_path(device: str, context: CommandContext) -> str:
     device_path = context.graph.resolve_device(device)
+    if device_path:
+        return device_path
+    device_path = context.graph.resolve_path(device)
     if not device_path:
-        device_path = context.config.media_path(context.graph.resolve_path(device))
-    return device_path
+        raise ValueError("Failed to find device path {}".format(device))
+    return context.config.media_path(device_path)

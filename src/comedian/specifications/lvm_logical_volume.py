@@ -11,7 +11,7 @@ class LvmLogicalVolumeApplyCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         lvm_physical_volume_paths = [
-            context.graph.resolve_device(lvm_physical_volume)
+            _lvm_physical_volume_path(lvm_physical_volume, context)
             for lvm_physical_volume in self.specification.lvm_physical_volumes
         ]
 
@@ -78,3 +78,12 @@ class LvmLogicalVolume(Specification):
 
     def resolve_device(self) -> ResolveLink:
         return ResolveLink(self.lvm_volume_group, self.name)
+
+
+def _lvm_physical_volume_path(lvm_physical_volume: str, context: CommandContext) -> str:
+    lvm_physical_volume_path = context.graph.resolve_device(lvm_physical_volume)
+    if not lvm_physical_volume_path:
+        raise ValueError(
+            "Failed to find lvm physical volume path {}".format(lvm_physical_volume)
+        )
+    return lvm_physical_volume_path

@@ -7,7 +7,7 @@ import logging
 import shlex
 import subprocess
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from comedian.action import ActionCommandHandler, ActionCommandGenerator
 from comedian.command import Command, CommandContext
@@ -21,7 +21,21 @@ class Mode(ActionCommandHandler):
     Base class for all objects that will handle Generators and Commands.
     """
 
-    pass
+    @abstractmethod
+    def on_begin(self, context: CommandContext):
+        pass
+
+    @abstractmethod
+    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
+        pass
+
+    @abstractmethod
+    def on_command(self, context: CommandContext, command: Command):
+        pass
+
+    @abstractmethod
+    def on_end(self, context: CommandContext):
+        pass
 
 
 def make_mode(name: str) -> Mode:
@@ -46,7 +60,7 @@ class ExecMode(Mode):
     def on_begin(self, context: CommandContext):
         pass
 
-    def on_generator(context: CommandContext, self, generator: ActionCommandGenerator):
+    def on_generator(self, context: CommandContext, generator: ActionCommandGenerator):
         logging.info("%s", generator)
 
     def on_command(self, context: CommandContext, command: Command):

@@ -11,8 +11,7 @@ class RaidVolumeApplyCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_paths = [
-            context.graph.resolve_device(device)
-            for device in self.specification.devices
+            _device_path(device, context) for device in self.specification.devices
         ]
 
         cmd = [
@@ -34,8 +33,7 @@ class RaidVolumeUpCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_paths = [
-            context.graph.resolve_device(device)
-            for device in self.specification.devices
+            _device_path(device, context) for device in self.specification.devices
         ]
 
         cmd = [
@@ -86,3 +84,10 @@ class RaidVolume(Specification):
 
 def _raid_device(name: str) -> str:
     return f"/dev/md/{name}"
+
+
+def _device_path(device: str, context: CommandContext) -> str:
+    device_path = context.graph.resolve_device(device)
+    if not device_path:
+        raise ValueError("Failed to find device path {}".format(device))
+    return device_path

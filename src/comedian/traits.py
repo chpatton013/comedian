@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Any, Iterator
 
 
 class __Fields__:
@@ -21,7 +21,7 @@ class __Debug__(__Fields__):
 
 
 class __Eq__(__Fields__):
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return all(

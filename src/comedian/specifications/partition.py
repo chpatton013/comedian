@@ -19,6 +19,12 @@ class PartitionApplyCommandGenerator(CommandGenerator):
         partition_table_path = context.graph.resolve_device(
             self.specification.partition_table
         )
+        if not partition_table_path:
+            raise ValueError(
+                "Failed to find partition table path {}".format(
+                    self.specification.partition_table
+                )
+            )
 
         cmd = [
             quote_argument(partition_table_path),

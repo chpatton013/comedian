@@ -11,6 +11,10 @@ class LvmPhysicalVolumeApplyCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = context.graph.resolve_device(self.specification.device)
+        if not device_path:
+            raise ValueError(
+                "Failed to find device path {}".format(self.specification.device)
+            )
 
         yield Command(["pvcreate", quote_argument(device_path)])
 

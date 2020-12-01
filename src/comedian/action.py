@@ -94,7 +94,7 @@ class Action(ABC):
     def __call__(
         self,
         handler: ActionCommandHandler,
-        generators: ActionCommandGenerator,
+        generators: Iterable[ActionCommandGenerator],
     ):
         pass
 

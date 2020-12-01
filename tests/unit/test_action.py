@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, call
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any, Iterable, Iterator
 
 from context import comedian
 
@@ -18,7 +18,7 @@ from comedian.traits import __Debug__, __Eq__
 
 
 class TestActionCommandGenerator(ActionCommandGenerator, __Debug__, __Eq__):
-    def __init__(self, name: str, **kwargs: Mapping[str, Any]):
+    def __init__(self, name: str, **kwargs: Any):
         super().__init__(**kwargs)
         self.name = name
 

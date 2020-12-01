@@ -137,31 +137,31 @@ def validate_spec(
     inclusive: Set[str] = set(),
     ignore: bool = False,
 ) -> Set[str]:
-    missing = required - spec.keys()
+    missing = set(required - spec.keys())
     if missing:
         raise MissingRequiredKeysError(name, dict(spec), missing)
 
-    valid = required | allowed
+    valid = set(required | allowed)
     if not ignore:
-        disallowed = spec.keys() - valid
+        disallowed = set(spec.keys() - valid)
         if disallowed:
             raise FoundIllegalKeysError(name, dict(spec), disallowed)
 
-    disallowed = spec.keys() & illegal
+    disallowed = set(spec.keys() & illegal)
     if illegal and disallowed:
         raise FoundIllegalKeysError(name, dict(spec), disallowed)
 
-    missing = spec.keys() & variant
+    missing = set(spec.keys() & variant)
     if variant and len(missing) < 1:
         raise MissingVariantKeysError(name, dict(spec), variant)
 
-    mutually_exclusive = exclusive | variant
-    incompatible = spec.keys() & mutually_exclusive
+    mutually_exclusive = set(exclusive | variant)
+    incompatible = set(spec.keys() & mutually_exclusive)
     if len(incompatible) > 1:
         raise FoundIncompatibleKeysError(name, dict(spec), incompatible)
 
-    specified = spec.keys() & inclusive
-    missing = inclusive - spec.keys()
+    specified = set(spec.keys() & inclusive)
+    missing = set(inclusive - spec.keys())
     if inclusive and specified and specified != inclusive:
         raise MissingRequiredKeysError(name, dict(spec), missing)
 

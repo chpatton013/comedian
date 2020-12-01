@@ -17,19 +17,22 @@ class DirectoryApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        directory_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.name)
-        )
+        directory_path = context.graph.resolve_path(self.specification.name)
+        if not directory_path:
+            raise ValueError(
+                "Failed to find directory path {}".format(self.specification.name)
+            )
+        media_directory_path = context.config.media_path(directory_path)
 
-        yield mkdir(directory_path)
+        yield mkdir(media_directory_path)
         if self.specification.owner or self.specification.group:
             yield chown(
                 self.specification.owner,
                 self.specification.group,
-                directory_path,
+                media_directory_path,
             )
         if self.specification.mode:
-            yield chmod(self.specification.mode, directory_path)
+            yield chmod(self.specification.mode, media_directory_path)
 
 
 class Directory(Specification):

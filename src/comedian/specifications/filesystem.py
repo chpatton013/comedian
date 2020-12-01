@@ -10,10 +10,9 @@ class FilesystemApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = context.graph.resolve_device(self.specification.device)
-        mountpoint_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.mountpoint)
-        )
+        device_path = _device_path(self.specification.device, context)
+        mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
+        media_mountpoint_path = context.config.media_path(mountpoint_path)
 
         yield Command(
             _mkfs(
@@ -22,7 +21,7 @@ class FilesystemApplyCommandGenerator(CommandGenerator):
                 self.specification.options,
             )
         )
-        yield Command(_mount_fs(device_path, mountpoint_path))
+        yield Command(_mount_fs(device_path, media_mountpoint_path))
 
 
 class FilesystemUpCommandGenerator(CommandGenerator):
@@ -30,12 +29,11 @@ class FilesystemUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = context.graph.resolve_device(self.specification.device)
-        mountpoint_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.mountpoint)
-        )
+        device_path = _device_path(self.specification.device, context)
+        mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
+        media_mountpoint_path = context.config.media_path(mountpoint_path)
 
-        yield Command(_mount_fs(device_path, mountpoint_path))
+        yield Command(_mount_fs(device_path, media_mountpoint_path))
 
 
 class FilesystemDownCommandGenerator(CommandGenerator):
@@ -43,11 +41,10 @@ class FilesystemDownCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        mountpoint_path = context.config.media_path(
-            context.graph.resolve_path(self.specification.mountpoint)
-        )
+        mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
+        media_mountpoint_path = context.config.media_path(mountpoint_path)
 
-        yield Command(_umount_fs(mountpoint_path))
+        yield Command(_umount_fs(media_mountpoint_path))
 
 
 class Filesystem(Specification):
@@ -88,3 +85,17 @@ def _mount_fs(device: str, mountpoint: str) -> List[str]:
 
 def _umount_fs(device: str) -> List[str]:
     return ["umount", quote_argument(device)]
+
+
+def _device_path(device: str, context: CommandContext) -> str:
+    device_path = context.graph.resolve_device(device)
+    if not device_path:
+        raise ValueError("Failed to find device path {}".format(device))
+    return device_path
+
+
+def _mountpoint_path(mountpoint: str, context: CommandContext) -> str:
+    mountpoint_path = context.graph.resolve_path(mountpoint)
+    if not mountpoint_path:
+        raise ValueError("Failed to find mountpoint path {}".format(mountpoint))
+    return mountpoint_path

@@ -1,5 +1,5 @@
 import os
-from typing import Iterable, Iterator, List, Optional
+from typing import Iterator, List, Optional
 
 from comedian.command import (
     Command,
@@ -18,17 +18,18 @@ class CryptVolumeApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = context.graph.resolve_device(self.specification.device)
-        tmp_keyfile = context.config.tmp_path(
-            context.graph.resolve_path(self.specification.keyfile)
-        )
+        device_path = _device_path(self.specification.device, context)
+        keyfile_path = _keyfile_path(self.specification.keyfile, context)
+        tmp_keyfile_path = context.config.tmp_path(keyfile_path)
 
         yield from _randomize_device(self.specification.name, device_path, context)
-        yield from _create_keyfile(tmp_keyfile, self.specification.keysize, context)
+        yield from _create_keyfile(
+            tmp_keyfile_path, self.specification.keysize, context
+        )
         yield from _format_crypt(
             self.specification.name,
             device_path,
-            tmp_keyfile,
+            tmp_keyfile_path,
             self.specification.type,
             self.specification.password,
             context,
@@ -40,18 +41,15 @@ class CryptVolumePostApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        tmp_keyfile = context.config.tmp_path(
-            context.graph.resolve_path(self.specification.keyfile)
-        )
-        dest_keyfile = context.config.media_path(
-            context.graph.resolve_path(self.specification.keyfile)
-        )
+        keyfile_path = _keyfile_path(self.specification.keyfile, context)
+        tmp_keyfile_path = context.config.tmp_path(keyfile_path)
+        media_keyfile_path = context.config.media_path(keyfile_path)
 
         yield Command(
             [
                 "cp",
-                quote_argument(tmp_keyfile),
-                quote_argument(dest_keyfile),
+                quote_argument(tmp_keyfile_path),
+                quote_argument(media_keyfile_path),
                 "--preserve=mode,ownership",
             ]
         )
@@ -62,12 +60,13 @@ class CryptVolumeUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = context.graph.resolve_device(self.specification.device)
-        keyfile_path = context.config.tmp_path(
-            context.graph.resolve_path(self.specification.keyfile)
-        )
+        device_path = _device_path(self.specification.device, context)
+        keyfile_path = _keyfile_path(self.specification.keyfile, context)
+        tmp_keyfile_path = context.config.tmp_path(keyfile_path)
 
-        yield Command(_open_crypt(self.specification.name, device_path, keyfile_path))
+        yield Command(
+            _open_crypt(self.specification.name, device_path, tmp_keyfile_path)
+        )
 
 
 class CryptVolumeDownCommandGenerator(CommandGenerator):
@@ -111,11 +110,11 @@ def _crypt_device(name: str) -> str:
     return f"/dev/mapper/{name}"
 
 
-def _dd(*args: Iterable[str]) -> List[str]:
+def _dd(*args: str) -> List[str]:
     return ["dd", "status=progress", "conv=sync,noerror"] + list(args)
 
 
-def _cryptsetup(*args: Iterable[str]) -> List[str]:
+def _cryptsetup(*args: str) -> List[str]:
     return ["cryptsetup", "--batch-mode"] + list(args)
 
 
@@ -123,7 +122,7 @@ def _open_crypt(
     name: str,
     device: str,
     keyfile: str,
-    *args: Iterable[str],
+    *args: str,
 ) -> List[str]:
     return _cryptsetup(
         f"--key-file={quote_argument(keyfile)}",
@@ -213,3 +212,17 @@ def _format_crypt(
             ]
         )
     yield Command(_open_crypt(name, device, keyfile))
+
+
+def _device_path(device: str, context: CommandContext) -> str:
+    device_path = context.graph.resolve_device(device)
+    if not device_path:
+        raise ValueError("Failed to find device path {}".format(device))
+    return device_path
+
+
+def _keyfile_path(keyfile: str, context: CommandContext) -> str:
+    keyfile_path = context.graph.resolve_path(keyfile)
+    if not keyfile_path:
+        raise ValueError("Failed to find keyfile path {}".format(keyfile))
+    return keyfile_path

@@ -3,11 +3,12 @@ from comedian.command import CommandContext
 from comedian.configuration import Configuration
 from comedian.graph import Graph
 from comedian.mode import make_mode
+from comedian.specification import Specification
 
 
 def run(
     config: Configuration,
-    graph: Graph,
+    graph: Graph[Specification],
     action_name: str,
     mode_name: str,
 ):
