@@ -60,7 +60,7 @@ class RaidVolumeTest(SpecificationTestBase, unittest.TestCase):
 
     def test_up_commands(self):
         expected = [
-            Command(["mdadm", "--assemble", "/dev/md/name"]),
+            Command(["mdadm", "--assemble", "/dev/md/name", "device"]),
         ]
         self.assertListEqual(
             expected,

@@ -131,7 +131,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "cryptsetup",
                     "--batch-mode",
-                    "--key-file=media_dir/keyfile",
+                    "--key-file=tmp_dir/keyfile",
                     "open",
                     "device",
                     "name",

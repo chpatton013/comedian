@@ -39,14 +39,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
     def test_apply_commands(self):
         expected = [
             Command(
-                cmd=["losetup", "args", "--find", "media_dir/file"],
-            ),
-            Command(
-                cmd=[
-                    "shell",
-                    "-c",
-                    "'losetup --associated media_dir/file | sed \"s#:.*##\"'",
-                ],
+                cmd=["losetup", "args", "--find", "--show", "media_dir/file"],
                 capture="loop_device_name",
             ),
         ]
@@ -58,14 +51,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
     def test_up_commands(self):
         expected = [
             Command(
-                cmd=["losetup", "args", "--find", "media_dir/file"],
-            ),
-            Command(
-                cmd=[
-                    "shell",
-                    "-c",
-                    "'losetup --associated media_dir/file | sed \"s#:.*##\"'",
-                ],
+                cmd=["losetup", "args", "--find", "--show", "media_dir/file"],
                 capture="loop_device_name",
             ),
         ]
@@ -92,13 +78,7 @@ class LoopDeviceTest(SpecificationTestBase, unittest.TestCase):
 
     def test_down_commands(self):
         expected = [
-            Command(
-                [
-                    "shell",
-                    "-c",
-                    "'losetup --detach \"$loop_device_name\"'",
-                ]
-            ),
+            Command(["losetup", "--detach", '"$loop_device_name"']),
         ]
         self.assertListEqual(
             expected,

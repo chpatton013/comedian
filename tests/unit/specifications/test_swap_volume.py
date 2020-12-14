@@ -51,6 +51,7 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "--uuid=uuid",
                 ]
             ),
+            Command(["swapon", "device"]),
         ]
         self.assertListEqual(
             expected,
