@@ -26,7 +26,7 @@ class FileApplyCommandGenerator(CommandGenerator):
             )
         media_file_path = context.config.media_path(file_path)
 
-        yield mkdir(os.path.dirname(file_path))
+        yield mkdir(os.path.dirname(media_file_path))
         if self.specification.size:
             yield Command(
                 [
