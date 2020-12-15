@@ -1,14 +1,7 @@
 import unittest
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-)
+from typing import Callable, List
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian.graph import (
     Graph,
@@ -26,10 +19,12 @@ class TestGraphNode(GraphNode):
         self,
         name: str,
         dependencies: List[str],
-        references: List[str] = [],
+        references: List[str] = None,
         resolve_device: ResolveLink = ResolveLink(None, None),
         resolve_path: ResolveLink = ResolveLink(None, None),
     ):
+        if references is None:
+            references = []
         super().__init__(name, dependencies, references)
         self._resolve_device = resolve_device
         self._resolve_path = resolve_path
@@ -45,9 +40,11 @@ def _make_device_node_factory() -> Callable[..., TestGraphNode]:
     def fn(
         name: str,
         dependencies: List[str],
-        references: List[str] = [],
+        references: List[str] = None,
         resolve: ResolveLink = ResolveLink(None, None),
     ) -> TestGraphNode:
+        if references is None:
+            references = []
         return TestGraphNode(
             name, dependencies, references=references, resolve_device=resolve
         )
@@ -59,9 +56,11 @@ def _make_path_node_factory() -> Callable[..., TestGraphNode]:
     def fn(
         name: str,
         dependencies: List[str],
-        references: List[str] = [],
+        references: List[str] = None,
         resolve: ResolveLink = ResolveLink(None, None),
     ) -> TestGraphNode:
+        if references is None:
+            references = []
         return TestGraphNode(
             name, dependencies, references=references, resolve_path=resolve
         )
@@ -76,7 +75,7 @@ class GraphNameTest(unittest.TestCase):
 
         nodes = [a1, a2]
         with self.assertRaises(GraphNameError) as context:
-            graph = Graph(nodes)
+            Graph(nodes)
 
         self.assertEqual("a", context.exception.name)
 
@@ -87,7 +86,7 @@ class GraphEdgeTest(unittest.TestCase):
 
         nodes = [a]
         with self.assertRaises(GraphEdgeError) as context:
-            graph = Graph(nodes)
+            Graph(nodes)
 
         self.assertEqual("a", context.exception.name)
         self.assertEqual("b", context.exception.dependency)
@@ -97,14 +96,14 @@ class GraphEdgeTest(unittest.TestCase):
 
         nodes = [a]
         with self.assertRaises(GraphEdgeError) as context:
-            graph = Graph(nodes)
+            Graph(nodes)
 
         self.assertEqual("a", context.exception.name)
         self.assertEqual("b", context.exception.dependency)
 
 
 class GraphResolveTest(unittest.TestCase):
-    PARAMETERIZATION = (
+    parameterization = (
         (
             "Test path resolution",
             _make_path_node_factory(),
@@ -118,7 +117,7 @@ class GraphResolveTest(unittest.TestCase):
     )
 
     def test_unknown_direct_resolve(self):
-        for msg, node_factory, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+        for msg, node_factory, graph_resolve in GraphResolveTest.parameterization:
             with self.subTest(msg=msg):
                 a = node_factory("a", [])
 
@@ -131,7 +130,7 @@ class GraphResolveTest(unittest.TestCase):
                 self.assertEqual("b", context.exception.reference)
 
     def test_successful_direct_resolve(self):
-        for msg, node_factory, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+        for msg, node_factory, graph_resolve in GraphResolveTest.parameterization:
             with self.subTest(msg=msg):
                 a = node_factory("a", [], resolve=ResolveLink(None, "x"))
 
@@ -141,7 +140,7 @@ class GraphResolveTest(unittest.TestCase):
                 self.assertEqual("x", graph_resolve(graph, "a"))
 
     def test_unknown_recursive_resolve(self):
-        for msg, node_factory, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+        for msg, node_factory, graph_resolve in GraphResolveTest.parameterization:
             with self.subTest(msg=msg):
                 a = node_factory("a", ["b"], resolve=ResolveLink("b", "y"))
                 b = node_factory("b", [], resolve=ResolveLink("c", "x"))
@@ -155,7 +154,7 @@ class GraphResolveTest(unittest.TestCase):
                 self.assertEqual("c", context.exception.reference)
 
     def test_undeclared_recursive_resolve(self):
-        for msg, node_factory, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+        for msg, node_factory, graph_resolve in GraphResolveTest.parameterization:
             with self.subTest(msg=msg):
                 a = node_factory("a", [], resolve=ResolveLink("b", "y"))
                 b = node_factory("b", [], resolve=ResolveLink(None, "x"))
@@ -169,7 +168,7 @@ class GraphResolveTest(unittest.TestCase):
                 self.assertEqual("b", context.exception.reference)
 
     def test_successful_recursive_resolve(self):
-        for msg, node_factory, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+        for msg, node_factory, graph_resolve in GraphResolveTest.parameterization:
             with self.subTest(msg=msg):
                 a = node_factory("a", ["b"], resolve=ResolveLink("b", "y"))
                 b = node_factory("b", [], resolve=ResolveLink(None, "x"))
@@ -180,7 +179,7 @@ class GraphResolveTest(unittest.TestCase):
                 self.assertEqual("x/y", graph_resolve(graph, "a"))
 
     def test_successful_recursive_resolve_with_join(self):
-        for msg, node_factory, graph_resolve in GraphResolveTest.PARAMETERIZATION:
+        for msg, node_factory, graph_resolve in GraphResolveTest.parameterization:
             with self.subTest(msg=msg):
                 a = node_factory(
                     "a", ["b"], resolve=ResolveLink("b", "y", lambda l, r: f"{l}j{r}")

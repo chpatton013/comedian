@@ -1,6 +1,6 @@
 import unittest
 
-from context import comedian, SpecificationTestBase
+from context import comedian, SpecificationTestBase  # pylint: disable=W0611
 
 from comedian.command import Command
 from comedian.graph import ResolveLink
@@ -36,6 +36,9 @@ class LvmVolumeGroupTest(SpecificationTestBase, unittest.TestCase):
             self.specification.resolve_path(),
         )
 
+    def test_post_apply_commands(self):
+        self.assertIsNone(self.specification.post_apply)
+
     def test_apply_commands(self):
         expected = [
             Command(["vgcreate", "name", "lvm_physical_volume"]),
@@ -53,6 +56,9 @@ class LvmVolumeGroupTest(SpecificationTestBase, unittest.TestCase):
             expected,
             list(self.specification.up(self.context)),
         )
+
+    def test_pre_down_commands(self):
+        self.assertIsNone(self.specification.pre_down)
 
     def test_down_commands(self):
         expected = [

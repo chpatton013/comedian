@@ -10,12 +10,12 @@ sys.path.insert(
 )
 
 # Import and expose the comedian module for each test file.
-import comedian
+import comedian  # pylint: disable=C0413
 
-from comedian.command import CommandContext
-from comedian.configuration import Configuration
-from comedian.graph import Graph, ResolveLink
-from comedian.specification import Specification
+from comedian.command import CommandContext  # pylint: disable=C0413
+from comedian.configuration import Configuration  # pylint: disable=C0413
+from comedian.graph import Graph, ResolveLink  # pylint: disable=C0413
+from comedian.specification import Specification  # pylint: disable=C0413
 
 __all__ = ["SpecificationTestBase", "comedian"]
 
@@ -68,14 +68,22 @@ class SpecificationTestBase(ABC):
     def test_resolve(self):
         pass
 
+    @abstractmethod
     def test_apply_commands(self):
-        self.assertIsNone(self.specification.apply)
+        pass
 
+    @abstractmethod
     def test_post_apply_commands(self):
-        self.assertIsNone(self.specification.post_apply)
+        pass
 
+    @abstractmethod
     def test_up_commands(self):
-        self.assertIsNone(self.specification.up)
+        pass
 
+    @abstractmethod
+    def test_pre_down_commands(self):
+        pass
+
+    @abstractmethod
     def test_down_commands(self):
-        self.assertIsNone(self.specification.down)
+        pass

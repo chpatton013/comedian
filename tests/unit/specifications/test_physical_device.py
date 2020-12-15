@@ -1,8 +1,7 @@
 import unittest
 
-from context import comedian, SpecificationTestBase
+from context import comedian, SpecificationTestBase  # pylint: disable=W0611
 
-from comedian.command import Command
 from comedian.graph import ResolveLink
 from comedian.specifications import PhysicalDevice
 
@@ -29,3 +28,18 @@ class PhysicalDeviceTest(SpecificationTestBase, unittest.TestCase):
             ResolveLink(None, None),
             self.specification.resolve_path(),
         )
+
+    def test_apply_commands(self):
+        self.assertIsNone(self.specification.apply)
+
+    def test_post_apply_commands(self):
+        self.assertIsNone(self.specification.post_apply)
+
+    def test_up_commands(self):
+        self.assertIsNone(self.specification.up)
+
+    def test_pre_down_commands(self):
+        self.assertIsNone(self.specification.pre_down)
+
+    def test_down_commands(self):
+        self.assertIsNone(self.specification.down)

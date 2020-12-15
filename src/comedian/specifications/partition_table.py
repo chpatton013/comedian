@@ -36,7 +36,7 @@ class PartitionTable(Specification):
         self.glue = glue
 
     def resolve_device(self) -> ResolveLink:
-        return ResolveLink(self.device, None, lambda x, y: self._join(x, y))
+        return ResolveLink(self.device, None, self._join)
 
     def _join(self, partition_table: str, partition_number: str) -> str:
         glue = self.glue if self.glue else ""

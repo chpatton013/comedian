@@ -1,12 +1,12 @@
 from typing import Any, Iterator
 
 
-class __Fields__:
+class FieldsMixin:
     def __fields__(self) -> Iterator[str]:
         yield from self.__dict__.keys()
 
 
-class __Debug__(__Fields__):
+class DebugMixin(FieldsMixin):
     def __str__(self):
         fields_str = ""
         for field in self.__fields__():
@@ -20,7 +20,7 @@ class __Debug__(__Fields__):
         return self.__str__()
 
 
-class __Eq__(__Fields__):
+class EqMixin(FieldsMixin):
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented

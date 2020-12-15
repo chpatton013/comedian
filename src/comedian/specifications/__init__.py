@@ -12,3 +12,21 @@ from comedian.specifications.physical_device import PhysicalDevice
 from comedian.specifications.raid_volume import RaidVolume
 from comedian.specifications.root import Root
 from comedian.specifications.swap_volume import SwapVolume
+
+
+__all__ = [
+    "CryptVolume",
+    "Directory",
+    "File",
+    "Filesystem",
+    "LoopDevice",
+    "LvmLogicalVolume",
+    "LvmPhysicalVolume",
+    "LvmVolumeGroup",
+    "Partition",
+    "PartitionTable",
+    "PhysicalDevice",
+    "RaidVolume",
+    "Root",
+    "SwapVolume",
+]

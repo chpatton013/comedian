@@ -154,7 +154,7 @@ def _randomize_device(
     )
     dd_cmd = " ".join(
         _dd(
-            f"if=/dev/zero",
+            "if=/dev/zero",
             f"of={quote_argument(_crypt_device(cryptname))}",
             f"bs={context.config.dd_bs}",
         )

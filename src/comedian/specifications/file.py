@@ -1,5 +1,5 @@
 import os
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional
 
 from comedian.command import (
     Command,

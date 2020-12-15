@@ -6,7 +6,7 @@ import stat
 import subprocess
 import tempfile
 import unittest
-from typing import Any, Callable, Dict, Iterable, Iterator
+from typing import Any, Callable, Dict, Iterator
 
 COMEDIAN_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RUNTIME_DATA_DIR = os.path.join(COMEDIAN_ROOT, "data")

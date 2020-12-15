@@ -1,4 +1,4 @@
-from typing import Iterable, Iterator, List, Optional
+from typing import Iterator, List, Optional
 
 from comedian.command import (
     Command,

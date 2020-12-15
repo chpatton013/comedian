@@ -1,6 +1,6 @@
 import unittest
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian.configuration import Configuration
 

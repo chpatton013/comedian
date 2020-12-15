@@ -1,6 +1,6 @@
 import unittest
 
-from context import comedian, SpecificationTestBase
+from context import comedian, SpecificationTestBase  # pylint: disable=W0611
 
 from comedian.command import Command
 from comedian.graph import ResolveLink
@@ -50,6 +50,9 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
             list(self.specification.apply(self.context)),
         )
 
+    def test_post_apply_commands(self):
+        self.assertIsNone(self.specification.post_apply)
+
     def test_up_commands(self):
         expected = [
             Command(["mount", "device", "media_dir/mountpoint"]),
@@ -58,6 +61,9 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
             expected,
             list(self.specification.up(self.context)),
         )
+
+    def test_pre_down_commands(self):
+        self.assertIsNone(self.specification.pre_down)
 
     def test_down_commands(self):
         expected = [

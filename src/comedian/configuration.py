@@ -1,9 +1,9 @@
 import os
 
-from comedian.traits import __Debug__, __Eq__
+from comedian.traits import DebugMixin, EqMixin
 
 
-class Configuration(__Debug__, __Eq__):
+class Configuration(DebugMixin, EqMixin):
     def __init__(
         self,
         shell: str,

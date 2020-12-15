@@ -4,14 +4,14 @@ Command API for generating shell commands to be run on a system.
 
 import shlex
 from abc import ABC, abstractmethod
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterator, List, Optional
 
 from comedian.configuration import Configuration
 from comedian.graph import Graph
-from comedian.traits import __Debug__, __Eq__
+from comedian.traits import DebugMixin, EqMixin
 
 
-class Command(__Debug__, __Eq__):
+class Command(DebugMixin, EqMixin):
     """
     A container for the arguments of a shell command.
     """
@@ -24,7 +24,7 @@ class Command(__Debug__, __Eq__):
         return " ".join(self.cmd)
 
 
-class CommandContext(__Debug__):
+class CommandContext(DebugMixin):
     """
     A structure holding the arguments necessary for generating Commands.
     """

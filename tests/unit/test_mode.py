@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian.action import ActionCommandGenerator
 from comedian.command import Command, CommandContext
@@ -196,7 +196,7 @@ class ShellModeTest(ModeTest):
         self.subprocess_check_output.assert_not_called()
         self.print.assert_called()
         self.assertEqual(
-            f"#!/usr/bin/bash\nset -xeuo pipefail\n",
+            "#!/usr/bin/bash\nset -xeuo pipefail\n",
             self.print.side_effect.buffer,
         )
 

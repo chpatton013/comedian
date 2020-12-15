@@ -14,13 +14,15 @@ class Specification(ActionCommandGenerator, GraphNode):
         self,
         name: str,
         dependencies: List[str],
-        references: List[str] = [],
+        references: Optional[List[str]] = None,
         apply: Optional[CommandGenerator] = None,
         post_apply: Optional[CommandGenerator] = None,
         up: Optional[CommandGenerator] = None,
         pre_down: Optional[CommandGenerator] = None,
         down: Optional[CommandGenerator] = None,
     ):
+        if references is None:
+            references = []
         ActionCommandGenerator.__init__(
             self,
             apply=apply,

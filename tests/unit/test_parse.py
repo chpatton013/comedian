@@ -1,8 +1,7 @@
 import copy
 import unittest
-from unittest.mock import patch
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian.specifications import (
     CryptVolume,
@@ -25,7 +24,6 @@ from comedian.parse import (
     FoundIllegalKeysError,
     FoundIncompatibleKeysError,
     MissingRequiredKeysError,
-    MissingVariantKeysError,
     parse,
 )
 

@@ -6,7 +6,7 @@ raise errors on invalid input.
 """
 
 import logging
-from typing import Any, Dict, Iterator, Mapping, Set, Tuple
+from typing import Any, Dict, Iterator, Mapping, Optional, Set, Tuple
 
 from comedian.specification import Specification
 from comedian.specifications import (
@@ -42,8 +42,6 @@ class ParseError(Exception):
     """
     Base class for all parse errors.
     """
-
-    pass
 
 
 class MissingRequiredKeysError(ParseError):
@@ -129,14 +127,29 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
 def validate_spec(
     name: str,
     spec: Mapping[str, Any],
-    required: Set[str] = set(),
-    allowed: Set[str] = set(),
-    illegal: Set[str] = set(),
-    variant: Set[str] = set(),
-    exclusive: Set[str] = set(),
-    inclusive: Set[str] = set(),
+    required: Optional[Set[str]] = None,
+    allowed: Optional[Set[str]] = None,
+    illegal: Optional[Set[str]] = None,
+    variant: Optional[Set[str]] = None,
+    exclusive: Optional[Set[str]] = None,
+    inclusive: Optional[Set[str]] = None,
     ignore: bool = False,
 ) -> Set[str]:
+    # pylint: disable=R0912,R0915
+
+    if required is None:
+        required = set()
+    if allowed is None:
+        allowed = set()
+    if illegal is None:
+        illegal = set()
+    if variant is None:
+        variant = set()
+    if exclusive is None:
+        exclusive = set()
+    if inclusive is None:
+        inclusive = set()
+
     missing = set(required - spec.keys())
     if missing:
         raise MissingRequiredKeysError(name, dict(spec), missing)
@@ -188,6 +201,8 @@ def parse_block_device(
     spec: Mapping[str, Any],
     device: str,
 ) -> Iterator[Specification]:
+    # pylint: disable=R0915
+
     keys = {
         "partition_table",
         "filesystem",

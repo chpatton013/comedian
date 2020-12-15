@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, call
 from typing import Any, Iterable, Iterator
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian.action import (
     ActionCommandGenerator,
@@ -14,10 +14,10 @@ from comedian.action import (
 from comedian.command import Command, CommandContext, CommandGenerator
 from comedian.configuration import Configuration
 from comedian.graph import Graph
-from comedian.traits import __Debug__, __Eq__
+from comedian.traits import DebugMixin, EqMixin
 
 
-class TestActionCommandGenerator(ActionCommandGenerator, __Debug__, __Eq__):
+class TestActionCommandGenerator(ActionCommandGenerator, DebugMixin, EqMixin):
     def __init__(self, name: str, **kwargs: Any):
         super().__init__(**kwargs)
         self.name = name

@@ -1,14 +1,14 @@
 import unittest
 from typing import Iterator
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian.command import Command, CommandContext, CommandGenerator
 from comedian.specification import Specification
-from comedian.traits import __Debug__, __Eq__
+from comedian.traits import DebugMixin, EqMixin
 
 
-class TestCommandGenerator(CommandGenerator, __Debug__, __Eq__):
+class TestCommandGenerator(CommandGenerator, DebugMixin, EqMixin):
     def __init__(self, name: str):
         super().__init__()
         self.name = name

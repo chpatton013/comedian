@@ -4,14 +4,11 @@ operational modes.
 """
 
 import logging
-import shlex
 import subprocess
-from abc import ABC, abstractmethod
-from typing import Any, Iterable, Optional
+from abc import abstractmethod
 
 from comedian.action import ActionCommandHandler, ActionCommandGenerator
 from comedian.command import Command, CommandContext
-from comedian.traits import __Debug__, __Eq__
 
 __all__ = ["make_mode"]
 

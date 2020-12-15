@@ -1,8 +1,8 @@
 import unittest
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 from typing import Any, Iterable, Iterator, List
 
-from context import comedian
+from context import comedian  # pylint: disable=W0611
 
 from comedian import run
 from comedian.command import Command

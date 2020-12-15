@@ -21,14 +21,12 @@ from typing import (
     Iterator,
     List,
     Mapping,
-    MutableMapping,
     Optional,
     Set,
-    Type,
     TypeVar,
 )
 
-from comedian.traits import __Debug__, __Eq__
+from comedian.traits import DebugMixin, EqMixin
 
 __all__ = [
     "Graph",
@@ -45,8 +43,6 @@ class GraphError(Exception):
     """
     Base class for all graph errors.
     """
-
-    pass
 
 
 class GraphNameError(GraphError):
@@ -95,7 +91,7 @@ class GraphWalkError(GraphError):
         self.not_visited = not_visited
 
 
-class ResolveLink(__Debug__, __Eq__):
+class ResolveLink(DebugMixin, EqMixin):
     def __init__(
         self,
         parent: Optional[str],
@@ -113,13 +109,13 @@ class ResolveLink(__Debug__, __Eq__):
         yield from ("parent", "value")
 
 
-class ResolveResult(__Debug__, __Eq__):
+class ResolveResult(DebugMixin, EqMixin):
     def __init__(self, path: Optional[str], join: Callable[[str, str], str]):
         self.path = path
         self.join = join
 
 
-class GraphNode(__Debug__, __Eq__):
+class GraphNode(DebugMixin, EqMixin):
     """
     A single node within a Graph, consisting of a unique name, a list of
     dependencies, and a list of non-dependency references.
@@ -129,8 +125,10 @@ class GraphNode(__Debug__, __Eq__):
         self,
         name: str,
         dependencies: List[str],
-        references: List[str] = [],
+        references: Optional[List[str]] = None,
     ):
+        if references is None:
+            references = []
         self.name = name
         self.dependencies = dependencies
         self.references = references
@@ -145,7 +143,7 @@ class GraphNode(__Debug__, __Eq__):
 GraphNodeT = TypeVar("GraphNodeT", bound=GraphNode)
 
 
-class Graph(__Debug__, Generic[GraphNodeT]):
+class Graph(DebugMixin, Generic[GraphNodeT]):
     """
     A graph-representation of a collection of GraphNodes.
 
@@ -160,13 +158,12 @@ class Graph(__Debug__, Generic[GraphNodeT]):
                 raise GraphNameError(node.name)
             self._nodes[node.name] = node
 
-        self._dependencies: Mapping[str, Set[str]] = defaultdict(set)
+        self._dependencies: Dict[str, Set[str]] = {}
         self._reverse_dependencies: Mapping[str, Set[str]] = defaultdict(set)
         for name, node in self._nodes.items():
             # Create the empty-set if it does not exist yet.
-            self._dependencies[name]
-            # Populate the forward- and reverse-dependency mappings for this
-            # node.
+            self._dependencies[name] = set()
+            # Populate the forward- and reverse-dependency mappings.
             for dependency_name in node.dependencies:
                 if dependency_name not in self._nodes:
                     raise GraphEdgeError(name, dependency_name)
@@ -242,14 +239,14 @@ class Graph(__Debug__, Generic[GraphNodeT]):
         return self._resolve(
             name,
             lambda node: node.resolve_device(),
-            lambda name: self._resolve_device(name),
+            self._resolve_device,
         )
 
     def _resolve_path(self, name: str) -> ResolveResult:
         return self._resolve(
             name,
             lambda node: node.resolve_path(),
-            lambda name: self._resolve_path(name),
+            self._resolve_path,
         )
 
     def _resolve(
@@ -261,8 +258,8 @@ class Graph(__Debug__, Generic[GraphNodeT]):
         # Ensure that the node exists.
         try:
             node = self._nodes[name]
-        except KeyError:
-            raise GraphResolveError(name)
+        except KeyError as ex:
+            raise GraphResolveError(name) from ex
 
         # Ensure that the "parent" node is declared as a dependency or reference
         # of the input node.
