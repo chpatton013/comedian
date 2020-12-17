@@ -556,17 +556,28 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "Filesystem",
         spec,
-        required={"name", "device", "mountpoint", "type"},
-        allowed={"options", "directories", "files"},
+        required={"name", "mountpoint", "type"},
+        allowed={
+            "device",
+            "options",
+            "mount_options",
+            "dump_frequency",
+            "fsck_order",
+            "directories",
+            "files",
+        },
     )
 
     filesystem_name = spec["name"]
     yield Filesystem(
         name=filesystem_name,
-        device=spec["device"],
+        device=spec.get("device"),
         mountpoint=spec["mountpoint"],
         type=spec["type"],
         options=spec.get("options", []),
+        mount_options=spec.get("mount_options", []),
+        dump_frequency=spec.get("dump_frequency"),
+        fsck_order=spec.get("fsck_order"),
     )
 
     for directory_spec in spec.get("directories", []):

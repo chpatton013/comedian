@@ -63,7 +63,7 @@ _FSROOT_SPEC = {
                     "name": "fsloop",
                     "mountpoint": "/loop",
                     "type": "ext4",
-                    "options": ["noatime"],
+                    "mount_options": ["noatime"],
                 },
             },
         },
@@ -222,6 +222,9 @@ class ParseRootTest(ParseTestBase):
                 mountpoint="/",
                 type="ext4",
                 options=[],
+                mount_options=[],
+                dump_frequency=None,
+                fsck_order=None,
             ),
             Directory(
                 name="fsroot:raid",
@@ -274,7 +277,10 @@ class ParseRootTest(ParseTestBase):
                 device="loop",
                 mountpoint="/loop",
                 type="ext4",
-                options=["noatime"],
+                options=[],
+                mount_options=["noatime"],
+                dump_frequency=None,
+                fsck_order=None,
             ),
             File(
                 name="fsroot:randomfile",
@@ -338,6 +344,9 @@ class ParseRootTest(ParseTestBase):
                 mountpoint="/raid",
                 type="ext4",
                 options=[],
+                mount_options=[],
+                dump_frequency=None,
+                fsck_order=None,
             ),
         ]
 

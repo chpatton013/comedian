@@ -192,6 +192,9 @@ Inherits `name` and `filesystem` properties from its parent `Filesystem`.
 "mountpoint": str
 "type": str
 "options": str *
+"mount_options": str *
+"dump_frequency": int ?
+"fsck_order": int ?
 "directories": Directory *
 "files": File *
 ```

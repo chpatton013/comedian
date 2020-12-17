@@ -17,18 +17,24 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
                 mountpoint="mountpoint",
                 type="type",
                 options=["options"],
+                mount_options=["mount-options"],
+                dump_frequency=1,
+                fsck_order=2,
             ),
         )
         unittest.TestCase.__init__(self, *args, **kwargs)
 
     def test_properties(self):
         self.assertEqual("name", self.specification.name)
-        self.assertListEqual(["device", "mountpoint"], self.specification.dependencies)
+        self.assertListEqual(["mountpoint", "device"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
         self.assertEqual("mountpoint", self.specification.mountpoint)
         self.assertEqual("type", self.specification.type)
         self.assertEqual(["options"], self.specification.options)
+        self.assertEqual(["mount-options"], self.specification.mount_options)
+        self.assertEqual(1, self.specification.dump_frequency)
+        self.assertEqual(2, self.specification.fsck_order)
 
     def test_resolve(self):
         self.assertEqual(
@@ -43,7 +49,7 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
     def test_apply_commands(self):
         expected = [
             Command(["mkfs", "--type", "type", "options", "device"]),
-            Command(["mount", "device", "media_dir/mountpoint"]),
+            Command(["mount", "-o", "mount-options", "device", "media_dir/mountpoint"]),
         ]
         self.assertListEqual(
             expected,
