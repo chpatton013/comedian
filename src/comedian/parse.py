@@ -102,11 +102,25 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
     """
     Parse a spec and yield the specifications described within.
     """
+    # pylint: disable=R0912
+
     validate_spec(
         "Root",
         spec,
         required={"physical_devices"},
-        allowed={"raid_volumes", "lvm_volume_groups"},
+        allowed={
+            "crypt_volumes",
+            "directories",
+            "files",
+            "filesystems",
+            "loop_devices",
+            "lvm_logical_volumes",
+            "lvm_physical_volumes",
+            "lvm_volume_groups",
+            "partition_tables",
+            "raid_volumes",
+            "swap_volumes",
+        },
     )
 
     yield Root()
@@ -114,11 +128,38 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
     for physical_device_spec in spec["physical_devices"]:
         yield from parse_physical_device(physical_device_spec)
 
-    for raid_volume_spec in spec.get("raid_volumes", []):
-        yield from parse_raid_volume(raid_volume_spec)
+    for crypt_volume_spec in spec.get("crypt_volumes", []):
+        yield from parse_crypt_volume(crypt_volume_spec)
+
+    for directory_spec in spec.get("directories", []):
+        yield from parse_directory(directory_spec)
+
+    for file_spec in spec.get("files", []):
+        yield from parse_file(file_spec)
+
+    for filesystem_spec in spec.get("filesystems", []):
+        yield from parse_filesystem(filesystem_spec)
+
+    for loop_device_spec in spec.get("loop_devices", []):
+        yield from parse_loop_device(loop_device_spec)
+
+    for lvm_logical_volume_spec in spec.get("lvm_logical_volumes", []):
+        yield from parse_lvm_logical_volume(lvm_logical_volume_spec)
+
+    for lvm_physical_volume_spec in spec.get("lvm_physical_volumes", []):
+        yield from parse_lvm_physical_volume(lvm_physical_volume_spec)
 
     for lvm_volume_group_spec in spec.get("lvm_volume_groups", []):
         yield from parse_lvm_volume_group(lvm_volume_group_spec)
+
+    for partition_table_spec in spec.get("partition_tables", []):
+        yield from parse_partition_table(partition_table_spec)
+
+    for raid_volume_spec in spec.get("raid_volumes", []):
+        yield from parse_raid_volume(raid_volume_spec)
+
+    for swap_volume_spec in spec.get("swap_volumes", []):
+        yield from parse_swap_volume(swap_volume_spec)
 
 
 # Private interface

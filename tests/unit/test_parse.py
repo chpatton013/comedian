@@ -305,19 +305,6 @@ class ParseRootTest(ParseTestBase):
             PhysicalDevice("sdc"),
             LvmPhysicalVolume(name="lvmpv", device="sdc"),
             PhysicalDevice("sdd"),
-            RaidVolume(
-                name="raidarray",
-                devices=["sdc"],
-                level="1",
-                metadata="1.2",
-            ),
-            Filesystem(
-                name="fsraid",
-                device="raidarray",
-                mountpoint="/raid",
-                type="ext4",
-                options=[],
-            ),
             LvmVolumeGroup(name="lvmvg", lvm_physical_volumes=["lvmpv"]),
             LvmLogicalVolume(
                 name="lvmlv",
@@ -338,6 +325,19 @@ class ParseRootTest(ParseTestBase):
                 keyfile="fsroot:randomfile",
                 keysize="2048",
                 password=None,
+            ),
+            RaidVolume(
+                name="raidarray",
+                devices=["sdc"],
+                level="1",
+                metadata="1.2",
+            ),
+            Filesystem(
+                name="fsraid",
+                device="raidarray",
+                mountpoint="/raid",
+                type="ext4",
+                options=[],
             ),
         ]
 

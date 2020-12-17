@@ -6,12 +6,12 @@ in this file - each with their own set of named fields. Each type of
 specification has its own collection of required and optional fields; no other
 fields are allowed.
 
-## Introduction
+## Defining Specifications
 
-At the top-level, the JSON object contains several lists of specifications:
-`physical_devices`, `raid_volumes`, and `lvm_volume_groups`. These lists are
-populated with several specifications of the associated types: `PhysicalDevice`,
-`RaidVolume`, and `LvmVolumeGroup`, respectively.
+At the top-level, the JSON object contains several lists of specifications. The
+`physical_devices` specification list is required, and all others are optional.
+The order of specification lists does not matter, as the graph will be resolved
+in dependency order.
 
 ### Composition
 
@@ -114,8 +114,17 @@ The grammar begins parsing at `Root`.
 
 ```
 "physical_devices": PhysicalDevice +
-"raid_volumes": RaidVolume *
+"crypt_volumes": CryptVolume *
+"directories": Directory *
+"files": File *
+"filesystems": Filesystem *
+"loop_devices": LoopDevice *
+"lvm_logical_volumes": LvmLogicalVolume *
+"lvm_physical_volumes": LvmPhysicalVolume *
 "lvm_volume_groups": LvmVolumeGroup *
+"partition_tables": PartitionTable *
+"raid_volumes": RaidVolume *
+"swap_volumes": SwapVolume *
 ```
 
 ### CryptVolume
