@@ -52,7 +52,7 @@ class File(Specification):
     def __init__(
         self,
         name: str,
-        filesystem: str,
+        mount: str,
         relative_path: str,
         owner: Optional[str],
         group: Optional[str],
@@ -61,10 +61,10 @@ class File(Specification):
     ):
         super().__init__(
             name,
-            [filesystem],
+            [mount],
             apply=FileApplyCommandGenerator(self),
         )
-        self.filesystem = filesystem
+        self.mount = mount
         self.relative_path = relative_path
         self.owner = owner
         self.group = group
@@ -72,4 +72,4 @@ class File(Specification):
         self.size = size
 
     def resolve_path(self) -> ResolveLink:
-        return ResolveLink(self.filesystem, self.relative_path)
+        return ResolveLink(self.mount, self.relative_path)

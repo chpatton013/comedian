@@ -13,7 +13,7 @@ class FileTest(SpecificationTestBase, unittest.TestCase):
             self,
             File(
                 name="name",
-                filesystem="filesystem",
+                mount="mount",
                 relative_path="relative_path",
                 owner="owner",
                 group="group",
@@ -25,9 +25,9 @@ class FileTest(SpecificationTestBase, unittest.TestCase):
 
     def test_properties(self):
         self.assertEqual("name", self.specification.name)
-        self.assertListEqual(["filesystem"], self.specification.dependencies)
+        self.assertListEqual(["mount"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
-        self.assertEqual("filesystem", self.specification.filesystem)
+        self.assertEqual("mount", self.specification.mount)
         self.assertEqual("relative_path", self.specification.relative_path)
         self.assertEqual("owner", self.specification.owner)
         self.assertEqual("group", self.specification.group)
@@ -40,7 +40,7 @@ class FileTest(SpecificationTestBase, unittest.TestCase):
             self.specification.resolve_device(),
         )
         self.assertEqual(
-            ResolveLink("filesystem", "relative_path"),
+            ResolveLink("mount", "relative_path"),
             self.specification.resolve_path(),
         )
 

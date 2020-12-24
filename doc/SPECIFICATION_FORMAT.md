@@ -123,6 +123,7 @@ The grammar begins parsing at `Root`.
 "lvm_logical_volumes": LvmLogicalVolume *
 "lvm_physical_volumes": LvmPhysicalVolume *
 "lvm_volume_groups": LvmVolumeGroup *
+"mounts": Mount *
 "partition_tables": PartitionTable *
 "raid_volumes": RaidVolume *
 "swap_volumes": SwapVolume *
@@ -191,14 +192,27 @@ Inherits `name` and `filesystem` properties from its parent `Filesystem`.
 
 ```
 "name": str
-"mountpoint": str
 "type": str
 "options": str *
-"mount_options": str *
+```
+
+#### Implicit Fields
+
+Inherits `device` properties from its parent specification.
+
+* `device`: `{parent}`
+
+### Mount
+
+```
+"name": str
+"mountpoint": str
+"options": str *
 "dump_frequency": int ?
 "fsck_order": int ?
 "directories": Directory *
 "files": File *
+"links": Link *
 ```
 
 #### Implicit Fields

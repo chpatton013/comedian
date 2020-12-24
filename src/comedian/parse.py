@@ -20,6 +20,7 @@ from comedian.specifications import (
     LvmLogicalVolume,
     LvmPhysicalVolume,
     LvmVolumeGroup,
+    Mount,
     Partition,
     PartitionTable,
     PhysicalDevice,
@@ -115,10 +116,12 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
             "directories",
             "files",
             "filesystems",
+            "links",
             "loop_devices",
             "lvm_logical_volumes",
             "lvm_physical_volumes",
             "lvm_volume_groups",
+            "mounts",
             "partition_tables",
             "raid_volumes",
             "swap_volumes",
@@ -156,6 +159,9 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
     for lvm_volume_group_spec in spec.get("lvm_volume_groups", []):
         yield from parse_lvm_volume_group(lvm_volume_group_spec)
+
+    for mount_spec in spec.get("mounts", []):
+        yield from parse_mount(mount_spec)
 
     for partition_table_spec in spec.get("partition_tables", []):
         yield from parse_partition_table(partition_table_spec)
@@ -566,11 +572,47 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "Filesystem",
         spec,
+        required={"name", "type"},
+        allowed={"device", "options", "mount"},
+    )
+
+    filesystem_name = spec["name"]
+    yield Filesystem(
+        name=filesystem_name,
+        device=spec["device"],
+        type=spec["type"],
+        options=spec.get("options", []),
+    )
+
+    if "mount" in spec:
+        mount_spec = spec["mount"]
+        validate_spec(
+            "Mount",
+            mount_spec,
+            required={"mountpoint"},
+            illegal={"name", "device"},
+            ignore=True,
+        )
+        yield from parse_mount(
+            {
+                "name": f"{filesystem_name}:mount",
+                "device": filesystem_name,
+                "type": spec["type"],
+                **mount_spec,
+            }
+        )
+
+
+def parse_mount(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_mount")
+
+    validate_spec(
+        "Mount",
+        spec,
         required={"name", "mountpoint", "type"},
         allowed={
             "device",
             "options",
-            "mount_options",
             "dump_frequency",
             "fsck_order",
             "directories",
@@ -579,14 +621,13 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
         },
     )
 
-    filesystem_name = spec["name"]
-    yield Filesystem(
-        name=filesystem_name,
+    mount_name = spec["name"]
+    yield Mount(
+        name=mount_name,
         device=spec.get("device"),
         mountpoint=spec["mountpoint"],
         type=spec["type"],
         options=spec.get("options", []),
-        mount_options=spec.get("mount_options", []),
         dump_frequency=spec.get("dump_frequency"),
         fsck_order=spec.get("fsck_order"),
     )
@@ -596,13 +637,13 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
             "Directory",
             directory_spec,
             required={"relative_path"},
-            illegal={"name", "filesystem"},
+            illegal={"name", "mount"},
             ignore=True,
         )
         yield from parse_directory(
             {
-                "name": f"{filesystem_name}:{directory_spec['relative_path']}",
-                "filesystem": filesystem_name,
+                "name": f"{mount_name}:{directory_spec['relative_path']}",
+                "mount": mount_name,
                 **directory_spec,
             }
         )
@@ -612,13 +653,13 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
             "File",
             file_spec,
             required={"relative_path"},
-            illegal={"name", "filesystem"},
+            illegal={"name", "mount"},
             ignore=True,
         )
         yield from parse_file(
             {
-                "name": f"{filesystem_name}:{file_spec['relative_path']}",
-                "filesystem": filesystem_name,
+                "name": f"{mount_name}:{file_spec['relative_path']}",
+                "mount": mount_name,
                 **file_spec,
             }
         )
@@ -628,13 +669,13 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
             "Link",
             link_spec,
             required={"relative_path", "source"},
-            illegal={"name", "filesystem"},
+            illegal={"name", "mount"},
             ignore=True,
         )
         yield from parse_link(
             {
-                "name": f"{filesystem_name}:{link_spec['relative_path']}",
-                "filesystem": filesystem_name,
+                "name": f"{mount_name}:{link_spec['relative_path']}",
+                "mount": mount_name,
                 **link_spec,
             }
         )
@@ -646,13 +687,13 @@ def parse_directory(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "Directory",
         spec,
-        required={"name", "filesystem", "relative_path"},
+        required={"name", "mount", "relative_path"},
         allowed={"owner", "group", "mode"},
     )
 
     yield Directory(
         name=spec["name"],
-        filesystem=spec["filesystem"],
+        mount=spec["mount"],
         relative_path=spec["relative_path"],
         owner=spec.get("owner"),
         group=spec.get("group"),
@@ -666,7 +707,7 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "File",
         spec,
-        required={"name", "filesystem", "relative_path"},
+        required={"name", "mount", "relative_path"},
         allowed={
             "owner",
             "group",
@@ -682,7 +723,7 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
     file_name = spec["name"]
     yield File(
         name=file_name,
-        filesystem=spec["filesystem"],
+        mount=spec["mount"],
         relative_path=spec["relative_path"],
         owner=spec.get("owner"),
         group=spec.get("group"),
@@ -730,7 +771,7 @@ def parse_link(spec: Mapping[str, Any]) -> Iterator[Specification]:
     validate_spec(
         "Link",
         spec,
-        required={"name", "filesystem", "relative_path", "source"},
+        required={"name", "mount", "relative_path", "source"},
         allowed={
             "owner",
             "group",
@@ -742,7 +783,7 @@ def parse_link(spec: Mapping[str, Any]) -> Iterator[Specification]:
     link_name = spec["name"]
     yield Link(
         name=link_name,
-        filesystem=spec["filesystem"],
+        mount=spec["mount"],
         relative_path=spec["relative_path"],
         source=spec["source"],
         owner=spec.get("owner"),

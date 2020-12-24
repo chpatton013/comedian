@@ -13,6 +13,7 @@ from comedian.specifications import (
     LvmLogicalVolume,
     LvmPhysicalVolume,
     LvmVolumeGroup,
+    Mount,
     Partition,
     PartitionTable,
     PhysicalDevice,
@@ -30,66 +31,70 @@ from comedian.parse import (
 
 _FSROOT_SPEC = {
     "name": "fsroot",
-    "mountpoint": "/",
     "type": "ext4",
-    "directories": [
-        {
-            "relative_path": "raid",
-            "owner": "root",
-            "group": "root",
-            "mode": "0755",
-        },
-        {
-            "relative_path": "loop",
-        },
-    ],
-    "files": [
-        {
-            "relative_path": "swapfile",
-            "owner": "root",
-            "group": "root",
-            "mode": "0755",
-            "size": "10",
-            "crypt_volume": {
-                "name": "cryptswap1",
-                "type": "luks2",
-                "keyfile": "/dev/urandom",
-                "options": ["swap", "cipher=aes-cbc-essiv:sha256", "size=256"],
-                "swap_volume": {"name": "swap1"},
+    "mount": {
+        "mountpoint": "/",
+        "directories": [
+            {
+                "relative_path": "raid",
+                "owner": "root",
+                "group": "root",
+                "mode": "0755",
             },
-        },
-        {
-            "relative_path": "loopfile",
-            "size": "10",
-            "loop_device": {
-                "name": "loop",
-                "args": ["-e", "18"],
-                "filesystem": {
-                    "name": "fsloop",
-                    "mountpoint": "/loop",
-                    "type": "ext4",
-                    "mount_options": ["noatime"],
+            {
+                "relative_path": "loop",
+            },
+        ],
+        "files": [
+            {
+                "relative_path": "swapfile",
+                "owner": "root",
+                "group": "root",
+                "mode": "0755",
+                "size": "10",
+                "crypt_volume": {
+                    "name": "cryptswap1",
+                    "type": "luks2",
+                    "keyfile": "/dev/urandom",
+                    "options": ["swap", "cipher=aes-cbc-essiv:sha256", "size=256"],
+                    "swap_volume": {"name": "swap1"},
                 },
             },
-        },
-        {
-            "relative_path": "randomfile",
-        },
-        {
-            "relative_path": "keyfile",
-        },
-    ],
-    "links": [
-        {
-            "relative_path": "hardlink",
-            "source": "/keyfile",
-        },
-        {
-            "relative_path": "symlink",
-            "source": "/randomfile",
-            "symbolic": True,
-        },
-    ],
+            {
+                "relative_path": "loopfile",
+                "size": "10",
+                "loop_device": {
+                    "name": "loop",
+                    "args": ["-e", "18"],
+                    "filesystem": {
+                        "name": "fsloop",
+                        "type": "ext4",
+                        "mount": {
+                            "mountpoint": "/loop",
+                            "options": ["noatime"],
+                        },
+                    },
+                },
+            },
+            {
+                "relative_path": "randomfile",
+            },
+            {
+                "relative_path": "keyfile",
+            },
+        ],
+        "links": [
+            {
+                "relative_path": "hardlink",
+                "source": "/keyfile",
+            },
+            {
+                "relative_path": "symlink",
+                "source": "/randomfile",
+                "symbolic": True,
+            },
+        ],
+    },
 }
 
 SPEC = {
@@ -113,7 +118,7 @@ SPEC = {
                         "crypt_volume": {
                             "name": "cryptroot",
                             "type": "luks2",
-                            "keyfile": "fsroot:keyfile",
+                            "keyfile": "fsroot:mount:keyfile",
                             "keysize": "2048",
                             "password": "hunter2",
                             "filesystem": _FSROOT_SPEC,
@@ -146,8 +151,10 @@ SPEC = {
             "metadata": "1.2",
             "filesystem": {
                 "name": "fsraid",
-                "mountpoint": "/raid",
                 "type": "ext4",
+                "mount": {
+                    "mountpoint": "/raid",
+                },
             },
         }
     ],
@@ -161,7 +168,7 @@ SPEC = {
                     "crypt_volume": {
                         "name": "crypt_lvm",
                         "type": "luks2",
-                        "keyfile": "fsroot:randomfile",
+                        "keyfile": "fsroot:mount:randomfile",
                         "keysize": "2048",
                     },
                 }
@@ -228,7 +235,7 @@ class ParseRootTest(ParseTestBase):
                 name="cryptroot",
                 device="sda:pt:2",
                 type="luks2",
-                keyfile="fsroot:keyfile",
+                keyfile="fsroot:mount:keyfile",
                 keysize="2048",
                 password="hunter2",
                 options=[],
@@ -236,32 +243,37 @@ class ParseRootTest(ParseTestBase):
             Filesystem(
                 name="fsroot",
                 device="cryptroot",
+                type="ext4",
+                options=[],
+            ),
+            Mount(
+                name="fsroot:mount",
+                device="fsroot",
                 mountpoint="/",
                 type="ext4",
                 options=[],
-                mount_options=[],
                 dump_frequency=None,
                 fsck_order=None,
             ),
             Directory(
-                name="fsroot:raid",
-                filesystem="fsroot",
+                name="fsroot:mount:raid",
+                mount="fsroot:mount",
                 relative_path="raid",
                 owner="root",
                 group="root",
                 mode="0755",
             ),
             Directory(
-                name="fsroot:loop",
-                filesystem="fsroot",
+                name="fsroot:mount:loop",
+                mount="fsroot:mount",
                 relative_path="loop",
                 owner=None,
                 group=None,
                 mode=None,
             ),
             File(
-                name="fsroot:swapfile",
-                filesystem="fsroot",
+                name="fsroot:mount:swapfile",
+                mount="fsroot:mount",
                 relative_path="swapfile",
                 owner="root",
                 group="root",
@@ -270,7 +282,7 @@ class ParseRootTest(ParseTestBase):
             ),
             CryptVolume(
                 name="cryptswap1",
-                device="fsroot:swapfile",
+                device="fsroot:mount:swapfile",
                 type="luks2",
                 keyfile="/dev/urandom",
                 keysize=None,
@@ -285,8 +297,8 @@ class ParseRootTest(ParseTestBase):
                 uuid=None,
             ),
             File(
-                name="fsroot:loopfile",
-                filesystem="fsroot",
+                name="fsroot:mount:loopfile",
+                mount="fsroot:mount",
                 relative_path="loopfile",
                 owner=None,
                 group=None,
@@ -295,22 +307,27 @@ class ParseRootTest(ParseTestBase):
             ),
             LoopDevice(
                 name="loop",
-                file="fsroot:loopfile",
+                file="fsroot:mount:loopfile",
                 args=["-e", "18"],
             ),
             Filesystem(
                 name="fsloop",
                 device="loop",
-                mountpoint="/loop",
                 type="ext4",
                 options=[],
-                mount_options=["noatime"],
+            ),
+            Mount(
+                name="fsloop:mount",
+                device="fsloop",
+                mountpoint="/loop",
+                type="ext4",
+                options=["noatime"],
                 dump_frequency=None,
                 fsck_order=None,
             ),
             File(
-                name="fsroot:randomfile",
-                filesystem="fsroot",
+                name="fsroot:mount:randomfile",
+                mount="fsroot:mount",
                 relative_path="randomfile",
                 owner=None,
                 group=None,
@@ -318,8 +335,8 @@ class ParseRootTest(ParseTestBase):
                 size=None,
             ),
             File(
-                name="fsroot:keyfile",
-                filesystem="fsroot",
+                name="fsroot:mount:keyfile",
+                mount="fsroot:mount",
                 relative_path="keyfile",
                 owner=None,
                 group=None,
@@ -327,8 +344,8 @@ class ParseRootTest(ParseTestBase):
                 size=None,
             ),
             Link(
-                name="fsroot:hardlink",
-                filesystem="fsroot",
+                name="fsroot:mount:hardlink",
+                mount="fsroot:mount",
                 relative_path="hardlink",
                 source="/keyfile",
                 owner=None,
@@ -337,8 +354,8 @@ class ParseRootTest(ParseTestBase):
                 symbolic=False,
             ),
             Link(
-                name="fsroot:symlink",
-                filesystem="fsroot",
+                name="fsroot:mount:symlink",
+                mount="fsroot:mount",
                 relative_path="symlink",
                 source="/randomfile",
                 owner=None,
@@ -374,7 +391,7 @@ class ParseRootTest(ParseTestBase):
                 name="crypt_lvm",
                 device="lvmlv",
                 type="luks2",
-                keyfile="fsroot:randomfile",
+                keyfile="fsroot:mount:randomfile",
                 keysize="2048",
                 password=None,
                 options=[],
@@ -388,10 +405,15 @@ class ParseRootTest(ParseTestBase):
             Filesystem(
                 name="fsraid",
                 device="raidarray",
+                type="ext4",
+                options=[],
+            ),
+            Mount(
+                name="fsraid:mount",
+                device="fsraid",
                 mountpoint="/raid",
                 type="ext4",
                 options=[],
-                mount_options=[],
                 dump_frequency=None,
                 fsck_order=None,
             ),
@@ -491,13 +513,12 @@ class ParseFilesystemTest(ParseTestBase):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         del spec["name"]
-        del spec["mountpoint"]
         del spec["type"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "Filesystem")
-        self.assertSetEqual(context.exception.keys, {"name", "mountpoint", "type"})
+        self.assertSetEqual(context.exception.keys, {"name", "type"})
 
 
 class ParseDirectoryTest(ParseTestBase):
@@ -506,19 +527,19 @@ class ParseDirectoryTest(ParseTestBase):
         # spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["directories"][0]
+        spec = spec["mount"]["directories"][0]
         spec["name"] = "name"
-        spec["filesystem"] = "filesystem"
+        spec["mount"] = "mount"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "Directory")
-        self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
+        self.assertSetEqual(context.exception.keys, {"name", "mount"})
 
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["directories"][0]
+        spec = spec["mount"]["directories"][0]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -529,7 +550,7 @@ class ParseDirectoryTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["directories"][0]
+        spec = spec["mount"]["directories"][0]
         del spec["relative_path"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
@@ -543,19 +564,19 @@ class ParseFileTest(ParseTestBase):
         # These keys are restricted before parsing the rest of the file spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]
+        spec = spec["mount"]["files"][0]
         spec["name"] = "name"
-        spec["filesystem"] = "filesystem"
+        spec["mount"] = "mount"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "File")
-        self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
+        self.assertSetEqual(context.exception.keys, {"name", "mount"})
 
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]
+        spec = spec["mount"]["files"][0]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -566,7 +587,7 @@ class ParseFileTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]
+        spec = spec["mount"]["files"][0]
         del spec["relative_path"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
@@ -577,7 +598,7 @@ class ParseFileTest(ParseTestBase):
     def test_exclusive_keys(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]
+        spec = spec["mount"]["files"][0]
         spec["loop_device"] = "loop_device"
         spec["crypt_volume"] = "crypt_volume"
         spec["swap_volume"] = "swap_volume"
@@ -596,19 +617,19 @@ class ParseLinkTest(ParseTestBase):
         # These keys are restricted before parsing the rest of the link spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["links"][0]
+        spec = spec["mount"]["links"][0]
         spec["name"] = "name"
-        spec["filesystem"] = "filesystem"
+        spec["mount"] = "mount"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "Link")
-        self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
+        self.assertSetEqual(context.exception.keys, {"name", "mount"})
 
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["links"][0]
+        spec = spec["mount"]["links"][0]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -619,7 +640,7 @@ class ParseLinkTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["links"][0]
+        spec = spec["mount"]["links"][0]
         del spec["relative_path"]
         del spec["source"]
 
@@ -635,7 +656,7 @@ class ParseLoopDeviceTest(ParseTestBase):
         # spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][1]["loop_device"]
+        spec = spec["mount"]["files"][1]["loop_device"]
         spec["file"] = "file"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -646,7 +667,7 @@ class ParseLoopDeviceTest(ParseTestBase):
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][1]["loop_device"]
+        spec = spec["mount"]["files"][1]["loop_device"]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -657,7 +678,7 @@ class ParseLoopDeviceTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][1]["loop_device"]
+        spec = spec["mount"]["files"][1]["loop_device"]
         del spec["name"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
@@ -914,7 +935,7 @@ class ParseSwapVolumeTest(ParseTestBase):
         # spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        spec = spec["mount"]["files"][0]["crypt_volume"]["swap_volume"]
         spec["device"] = "device"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -925,7 +946,7 @@ class ParseSwapVolumeTest(ParseTestBase):
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        spec = spec["mount"]["files"][0]["crypt_volume"]["swap_volume"]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -936,7 +957,7 @@ class ParseSwapVolumeTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        spec = spec["mount"]["files"][0]["crypt_volume"]["swap_volume"]
         del spec["name"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:

@@ -47,7 +47,7 @@ class Link(Specification):
     def __init__(
         self,
         name: str,
-        filesystem: str,
+        mount: str,
         relative_path: str,
         source: str,
         owner: Optional[str],
@@ -57,10 +57,10 @@ class Link(Specification):
     ):
         super().__init__(
             name,
-            [filesystem],
+            [mount],
             apply=LinkApplyCommandGenerator(self),
         )
-        self.filesystem = filesystem
+        self.mount = mount
         self.relative_path = relative_path
         self.source = source
         self.owner = owner
@@ -69,4 +69,4 @@ class Link(Specification):
         self.symbolic = symbolic
 
     def resolve_path(self) -> ResolveLink:
-        return ResolveLink(self.filesystem, self.relative_path)
+        return ResolveLink(self.mount, self.relative_path)

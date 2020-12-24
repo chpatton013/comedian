@@ -7,6 +7,7 @@ from comedian.specifications.loop_device import LoopDevice
 from comedian.specifications.lvm_logical_volume import LvmLogicalVolume
 from comedian.specifications.lvm_physical_volume import LvmPhysicalVolume
 from comedian.specifications.lvm_volume_group import LvmVolumeGroup
+from comedian.specifications.mount import Mount
 from comedian.specifications.partition import Partition
 from comedian.specifications.partition_table import PartitionTable
 from comedian.specifications.physical_device import PhysicalDevice
@@ -25,6 +26,7 @@ __all__ = [
     "LvmLogicalVolume",
     "LvmPhysicalVolume",
     "LvmVolumeGroup",
+    "Mount",
     "Partition",
     "PartitionTable",
     "PhysicalDevice",
