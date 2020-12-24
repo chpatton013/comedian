@@ -1,4 +1,4 @@
-.PHONY: clean dev_requirements dist dist_requirements dist_test example integration_test lint_test style_test test type_test unit_test
+.PHONY: clean dev_requirements dev_test dist dist_requirements dist_test example integration_test lint_test style_test test type_test unit_test
 
 dev_requirements: dev_requirements.txt
 	pip3 install --requirement dev_requirements.txt
@@ -22,8 +22,6 @@ clean:
 example:
 	./src/__main__.py apply ./example.spec.json --mode=shell --quiet
 
-test: style_test type_test lint_test unit_test integration_test dist_test
-
 style_test: dev_requirements
 	black --check .
 
@@ -41,3 +39,6 @@ integration_test:
 
 dist_test: dist
 	bash -c 'diff ./README.md <(./dist/comedian --doc)'
+
+test: style_test type_test lint_test unit_test integration_test dist_test
+dev_test: style_test type_test lint_test unit_test
