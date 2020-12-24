@@ -13,23 +13,22 @@ class FilesystemApplyCommandGenerator(CommandGenerator):
         mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
         media_mountpoint_path = context.config.media_path(mountpoint_path)
 
-        mount_cmd = ["mount"]
+        mount_cmd = ["mount", "--types", self.specification.type]
         if self.specification.mount_options:
             mount_cmd += ["-o", ",".join(self.specification.mount_options)]
 
         if self.specification.device:
             device_path = _device_path(self.specification.device, context)
+            mount_cmd.append(quote_argument(device_path))
+
             yield Command(
                 ["mkfs", "--type", self.specification.type]
                 + list(self.specification.options)
                 + [quote_argument(device_path)]
             )
-            yield Command(
-                mount_cmd
-                + [quote_argument(device_path), quote_argument(media_mountpoint_path)]
-            )
-        else:
-            yield Command(mount_cmd + [quote_argument(media_mountpoint_path)])
+
+        mount_cmd.append(quote_argument(media_mountpoint_path))
+        yield Command(mount_cmd)
 
 
 class FilesystemUpCommandGenerator(CommandGenerator):
@@ -40,17 +39,16 @@ class FilesystemUpCommandGenerator(CommandGenerator):
         mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
         media_mountpoint_path = context.config.media_path(mountpoint_path)
 
+        mount_cmd = ["mount", "--types", self.specification.type]
+        if self.specification.mount_options:
+            mount_cmd += ["-o", ",".join(self.specification.mount_options)]
+
         if self.specification.device:
             device_path = _device_path(self.specification.device, context)
-            yield Command(
-                [
-                    "mount",
-                    quote_argument(device_path),
-                    quote_argument(media_mountpoint_path),
-                ]
-            )
-        else:
-            yield Command(["mount", quote_argument(media_mountpoint_path)])
+            mount_cmd.append(quote_argument(device_path))
+
+        mount_cmd.append(quote_argument(media_mountpoint_path))
+        yield Command(mount_cmd)
 
 
 class FilesystemDownCommandGenerator(CommandGenerator):

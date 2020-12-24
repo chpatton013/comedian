@@ -17,7 +17,7 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
                 mountpoint="mountpoint",
                 type="type",
                 options=["options"],
-                mount_options=["mount-options"],
+                mount_options=["mount", "options"],
                 dump_frequency=1,
                 fsck_order=2,
             ),
@@ -32,7 +32,7 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
         self.assertEqual("mountpoint", self.specification.mountpoint)
         self.assertEqual("type", self.specification.type)
         self.assertEqual(["options"], self.specification.options)
-        self.assertEqual(["mount-options"], self.specification.mount_options)
+        self.assertEqual(["mount", "options"], self.specification.mount_options)
         self.assertEqual(1, self.specification.dump_frequency)
         self.assertEqual(2, self.specification.fsck_order)
 
@@ -49,7 +49,17 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
     def test_apply_commands(self):
         expected = [
             Command(["mkfs", "--type", "type", "options", "device"]),
-            Command(["mount", "-o", "mount-options", "device", "media_dir/mountpoint"]),
+            Command(
+                [
+                    "mount",
+                    "--types",
+                    "type",
+                    "-o",
+                    "mount,options",
+                    "device",
+                    "media_dir/mountpoint",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,
@@ -61,7 +71,17 @@ class FilesystemTest(SpecificationTestBase, unittest.TestCase):
 
     def test_up_commands(self):
         expected = [
-            Command(["mount", "device", "media_dir/mountpoint"]),
+            Command(
+                [
+                    "mount",
+                    "--types",
+                    "type",
+                    "-o",
+                    "mount,options",
+                    "device",
+                    "media_dir/mountpoint",
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,
