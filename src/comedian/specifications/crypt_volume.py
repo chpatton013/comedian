@@ -19,20 +19,27 @@ class CryptVolumeApplyCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(self.specification.device, context)
-        keyfile_path = _keyfile_path(self.specification.keyfile, context)
-        tmp_keyfile_path = context.config.tmp_path(keyfile_path)
+        keyfile_path = self.specification.tmp_keyfile_path(context)
 
-        yield from _randomize_device(self.specification.name, device_path, context)
-        yield from _create_keyfile(
-            tmp_keyfile_path, self.specification.keysize, context
-        )
+        if not self.specification.ephemeral_keyfile():
+            if self.specification.keysize is None:
+                raise RuntimeError(
+                    "Logical Error: CryptVolume.keysize must be set with explicit keyfile"
+                )
+
+            yield from _randomize_device(self.specification.name, device_path, context)
+            yield from _create_keyfile(
+                keyfile_path, self.specification.keysize, context
+            )
+
         yield from _format_crypt(
+            context,
             self.specification.name,
             device_path,
-            tmp_keyfile_path,
+            keyfile_path,
             self.specification.type,
             self.specification.password,
-            context,
+            self.specification.options,
         )
 
 
@@ -41,15 +48,14 @@ class CryptVolumePostApplyCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        keyfile_path = _keyfile_path(self.specification.keyfile, context)
-        tmp_keyfile_path = context.config.tmp_path(keyfile_path)
-        media_keyfile_path = context.config.media_path(keyfile_path)
+        if self.specification.ephemeral_keyfile():
+            return
 
         yield Command(
             [
                 "cp",
-                quote_argument(tmp_keyfile_path),
-                quote_argument(media_keyfile_path),
+                quote_argument(self.specification.tmp_keyfile_path(context)),
+                quote_argument(self.specification.media_keyfile_path(context)),
                 "--preserve=mode,ownership",
             ]
         )
@@ -61,11 +67,13 @@ class CryptVolumeUpCommandGenerator(CommandGenerator):
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(self.specification.device, context)
-        keyfile_path = _keyfile_path(self.specification.keyfile, context)
-        tmp_keyfile_path = context.config.tmp_path(keyfile_path)
 
         yield Command(
-            _open_crypt(self.specification.name, device_path, tmp_keyfile_path)
+            _open_crypt(
+                self.specification.name,
+                device_path,
+                self.specification.tmp_keyfile_path(context),
+            )
         )
 
 
@@ -84,26 +92,52 @@ class CryptVolume(Specification):
         device: str,
         type: str,
         keyfile: str,
-        keysize: str,
+        keysize: Optional[str],
         password: Optional[str],
+        options: List[str],
     ):
+        references = []
+        if not _ephemeral_keyfile(keyfile):
+            references.append(keyfile)
+
         super().__init__(
             name,
             [device],
-            references=[keyfile],
+            references=references,
             apply=CryptVolumeApplyCommandGenerator(self),
             post_apply=CryptVolumePostApplyCommandGenerator(self),
             up=CryptVolumeUpCommandGenerator(self),
             down=CryptVolumeDownCommandGenerator(self),
         )
+
         self.device = device
         self.type = type
         self.keyfile = keyfile
         self.keysize = keysize
         self.password = password
+        self.options = options
+
+    def ephemeral_keyfile(self) -> bool:
+        return _ephemeral_keyfile(self.keyfile)
+
+    def tmp_keyfile_path(self, context: CommandContext) -> str:
+        if self.ephemeral_keyfile():
+            return self.keyfile
+        else:
+            return context.config.tmp_path(_keyfile_path(self.keyfile, context))
+
+    def media_keyfile_path(self, context: CommandContext) -> str:
+        if self.ephemeral_keyfile():
+            return self.keyfile
+        else:
+            return context.config.media_path(_keyfile_path(self.keyfile, context))
 
     def resolve_device(self) -> ResolveLink:
         return ResolveLink(None, _crypt_device(self.name))
+
+
+def _ephemeral_keyfile(keyfile: str) -> bool:
+    return os.path.isabs(keyfile)
 
 
 def _crypt_device(name: str) -> str:
@@ -181,19 +215,23 @@ def _create_keyfile(
 
 
 def _format_crypt(
+    context: CommandContext,
     name: str,
     device: str,
     keyfile: str,
     type: str,
     password: Optional[str],
-    context: CommandContext,
+    options: List[str],
 ) -> Iterator[Command]:
+    options_str = ",".join(options)
+    options_args = [options_str] if options_str else []
     yield Command(
         _cryptsetup(
             f"--key-file={quote_argument(keyfile)}",
             "luksFormat",
             f"--type={type}",
             quote_argument(device),
+            *options_args,
         )
     )
     if password:
@@ -216,6 +254,8 @@ def _format_crypt(
 
 def _device_path(device: str, context: CommandContext) -> str:
     device_path = context.graph.resolve_device(device)
+    if not device_path:
+        device_path = context.graph.resolve_path(device)
     if not device_path:
         raise ValueError("Failed to find device path {}".format(device))
     return device_path

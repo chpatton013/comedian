@@ -49,8 +49,12 @@ _FSROOT_SPEC = {
             "group": "root",
             "mode": "0755",
             "size": "10",
-            "swap_volume": {
-                "name": "swap1",
+            "crypt_volume": {
+                "name": "cryptswap1",
+                "type": "luks2",
+                "keyfile": "/dev/urandom",
+                "options": ["swap", "cipher=aes-cbc-essiv:sha256", "size=256"],
+                "swap_volume": {"name": "swap1"},
             },
         },
         {
@@ -215,6 +219,7 @@ class ParseRootTest(ParseTestBase):
                 keyfile="fsroot:keyfile",
                 keysize="2048",
                 password="hunter2",
+                options=[],
             ),
             Filesystem(
                 name="fsroot",
@@ -251,9 +256,18 @@ class ParseRootTest(ParseTestBase):
                 mode="0755",
                 size="10",
             ),
+            CryptVolume(
+                name="cryptswap1",
+                device="fsroot:swapfile",
+                type="luks2",
+                keyfile="/dev/urandom",
+                keysize=None,
+                password=None,
+                options=["swap", "cipher=aes-cbc-essiv:sha256", "size=256"],
+            ),
             SwapVolume(
                 name="swap1",
-                device="fsroot:swapfile",
+                device="cryptswap1",
                 label=None,
                 pagesize=None,
                 uuid=None,
@@ -331,6 +345,7 @@ class ParseRootTest(ParseTestBase):
                 keyfile="fsroot:randomfile",
                 keysize="2048",
                 password=None,
+                options=[],
             ),
             RaidVolume(
                 name="raidarray",
@@ -531,13 +546,38 @@ class ParseCryptVolumeTest(ParseTestBase):
         del spec["name"]
         del spec["type"]
         del spec["keyfile"]
-        del spec["keysize"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
         self.assertEqual(context.exception.name, "CryptVolume")
+        self.assertSetEqual(context.exception.keys, {"name", "type", "keyfile"})
+
+    def test_exclusive_keys_1(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]
+        spec["keyfile"] = "keyfile"
+        del spec["keysize"]
+
+        with self.assertRaises(FoundIncompatibleKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "CryptVolume")
         self.assertSetEqual(
-            context.exception.keys, {"name", "type", "keyfile", "keysize"}
+            context.exception.keys,
+            {"keyfile", "keysize"},
+        )
+
+    def test_exclusive_keys_2(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]
+        spec["keyfile"] = "/keyfile"
+        spec["keysize"] = "swap_volume"
+
+        with self.assertRaises(FoundIncompatibleKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "CryptVolume")
+        self.assertSetEqual(
+            context.exception.keys,
+            {"keyfile", "keysize"},
         )
 
 

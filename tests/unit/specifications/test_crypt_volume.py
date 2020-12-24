@@ -18,11 +18,13 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 keyfile="keyfile",
                 keysize="keysize",
                 password="password",
+                options=["opt", "ions"],
             ),
         )
         unittest.TestCase.__init__(self, *args, **kwargs)
 
     def test_properties(self):
+        self.assertFalse(self.specification.ephemeral_keyfile())
         self.assertEqual("name", self.specification.name)
         self.assertListEqual(["device"], self.specification.dependencies)
         self.assertListEqual(["keyfile"], self.specification.references)
@@ -31,6 +33,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
         self.assertEqual("keyfile", self.specification.keyfile)
         self.assertEqual("keysize", self.specification.keysize)
         self.assertEqual("password", self.specification.password)
+        self.assertListEqual(["opt", "ions"], self.specification.options)
 
     def test_resolve(self):
         self.assertEqual(
@@ -84,6 +87,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "luksFormat",
                     "--type=type",
                     "device",
+                    "opt,ions",
                 ]
             ),
             Command(
@@ -132,6 +136,118 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "cryptsetup",
                     "--batch-mode",
                     "--key-file=tmp_dir/keyfile",
+                    "open",
+                    "device",
+                    "name",
+                ]
+            ),
+        ]
+        self.assertListEqual(
+            expected,
+            list(self.specification.up(self.context)),
+        )
+
+    def test_pre_down_commands(self):
+        self.assertIsNone(self.specification.pre_down)
+
+    def test_down_commands(self):
+        expected = [
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "close",
+                    "name",
+                ]
+            ),
+        ]
+        self.assertListEqual(
+            expected,
+            list(self.specification.down(self.context)),
+        )
+
+
+class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        SpecificationTestBase.__init__(
+            self,
+            CryptVolume(
+                name="name",
+                device="device",
+                type="type",
+                keyfile="/keyfile",
+                keysize=None,
+                password=None,
+                options=["opt", "ions"],
+            ),
+        )
+        unittest.TestCase.__init__(self, *args, **kwargs)
+
+    def test_properties(self):
+        self.assertTrue(self.specification.ephemeral_keyfile())
+        self.assertEqual("name", self.specification.name)
+        self.assertListEqual(["device"], self.specification.dependencies)
+        self.assertListEqual([], self.specification.references)
+        self.assertEqual("device", self.specification.device)
+        self.assertEqual("type", self.specification.type)
+        self.assertEqual("/keyfile", self.specification.keyfile)
+        self.assertIsNone(self.specification.keysize)
+        self.assertIsNone(self.specification.password)
+        self.assertListEqual(["opt", "ions"], self.specification.options)
+
+    def test_resolve(self):
+        self.assertEqual(
+            ResolveLink(None, "/dev/mapper/name"),
+            self.specification.resolve_device(),
+        )
+        self.assertEqual(
+            ResolveLink(None, None),
+            self.specification.resolve_path(),
+        )
+
+    def test_apply_commands(self):
+        expected = [
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=/keyfile",
+                    "luksFormat",
+                    "--type=type",
+                    "device",
+                    "opt,ions",
+                ]
+            ),
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=/keyfile",
+                    "open",
+                    "device",
+                    "name",
+                ]
+            ),
+        ]
+        self.assertListEqual(
+            expected,
+            list(self.specification.apply(self.context)),
+        )
+
+    def test_post_apply_commands(self):
+        expected = []
+        self.assertListEqual(
+            expected,
+            list(self.specification.post_apply(self.context)),
+        )
+
+    def test_up_commands(self):
+        expected = [
+            Command(
+                [
+                    "cryptsetup",
+                    "--batch-mode",
+                    "--key-file=/keyfile",
                     "open",
                     "device",
                     "name",

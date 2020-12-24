@@ -6,6 +6,7 @@ raise errors on invalid input.
 """
 
 import logging
+import os
 from typing import Any, Dict, Iterator, Mapping, Optional, Set, Tuple
 
 from comedian.specification import Specification
@@ -425,19 +426,24 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     crypt_volume_spec, block_device_spec = split_spec(
         name,
         spec,
-        required={"name", "device", "type", "keyfile", "keysize"},
-        allowed={"password"},
+        required={"name", "device", "type", "keyfile"},
+        allowed={"keysize", "password", "options"},
         ignore=True,
     )
+
+    keyfile = crypt_volume_spec["keyfile"]
+    if os.path.isabs(keyfile) == ("keysize" in spec):
+        raise FoundIncompatibleKeysError(name, dict(spec), {"keyfile", "keysize"})
 
     crypt_volume_name = crypt_volume_spec["name"]
     yield CryptVolume(
         name=crypt_volume_name,
         device=crypt_volume_spec["device"],
         type=crypt_volume_spec["type"],
-        keyfile=crypt_volume_spec["keyfile"],
-        keysize=crypt_volume_spec["keysize"],
+        keyfile=keyfile,
+        keysize=crypt_volume_spec.get("keysize"),
         password=crypt_volume_spec.get("password"),
+        options=crypt_volume_spec.get("options", []),
     )
 
     if block_device_spec:
