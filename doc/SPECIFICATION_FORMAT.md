@@ -118,6 +118,7 @@ The grammar begins parsing at `Root`.
 "directories": Directory *
 "files": File *
 "filesystems": Filesystem *
+"links": Link *
 "loop_devices": LoopDevice *
 "lvm_logical_volumes": LvmLogicalVolume *
 "lvm_physical_volumes": LvmPhysicalVolume *
@@ -206,47 +207,23 @@ Inherits `device` properties from its parent specification.
 
 * `device`: `{parent}`
 
-### Partition
+### Link
 
 ```
-"align": str ?
-"type": str
-"start": str
-"end": str,
-"flags": str *
-"label": str ?
-"unit": str ?
-"crypt_volume": CryptVolume ^
-"filesystem": Filesystem ^
-"partition_table": PartitionTable ^
-"lvm_physical_volume": LvmPhysicalVolume ^
-"swap_volume": SwapVolume ^
+"name": str
+"relative_path": str
+"owner": str ?
+"group": str ?
+"mode": str ?
+"symbolic": bool ?
 ```
 
 #### Implicit Fields
 
-Inherits `partition_table`, `number`, and `name` properties from its parent
-`PartitionTable`.
+Inherits `name` and `filesystem` properties from its parent `Filesystem`.
 
-* `partition_table`: `{parent}`
-* `number`: The index of this partition within the list of partitions in the
-  parent `PartitiontTable`; 1-indexed.
-* `name`: `{partition_table}:{number}`
-
-### PartitionTable
-
-```
-"type": str
-"glue": str ?
-"partitions": Partition +
-```
-
-#### Implicit Fields
-
-Inherits `name` and `device` properties from its parent specification.
-
-* `device`: `{parent}`
-* `name`: `{device}:pt`
+* `filesystem`: `{parent}`
+* `name`: `{filesystem}:{relative_path}`
 
 ### LoopDevice
 
@@ -311,6 +288,48 @@ Inherits `device` properties from its parent specification.
 "lvm_physical_volumes": str +
 "lvm_logical_volumes": LvmLogicalVolume +
 ```
+
+### Partition
+
+```
+"align": str ?
+"type": str
+"start": str
+"end": str,
+"flags": str *
+"label": str ?
+"unit": str ?
+"crypt_volume": CryptVolume ^
+"filesystem": Filesystem ^
+"partition_table": PartitionTable ^
+"lvm_physical_volume": LvmPhysicalVolume ^
+"swap_volume": SwapVolume ^
+```
+
+#### Implicit Fields
+
+Inherits `partition_table`, `number`, and `name` properties from its parent
+`PartitionTable`.
+
+* `partition_table`: `{parent}`
+* `number`: The index of this partition within the list of partitions in the
+  parent `PartitiontTable`; 1-indexed.
+* `name`: `{partition_table}:{number}`
+
+### PartitionTable
+
+```
+"type": str
+"glue": str ?
+"partitions": Partition +
+```
+
+#### Implicit Fields
+
+Inherits `name` and `device` properties from its parent specification.
+
+* `device`: `{parent}`
+* `name`: `{device}:pt`
 
 ### PhysicalDevice
 

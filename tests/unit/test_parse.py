@@ -8,12 +8,13 @@ from comedian.specifications import (
     Directory,
     File,
     Filesystem,
-    Partition,
-    PartitionTable,
+    Link,
     LoopDevice,
     LvmLogicalVolume,
     LvmPhysicalVolume,
     LvmVolumeGroup,
+    Partition,
+    PartitionTable,
     PhysicalDevice,
     RaidVolume,
     Root,
@@ -76,6 +77,17 @@ _FSROOT_SPEC = {
         },
         {
             "relative_path": "keyfile",
+        },
+    ],
+    "links": [
+        {
+            "relative_path": "hardlink",
+            "source": "/keyfile",
+        },
+        {
+            "relative_path": "symlink",
+            "source": "/randomfile",
+            "symbolic": True,
         },
     ],
 }
@@ -314,6 +326,26 @@ class ParseRootTest(ParseTestBase):
                 mode=None,
                 size=None,
             ),
+            Link(
+                name="fsroot:hardlink",
+                filesystem="fsroot",
+                relative_path="hardlink",
+                source="/keyfile",
+                owner=None,
+                group=None,
+                mode=None,
+                symbolic=False,
+            ),
+            Link(
+                name="fsroot:symlink",
+                filesystem="fsroot",
+                relative_path="symlink",
+                source="/randomfile",
+                owner=None,
+                group=None,
+                mode=None,
+                symbolic=True,
+            ),
             PhysicalDevice("sdb"),
             SwapVolume(
                 name="swap2",
@@ -366,155 +398,6 @@ class ParseRootTest(ParseTestBase):
         ]
 
         self.assertListEqual(list(parse(self.spec)), expected)
-
-
-class ParsePhysicalDeviceTest(ParseTestBase):
-    def test_illegal_key(self):
-        self.spec["physical_devices"][0]["foo"] = "bar"
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "PhysicalDevice")
-        self.assertSetEqual(context.exception.keys, {"foo"})
-
-    def test_missing_key(self):
-        del self.spec["physical_devices"][0]["name"]
-
-        with self.assertRaises(MissingRequiredKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "PhysicalDevice")
-        self.assertSetEqual(context.exception.keys, {"name"})
-
-
-class ParseRaidVolumeTest(ParseTestBase):
-    def test_illegal_key(self):
-        spec = self.spec["raid_volumes"][0]
-        spec["foo"] = "bar"
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "RaidVolume")
-        self.assertSetEqual(context.exception.keys, {"foo"})
-
-    def test_missing_key(self):
-        spec = self.spec["raid_volumes"][0]
-        del spec["name"]
-        del spec["devices"]
-        del spec["level"]
-        del spec["metadata"]
-
-        with self.assertRaises(MissingRequiredKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "RaidVolume")
-        self.assertSetEqual(
-            context.exception.keys, {"name", "devices", "level", "metadata"}
-        )
-
-
-class ParseLvmVolumeGroupTest(ParseTestBase):
-    def test_illegal_key(self):
-        spec = self.spec["lvm_volume_groups"][0]
-        spec["foo"] = "bar"
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "LvmVolumeGroup")
-        self.assertSetEqual(context.exception.keys, {"foo"})
-
-    def test_missing_key(self):
-        spec = self.spec["lvm_volume_groups"][0]
-        del spec["name"]
-        del spec["lvm_physical_volumes"]
-        del spec["lvm_logical_volumes"]
-
-        with self.assertRaises(MissingRequiredKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "LvmVolumeGroup")
-        self.assertSetEqual(
-            context.exception.keys,
-            {"name", "lvm_physical_volumes", "lvm_logical_volumes"},
-        )
-
-
-class ParsePartitionTableTest(ParseTestBase):
-    def test_illegal_key_1(self):
-        # These keys are restricted before parsing the rest of the
-        # partition_table spec.
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        spec["name"] = "name"
-        spec["device"] = "device"
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "PartitionTable")
-        self.assertSetEqual(context.exception.keys, {"name", "device"})
-
-    def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        spec["foo"] = "bar"
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "PartitionTable")
-        self.assertSetEqual(context.exception.keys, {"foo"})
-
-    def test_missing_key_1(self):
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        del spec["type"]
-
-        with self.assertRaises(MissingRequiredKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "PartitionTable")
-        self.assertSetEqual(context.exception.keys, {"type"})
-
-    def test_missing_key_2(self):
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        del spec["partitions"]
-
-        with self.assertRaises(MissingRequiredKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "PartitionTable")
-        self.assertSetEqual(context.exception.keys, {"partitions"})
-
-
-class ParsePartitionTest(ParseTestBase):
-    def test_illegal_key_1(self):
-        # These keys are restricted before parsing the rest of the
-        # partition spec.
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        spec = spec["partitions"][0]
-        spec["name"] = "name"
-        spec["partition_table"] = "partition_table"
-        spec["number"] = 1
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "Partition")
-        self.assertSetEqual(
-            context.exception.keys, {"name", "partition_table", "number"}
-        )
-
-    def test_illegal_key_2(self):
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        spec = spec["partitions"][0]
-        spec["foo"] = "bar"
-
-        with self.assertRaises(FoundIllegalKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "Partition")
-        self.assertSetEqual(context.exception.keys, {"foo"})
-
-    def test_missing_key(self):
-        spec = self.spec["physical_devices"][0]["partition_table"]
-        spec = spec["partitions"][0]
-        del spec["type"]
-        del spec["start"]
-        del spec["end"]
-
-        with self.assertRaises(MissingRequiredKeysError) as context:
-            list(parse(self.spec))
-        self.assertEqual(context.exception.name, "Partition")
-        self.assertSetEqual(context.exception.keys, {"type", "start", "end"})
 
 
 class ParseCryptVolumeTest(ParseTestBase):
@@ -708,41 +591,42 @@ class ParseFileTest(ParseTestBase):
         )
 
 
-class ParseSwapVolumeTest(ParseTestBase):
+class ParseLinkTest(ParseTestBase):
     def test_illegal_key_1(self):
-        # These keys are restricted before parsing the rest of the swap_volume
-        # spec.
+        # These keys are restricted before parsing the rest of the link spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
-        spec["device"] = "device"
+        spec = spec["links"][0]
+        spec["name"] = "name"
+        spec["filesystem"] = "filesystem"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "SwapVolume")
-        self.assertSetEqual(context.exception.keys, {"device"})
+        self.assertEqual(context.exception.name, "Link")
+        self.assertSetEqual(context.exception.keys, {"name", "filesystem"})
 
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        spec = spec["links"][0]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "SwapVolume")
+        self.assertEqual(context.exception.name, "Link")
         self.assertSetEqual(context.exception.keys, {"foo"})
 
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
-        del spec["name"]
+        spec = spec["links"][0]
+        del spec["relative_path"]
+        del spec["source"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
             list(parse(self.spec))
-        self.assertEqual(context.exception.name, "SwapVolume")
-        self.assertSetEqual(context.exception.keys, {"name"})
+        self.assertEqual(context.exception.name, "Link")
+        self.assertSetEqual(context.exception.keys, {"relative_path", "source"})
 
 
 class ParseLoopDeviceTest(ParseTestBase):
@@ -873,3 +757,189 @@ class ParseLvmLogicalVolumeTest(ParseTestBase):
                 "lvm_thinpool_volume",
             },
         )
+
+
+class ParseLvmVolumeGroupTest(ParseTestBase):
+    def test_illegal_key(self):
+        spec = self.spec["lvm_volume_groups"][0]
+        spec["foo"] = "bar"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "LvmVolumeGroup")
+        self.assertSetEqual(context.exception.keys, {"foo"})
+
+    def test_missing_key(self):
+        spec = self.spec["lvm_volume_groups"][0]
+        del spec["name"]
+        del spec["lvm_physical_volumes"]
+        del spec["lvm_logical_volumes"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "LvmVolumeGroup")
+        self.assertSetEqual(
+            context.exception.keys,
+            {"name", "lvm_physical_volumes", "lvm_logical_volumes"},
+        )
+
+
+class ParsePartitionTest(ParseTestBase):
+    def test_illegal_key_1(self):
+        # These keys are restricted before parsing the rest of the
+        # partition spec.
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][0]
+        spec["name"] = "name"
+        spec["partition_table"] = "partition_table"
+        spec["number"] = 1
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "Partition")
+        self.assertSetEqual(
+            context.exception.keys, {"name", "partition_table", "number"}
+        )
+
+    def test_illegal_key_2(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][0]
+        spec["foo"] = "bar"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "Partition")
+        self.assertSetEqual(context.exception.keys, {"foo"})
+
+    def test_missing_key(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][0]
+        del spec["type"]
+        del spec["start"]
+        del spec["end"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "Partition")
+        self.assertSetEqual(context.exception.keys, {"type", "start", "end"})
+
+
+class ParsePartitionTableTest(ParseTestBase):
+    def test_illegal_key_1(self):
+        # These keys are restricted before parsing the rest of the
+        # partition_table spec.
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec["name"] = "name"
+        spec["device"] = "device"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PartitionTable")
+        self.assertSetEqual(context.exception.keys, {"name", "device"})
+
+    def test_illegal_key_2(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec["foo"] = "bar"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PartitionTable")
+        self.assertSetEqual(context.exception.keys, {"foo"})
+
+    def test_missing_key_1(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        del spec["type"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PartitionTable")
+        self.assertSetEqual(context.exception.keys, {"type"})
+
+    def test_missing_key_2(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        del spec["partitions"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PartitionTable")
+        self.assertSetEqual(context.exception.keys, {"partitions"})
+
+
+class ParsePhysicalDeviceTest(ParseTestBase):
+    def test_illegal_key(self):
+        self.spec["physical_devices"][0]["foo"] = "bar"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PhysicalDevice")
+        self.assertSetEqual(context.exception.keys, {"foo"})
+
+    def test_missing_key(self):
+        del self.spec["physical_devices"][0]["name"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "PhysicalDevice")
+        self.assertSetEqual(context.exception.keys, {"name"})
+
+
+class ParseRaidVolumeTest(ParseTestBase):
+    def test_illegal_key(self):
+        spec = self.spec["raid_volumes"][0]
+        spec["foo"] = "bar"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "RaidVolume")
+        self.assertSetEqual(context.exception.keys, {"foo"})
+
+    def test_missing_key(self):
+        spec = self.spec["raid_volumes"][0]
+        del spec["name"]
+        del spec["devices"]
+        del spec["level"]
+        del spec["metadata"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "RaidVolume")
+        self.assertSetEqual(
+            context.exception.keys, {"name", "devices", "level", "metadata"}
+        )
+
+
+class ParseSwapVolumeTest(ParseTestBase):
+    def test_illegal_key_1(self):
+        # These keys are restricted before parsing the rest of the swap_volume
+        # spec.
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
+        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        spec["device"] = "device"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "SwapVolume")
+        self.assertSetEqual(context.exception.keys, {"device"})
+
+    def test_illegal_key_2(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
+        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        spec["foo"] = "bar"
+
+        with self.assertRaises(FoundIllegalKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "SwapVolume")
+        self.assertSetEqual(context.exception.keys, {"foo"})
+
+    def test_missing_key(self):
+        spec = self.spec["physical_devices"][0]["partition_table"]
+        spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
+        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
+        del spec["name"]
+
+        with self.assertRaises(MissingRequiredKeysError) as context:
+            list(parse(self.spec))
+        self.assertEqual(context.exception.name, "SwapVolume")
+        self.assertSetEqual(context.exception.keys, {"name"})

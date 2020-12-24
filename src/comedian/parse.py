@@ -15,12 +15,13 @@ from comedian.specifications import (
     Directory,
     File,
     Filesystem,
-    Partition,
-    PartitionTable,
+    Link,
     LoopDevice,
     LvmLogicalVolume,
     LvmPhysicalVolume,
     LvmVolumeGroup,
+    Partition,
+    PartitionTable,
     PhysicalDevice,
     RaidVolume,
     Root,
@@ -140,6 +141,9 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
 
     for filesystem_spec in spec.get("filesystems", []):
         yield from parse_filesystem(filesystem_spec)
+
+    for link_spec in spec.get("links", []):
+        yield from parse_link(link_spec)
 
     for loop_device_spec in spec.get("loop_devices", []):
         yield from parse_loop_device(loop_device_spec)
@@ -571,6 +575,7 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
             "fsck_order",
             "directories",
             "files",
+            "links",
         },
     )
 
@@ -615,6 +620,22 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
                 "name": f"{filesystem_name}:{file_spec['relative_path']}",
                 "filesystem": filesystem_name,
                 **file_spec,
+            }
+        )
+
+    for link_spec in spec.get("links", []):
+        validate_spec(
+            "Link",
+            link_spec,
+            required={"relative_path", "source"},
+            illegal={"name", "filesystem"},
+            ignore=True,
+        )
+        yield from parse_link(
+            {
+                "name": f"{filesystem_name}:{link_spec['relative_path']}",
+                "filesystem": filesystem_name,
+                **link_spec,
             }
         )
 
@@ -701,6 +722,34 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
             ignore=True,
         )
         yield from parse_swap_volume({"device": file_name, **swap_volume_spec})
+
+
+def parse_link(spec: Mapping[str, Any]) -> Iterator[Specification]:
+    logging.debug("parse_link")
+
+    validate_spec(
+        "Link",
+        spec,
+        required={"name", "filesystem", "relative_path", "source"},
+        allowed={
+            "owner",
+            "group",
+            "mode",
+            "symbolic",
+        },
+    )
+
+    link_name = spec["name"]
+    yield Link(
+        name=link_name,
+        filesystem=spec["filesystem"],
+        relative_path=spec["relative_path"],
+        source=spec["source"],
+        owner=spec.get("owner"),
+        group=spec.get("group"),
+        mode=spec.get("mode"),
+        symbolic=spec.get("symbolic", False),
+    )
 
 
 def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:

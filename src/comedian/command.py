@@ -74,6 +74,14 @@ def chown(
     return Command(["chown", own] + [quote_argument(path) for path in paths])
 
 
+def ln(source: str, dest: str, symbolic: bool = False) -> Command:
+    cmd = ["ln", "--force"]
+    if symbolic:
+        cmd.append("--symbolic")
+    cmd += [quote_argument(source), quote_argument(dest)]
+    return Command(cmd)
+
+
 def mkdir(*paths: str) -> Command:
     return Command(["mkdir", "--parents"] + [quote_argument(path) for path in paths])
 
