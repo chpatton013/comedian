@@ -640,8 +640,16 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
         "File",
         spec,
         required={"name", "filesystem", "relative_path"},
-        allowed={"owner", "group", "mode", "size", "loop_device", "swap_volume"},
-        exclusive={"loop_device", "swap_volume"},
+        allowed={
+            "owner",
+            "group",
+            "mode",
+            "size",
+            "loop_device",
+            "crypt_volume",
+            "swap_volume",
+        },
+        exclusive={"loop_device", "crypt_volume", "swap_volume"},
     )
 
     file_name = spec["name"]
@@ -665,6 +673,17 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
             ignore=True,
         )
         yield from parse_loop_device({"file": file_name, **loop_device_spec})
+
+    if "crypt_volume" in spec:
+        validate_spec("File", spec, required={"size"}, ignore=True)
+        crypt_volume_spec = spec["crypt_volume"]
+        validate_spec(
+            "CryptVolume",
+            crypt_volume_spec,
+            illegal={"device"},
+            ignore=True,
+        )
+        yield from parse_crypt_volume({"device": file_name, **crypt_volume_spec})
 
     if "swap_volume" in spec:
         validate_spec("File", spec, required={"size"}, ignore=True)

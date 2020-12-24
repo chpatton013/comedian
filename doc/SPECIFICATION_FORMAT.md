@@ -17,7 +17,7 @@ in dependency order.
 
 Several specification types can contain one or more other specifications in
 their named fields:
-* `File` can contain a `LoopDevice` or a `SwapVolume`
+* `File` can contain a `LoopDevice`, `CryptVolume`, or a `SwapVolume`
 * `Filesystem` can contain several `Directory`s and `File`s
 * `PartitionTable` can contain several `Partition`s
 * `LvmVolumeGroup` can contain several `LvmLogicalVolume`s
@@ -175,6 +175,7 @@ Inherits `name` and `filesystem` properties from its parent `Filesystem`.
 "mode": str ?
 "size": str ?
 "loop_device": LoopDevice ^ ?
+"crypt_volume": CryptVolume ^ ?
 "swap_volume": SwapVolume ^ ?
 ```
 

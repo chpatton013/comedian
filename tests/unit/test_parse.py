@@ -656,6 +656,7 @@ class ParseFileTest(ParseTestBase):
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
         spec = spec["files"][0]
         spec["loop_device"] = "loop_device"
+        spec["crypt_volume"] = "crypt_volume"
         spec["swap_volume"] = "swap_volume"
 
         with self.assertRaises(FoundIncompatibleKeysError) as context:
@@ -663,7 +664,7 @@ class ParseFileTest(ParseTestBase):
         self.assertEqual(context.exception.name, "File")
         self.assertSetEqual(
             context.exception.keys,
-            {"loop_device", "swap_volume"},
+            {"loop_device", "crypt_volume", "swap_volume"},
         )
 
 
@@ -673,7 +674,7 @@ class ParseSwapVolumeTest(ParseTestBase):
         # spec.
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["swap_volume"]
+        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
         spec["device"] = "device"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -684,7 +685,7 @@ class ParseSwapVolumeTest(ParseTestBase):
     def test_illegal_key_2(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["swap_volume"]
+        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
         spec["foo"] = "bar"
 
         with self.assertRaises(FoundIllegalKeysError) as context:
@@ -695,7 +696,7 @@ class ParseSwapVolumeTest(ParseTestBase):
     def test_missing_key(self):
         spec = self.spec["physical_devices"][0]["partition_table"]
         spec = spec["partitions"][1]["crypt_volume"]["filesystem"]
-        spec = spec["files"][0]["swap_volume"]
+        spec = spec["files"][0]["crypt_volume"]["swap_volume"]
         del spec["name"]
 
         with self.assertRaises(MissingRequiredKeysError) as context:
