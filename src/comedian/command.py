@@ -57,6 +57,17 @@ def quote_subcommand(sub: str) -> str:
     return f"'{sub}'"
 
 
+def cp(source: str, destination: str) -> Command:
+    return Command(
+        [
+            "cp",
+            quote_argument(source),
+            quote_argument(destination),
+            "--preserve=mode,ownership",
+        ]
+    )
+
+
 def chmod(mode: str, *paths: str) -> Command:
     return Command(["chmod", mode] + [quote_argument(path) for path in paths])
 
@@ -72,6 +83,24 @@ def chown(
     if group:
         own += f":{group}"
     return Command(["chown", own] + [quote_argument(path) for path in paths])
+
+
+def crypttab_append(context: CommandContext, crypttab_entry: str) -> Command:
+    crypttab_filepath = context.config.tmp_path("/etc/crypttab")
+    return Command(
+        [
+            context.config.shell,
+            "-c",
+            f'echo -e "{crypttab_entry}" >> {crypttab_filepath}',
+        ]
+    )
+
+
+def fstab_append(context: CommandContext, fstab_entry: str) -> Command:
+    fstab_filepath = context.config.tmp_path("/etc/fstab")
+    return Command(
+        [context.config.shell, "-c", f'echo -e "{fstab_entry}" >> {fstab_filepath}']
+    )
 
 
 def ln(source: str, dest: str, symbolic: bool = False) -> Command:

@@ -87,7 +87,6 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "luksFormat",
                     "--type=type",
                     "device",
-                    "opt,ions",
                 ]
             ),
             Command(
@@ -105,6 +104,13 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "open",
                     "device",
                     "name",
+                ]
+            ),
+            Command(
+                [
+                    "shell",
+                    "-c",
+                    'echo -e "\\n# name\\nname\\tdevice\\tkeyfile\\topt,ions" >> tmp_dir/etc/crypttab',
                 ]
             ),
         ]
@@ -212,20 +218,17 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "cryptsetup",
                     "--batch-mode",
                     "--key-file=/keyfile",
-                    "luksFormat",
-                    "--type=type",
+                    "open",
                     "device",
-                    "opt,ions",
+                    "name",
+                    "--type=type",
                 ]
             ),
             Command(
                 [
-                    "cryptsetup",
-                    "--batch-mode",
-                    "--key-file=/keyfile",
-                    "open",
-                    "device",
-                    "name",
+                    "shell",
+                    "-c",
+                    'echo -e "\\n# name\\nname\\tdevice\\t/keyfile\\topt,ions" >> tmp_dir/etc/crypttab',
                 ]
             ),
         ]
@@ -251,6 +254,7 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                     "open",
                     "device",
                     "name",
+                    "--type=type",
                 ]
             ),
         ]

@@ -2,6 +2,7 @@ import unittest
 
 from context import comedian, SpecificationTestBase  # pylint: disable=W0611
 
+from comedian.command import Command
 from comedian.graph import ResolveLink
 from comedian.specifications import Root
 
@@ -30,10 +31,44 @@ class RootTest(SpecificationTestBase, unittest.TestCase):
         )
 
     def test_apply_commands(self):
-        self.assertIsNone(self.specification.apply)
+        expected = [
+            Command(["mkdir", "--parents", "tmp_dir/etc"]),
+            Command(["truncate", "--size=0", "tmp_dir/etc/fstab"]),
+            Command(["chmod", "0644", "tmp_dir/etc/fstab"]),
+            Command(["chown", "root:root", "tmp_dir/etc/fstab"]),
+            Command(["truncate", "--size=0", "tmp_dir/etc/crypttab"]),
+            Command(["chmod", "0644", "tmp_dir/etc/crypttab"]),
+            Command(["chown", "root:root", "tmp_dir/etc/crypttab"]),
+        ]
+        self.assertListEqual(
+            expected,
+            list(self.specification.apply(self.context)),
+        )
 
     def test_post_apply_commands(self):
-        self.assertIsNone(self.specification.post_apply)
+        expected = [
+            Command(["mkdir", "--parents", "media_dir/etc"]),
+            Command(
+                [
+                    "cp",
+                    "tmp_dir/etc/fstab",
+                    "media_dir/etc/fstab",
+                    "--preserve=mode,ownership",
+                ]
+            ),
+            Command(
+                [
+                    "cp",
+                    "tmp_dir/etc/crypttab",
+                    "media_dir/etc/crypttab",
+                    "--preserve=mode,ownership",
+                ]
+            ),
+        ]
+        self.assertListEqual(
+            expected,
+            list(self.specification.post_apply(self.context)),
+        )
 
     def test_up_commands(self):
         self.assertIsNone(self.specification.up)

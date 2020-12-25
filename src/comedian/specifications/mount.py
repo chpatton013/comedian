@@ -1,6 +1,12 @@
 from typing import Iterator, List, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
+from comedian.command import (
+    Command,
+    CommandContext,
+    CommandGenerator,
+    fstab_append,
+    quote_argument,
+)
 from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
@@ -12,9 +18,9 @@ class MountUpCommandGenerator(CommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         mount_cmd = ["mount"]
         if self.specification.type:
-            mount_cmd += ["--types", self.specification.type]
+            mount_cmd += ["--types", quote_argument(self.specification.type)]
         if self.specification.options:
-            mount_cmd += ["-o", ",".join(self.specification.options)]
+            mount_cmd += ["-o", quote_argument(",".join(self.specification.options))]
 
         if self.specification.device:
             device_path = _device_path(self.specification.device, context)
@@ -27,11 +33,6 @@ class MountUpCommandGenerator(CommandGenerator):
         yield Command(mount_cmd)
 
 
-class MountApplyCommandGenerator(MountUpCommandGenerator):
-    def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield from super().__call__(context)
-
-
 class MountDownCommandGenerator(CommandGenerator):
     def __init__(self, specification: "Mount"):
         self.specification = specification
@@ -41,6 +42,35 @@ class MountDownCommandGenerator(CommandGenerator):
         media_mountpoint_path = context.config.media_path(mountpoint_path)
 
         yield Command(["umount", quote_argument(media_mountpoint_path)])
+
+
+class MountApplyCommandGenerator(MountUpCommandGenerator):
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        yield from super().__call__(context)
+
+        device_path = None
+        if self.specification.device:
+            device_path = _device_path(self.specification.device, context)
+        else:
+            device_path = self.specification.type
+
+        fstab_entry = [
+            "",
+            f"# {self.specification.name}",
+            "\\t".join(
+                [
+                    device_path,
+                    quote_argument(
+                        _mountpoint_path(self.specification.mountpoint, context)
+                    ),
+                    quote_argument(self.specification.type),
+                    quote_argument(",".join(self.specification.options)),
+                    str(self.specification.dump_frequency or 0),
+                    str(self.specification.fsck_order or 0),
+                ]
+            ),
+        ]
+        yield fstab_append(context, "\\n".join(fstab_entry))
 
 
 class Mount(Specification):

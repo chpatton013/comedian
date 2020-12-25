@@ -52,6 +52,13 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
                 ]
             ),
             Command(["swapon", "device"]),
+            Command(
+                [
+                    "shell",
+                    "-c",
+                    'echo -e "\\n# name\\ndevice\\tnone\\tswap\\tdefaults\\t0\\t0" >> tmp_dir/etc/fstab',
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,

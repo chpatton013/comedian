@@ -57,6 +57,13 @@ class MountTest(SpecificationTestBase, unittest.TestCase):
                     "media_dir/mountpoint",
                 ]
             ),
+            Command(
+                [
+                    "shell",
+                    "-c",
+                    'echo -e "\\n# name\\ndevice\\tmountpoint\\ttype\\topt,ions\\t1\\t2" >> tmp_dir/etc/fstab',
+                ]
+            ),
         ]
         self.assertListEqual(
             expected,

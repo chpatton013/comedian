@@ -5,6 +5,8 @@ from comedian.command import (
     Command,
     CommandContext,
     CommandGenerator,
+    cp,
+    crypttab_append,
     mkdir,
     quote_argument,
     quote_subcommand,
@@ -13,10 +15,35 @@ from comedian.graph import ResolveLink
 from comedian.specification import Specification
 
 
-class CryptVolumeApplyCommandGenerator(CommandGenerator):
+class CryptVolumeUpCommandGenerator(CommandGenerator):
     def __init__(self, specification: "CryptVolume"):
         self.specification = specification
 
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        device_path = _device_path(self.specification.device, context)
+        type = (
+            self.specification.type if self.specification.ephemeral_keyfile() else None
+        )
+
+        yield Command(
+            _open_crypt(
+                self.specification.name,
+                device_path,
+                self.specification.tmp_keyfile_path(context),
+                type,
+            )
+        )
+
+
+class CryptVolumeDownCommandGenerator(CommandGenerator):
+    def __init__(self, specification: "CryptVolume"):
+        self.specification = specification
+
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        yield Command(_close_crypt(self.specification.name))
+
+
+class CryptVolumeApplyCommandGenerator(CryptVolumeUpCommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(self.specification.device, context)
         keyfile_path = self.specification.tmp_keyfile_path(context)
@@ -31,16 +58,29 @@ class CryptVolumeApplyCommandGenerator(CommandGenerator):
             yield from _create_keyfile(
                 keyfile_path, self.specification.keysize, context
             )
+            yield from _format_crypt(
+                context,
+                device_path,
+                keyfile_path,
+                self.specification.type,
+                self.specification.password,
+            )
 
-        yield from _format_crypt(
-            context,
-            self.specification.name,
-            device_path,
-            keyfile_path,
-            self.specification.type,
-            self.specification.password,
-            self.specification.options,
-        )
+        yield from super().__call__(context)
+
+        crypttab_entry = [
+            "",
+            f"# {self.specification.name}",
+            "\\t".join(
+                [
+                    self.specification.name,
+                    device_path,
+                    self.specification.keyfile,
+                    ",".join(self.specification.options),
+                ]
+            ),
+        ]
+        yield crypttab_append(context, "\\n".join(crypttab_entry))
 
 
 class CryptVolumePostApplyCommandGenerator(CommandGenerator):
@@ -51,38 +91,10 @@ class CryptVolumePostApplyCommandGenerator(CommandGenerator):
         if self.specification.ephemeral_keyfile():
             return
 
-        yield Command(
-            [
-                "cp",
-                quote_argument(self.specification.tmp_keyfile_path(context)),
-                quote_argument(self.specification.media_keyfile_path(context)),
-                "--preserve=mode,ownership",
-            ]
+        yield cp(
+            self.specification.tmp_keyfile_path(context),
+            self.specification.media_keyfile_path(context),
         )
-
-
-class CryptVolumeUpCommandGenerator(CommandGenerator):
-    def __init__(self, specification: "CryptVolume"):
-        self.specification = specification
-
-    def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(self.specification.device, context)
-
-        yield Command(
-            _open_crypt(
-                self.specification.name,
-                device_path,
-                self.specification.tmp_keyfile_path(context),
-            )
-        )
-
-
-class CryptVolumeDownCommandGenerator(CommandGenerator):
-    def __init__(self, specification: "CryptVolume"):
-        self.specification = specification
-
-    def __call__(self, context: CommandContext) -> Iterator[Command]:
-        yield Command(_close_crypt(self.specification.name))
 
 
 class CryptVolume(Specification):
@@ -156,14 +168,14 @@ def _open_crypt(
     name: str,
     device: str,
     keyfile: str,
-    *args: str,
+    type: Optional[str],
 ) -> List[str]:
     return _cryptsetup(
         f"--key-file={quote_argument(keyfile)}",
         "open",
         quote_argument(device),
         name,
-        *args,
+        *([f"--type={type}"] if type is not None else []),
     )
 
 
@@ -183,7 +195,7 @@ def _randomize_device(
             cryptname,
             device,
             context.config.random_device,
-            "--type=plain",
+            "plain",
         )
     )
     dd_cmd = " ".join(
@@ -216,22 +228,17 @@ def _create_keyfile(
 
 def _format_crypt(
     context: CommandContext,
-    name: str,
     device: str,
     keyfile: str,
     type: str,
     password: Optional[str],
-    options: List[str],
 ) -> Iterator[Command]:
-    options_str = ",".join(options)
-    options_args = [options_str] if options_str else []
     yield Command(
         _cryptsetup(
             f"--key-file={quote_argument(keyfile)}",
             "luksFormat",
             f"--type={type}",
             quote_argument(device),
-            *options_args,
         )
     )
     if password:
@@ -249,7 +256,6 @@ def _format_crypt(
                 quote_subcommand(f"echo {password} | {add_key_cmd}"),
             ]
         )
-    yield Command(_open_crypt(name, device, keyfile))
 
 
 def _device_path(device: str, context: CommandContext) -> str:

@@ -1,26 +1,13 @@
 from typing import Iterator, Optional
 
-from comedian.command import Command, CommandContext, CommandGenerator, quote_argument
+from comedian.command import (
+    Command,
+    CommandContext,
+    CommandGenerator,
+    quote_argument,
+    fstab_append,
+)
 from comedian.specification import Specification
-
-
-class SwapVolumeApplyCommandGenerator(CommandGenerator):
-    def __init__(self, specification: "SwapVolume"):
-        self.specification = specification
-
-    def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(self.specification.device, context)
-
-        cmd = ["mkswap", quote_argument(device_path)]
-        if self.specification.label:
-            cmd.append(f"--label={self.specification.label}")
-        if self.specification.pagesize:
-            cmd.append(f"--pagesize={self.specification.pagesize}")
-        if self.specification.uuid:
-            cmd.append(f"--uuid={self.specification.uuid}")
-        yield Command(cmd)
-
-        yield Command(["swapon", quote_argument(device_path)])
 
 
 class SwapVolumeUpCommandGenerator(CommandGenerator):
@@ -39,6 +26,29 @@ class SwapVolumeDownCommandGenerator(CommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(self.specification.device, context)
         yield Command(["swapoff", quote_argument(device_path)])
+
+
+class SwapVolumeApplyCommandGenerator(SwapVolumeUpCommandGenerator):
+    def __call__(self, context: CommandContext) -> Iterator[Command]:
+        device_path = _device_path(self.specification.device, context)
+
+        cmd = ["mkswap", quote_argument(device_path)]
+        if self.specification.label:
+            cmd.append(f"--label={self.specification.label}")
+        if self.specification.pagesize:
+            cmd.append(f"--pagesize={self.specification.pagesize}")
+        if self.specification.uuid:
+            cmd.append(f"--uuid={self.specification.uuid}")
+        yield Command(cmd)
+
+        yield from super().__call__(context)
+
+        fstab_entry = [
+            "",
+            f"# {self.specification.name}",
+            "\\t".join([device_path, "none", "swap", "defaults", "0", "0"]),
+        ]
+        yield fstab_append(context, "\\n".join(fstab_entry))
 
 
 class SwapVolume(Specification):
