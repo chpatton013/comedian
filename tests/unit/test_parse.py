@@ -234,6 +234,7 @@ class ParseRootTest(ParseTestBase):
             CryptVolume(
                 name="cryptroot",
                 device="sda:pt:2",
+                identify="partuuid",
                 type="luks2",
                 keyfile="fsroot:mount:keyfile",
                 keysize="2048",
@@ -249,6 +250,7 @@ class ParseRootTest(ParseTestBase):
             Mount(
                 name="fsroot:mount",
                 device="fsroot",
+                identify="device",
                 mountpoint="/",
                 type="ext4",
                 options=[],
@@ -283,6 +285,7 @@ class ParseRootTest(ParseTestBase):
             CryptVolume(
                 name="cryptswap1",
                 device="fsroot:mount:swapfile",
+                identify="device",
                 type="luks2",
                 keyfile="/dev/urandom",
                 keysize=None,
@@ -292,6 +295,7 @@ class ParseRootTest(ParseTestBase):
             SwapVolume(
                 name="swap1",
                 device="cryptswap1",
+                identify="device",
                 label=None,
                 pagesize=None,
                 uuid=None,
@@ -319,6 +323,7 @@ class ParseRootTest(ParseTestBase):
             Mount(
                 name="fsloop:mount",
                 device="fsloop",
+                identify="device",
                 mountpoint="/loop",
                 type="ext4",
                 options=["noatime"],
@@ -367,6 +372,7 @@ class ParseRootTest(ParseTestBase):
             SwapVolume(
                 name="swap2",
                 device="sdb",
+                identify="uuid",
                 label=None,
                 pagesize=None,
                 uuid=None,
@@ -390,6 +396,7 @@ class ParseRootTest(ParseTestBase):
             CryptVolume(
                 name="crypt_lvm",
                 device="lvmlv",
+                identify="device",
                 type="luks2",
                 keyfile="fsroot:mount:randomfile",
                 keysize="2048",
@@ -411,6 +418,7 @@ class ParseRootTest(ParseTestBase):
             Mount(
                 name="fsraid:mount",
                 device="fsraid",
+                identify="device",
                 mountpoint="/raid",
                 type="ext4",
                 options=[],

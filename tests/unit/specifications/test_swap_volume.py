@@ -14,6 +14,7 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
             SwapVolume(
                 name="name",
                 device="device",
+                identify="device",
                 label="label",
                 pagesize="pagesize",
                 uuid="uuid",
@@ -26,6 +27,7 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
         self.assertListEqual(["device"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
+        self.assertEqual("device", self.specification.identify)
         self.assertEqual("label", self.specification.label)
         self.assertEqual("pagesize", self.specification.pagesize)
         self.assertEqual("uuid", self.specification.uuid)
@@ -41,6 +43,14 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
         )
 
     def test_apply_commands(self):
+        fstab_lines = "\\n".join(
+            [
+                "",
+                "# name (originally device)",
+                "device\\tnone\\tswap\\tdefaults\\t0\\t0",
+            ]
+        )
+
         expected = [
             Command(
                 [
@@ -56,7 +66,7 @@ class SwapVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    'echo -e "\\n# name\\ndevice\\tnone\\tswap\\tdefaults\\t0\\t0" >> tmp_dir/etc/fstab',
+                    f'echo -e "{fstab_lines}" >> tmp_dir/etc/fstab',
                 ]
             ),
         ]

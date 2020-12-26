@@ -14,6 +14,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
             CryptVolume(
                 name="name",
                 device="device",
+                identify="device",
                 type="type",
                 keyfile="keyfile",
                 keysize="keysize",
@@ -29,6 +30,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
         self.assertListEqual(["device"], self.specification.dependencies)
         self.assertListEqual(["keyfile"], self.specification.references)
         self.assertEqual("device", self.specification.device)
+        self.assertEqual("device", self.specification.identify)
         self.assertEqual("type", self.specification.type)
         self.assertEqual("keyfile", self.specification.keyfile)
         self.assertEqual("keysize", self.specification.keysize)
@@ -46,6 +48,14 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
         )
 
     def test_apply_commands(self):
+        crypttab_lines = "\\n".join(
+            [
+                "",
+                "# name (originally device)",
+                "name\\tdevice\\tkeyfile\\topt,ions",
+            ]
+        )
+
         expected = [
             Command(
                 [
@@ -110,7 +120,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    'echo -e "\\n# name\\nname\\tdevice\\tkeyfile\\topt,ions" >> tmp_dir/etc/crypttab',
+                    f'echo -e "{crypttab_lines}" >> tmp_dir/etc/crypttab',
                 ]
             ),
         ]
@@ -180,6 +190,7 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
             CryptVolume(
                 name="name",
                 device="device",
+                identify="device",
                 type="type",
                 keyfile="/keyfile",
                 keysize=None,
@@ -195,6 +206,7 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
         self.assertListEqual(["device"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
+        self.assertEqual("device", self.specification.identify)
         self.assertEqual("type", self.specification.type)
         self.assertEqual("/keyfile", self.specification.keyfile)
         self.assertIsNone(self.specification.keysize)
@@ -212,6 +224,14 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
         )
 
     def test_apply_commands(self):
+        crypttab_lines = "\\n".join(
+            [
+                "",
+                "# name (originally device)",
+                "name\\tdevice\\t/keyfile\\topt,ions",
+            ]
+        )
+
         expected = [
             Command(
                 [
@@ -228,7 +248,7 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    'echo -e "\\n# name\\nname\\tdevice\\t/keyfile\\topt,ions" >> tmp_dir/etc/crypttab',
+                    f'echo -e "{crypttab_lines}" >> tmp_dir/etc/crypttab',
                 ]
             ),
         ]

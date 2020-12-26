@@ -4,6 +4,7 @@ from comedian.command import (
     Command,
     CommandContext,
     CommandGenerator,
+    identify_device_path,
     quote_argument,
     fstab_append,
 )
@@ -43,10 +44,11 @@ class SwapVolumeApplyCommandGenerator(SwapVolumeUpCommandGenerator):
 
         yield from super().__call__(context)
 
+        identify_path = identify_device_path(self.specification.identify, device_path)
         fstab_entry = [
             "",
-            f"# {self.specification.name}",
-            "\\t".join([device_path, "none", "swap", "defaults", "0", "0"]),
+            f"# {self.specification.name} (originally {device_path})",
+            "\\t".join([identify_path, "none", "swap", "defaults", "0", "0"]),
         ]
         yield fstab_append(context, "\\n".join(fstab_entry))
 
@@ -56,6 +58,7 @@ class SwapVolume(Specification):
         self,
         name: str,
         device: str,
+        identify: str,
         label: Optional[str],
         pagesize: Optional[str],
         uuid: Optional[str],
@@ -68,6 +71,7 @@ class SwapVolume(Specification):
             down=SwapVolumeDownCommandGenerator(self),
         )
         self.device = device
+        self.identify = identify
         self.label = label
         self.pagesize = pagesize
         self.uuid = uuid

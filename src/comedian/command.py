@@ -103,6 +103,33 @@ def fstab_append(context: CommandContext, fstab_entry: str) -> Command:
     )
 
 
+def identify_device_path(identify: str, device_path: str) -> str:
+    if identify == "device":
+        return device_path
+    elif identify == "uuid":
+        return "UUID=$({})".format(
+            _identify_device_node_cmd(device_path, "/dev/disk/by-uuid/")
+        )
+    elif identify == "partuuid":
+        return "PARTUUID=$({})".format(
+            _identify_device_node_cmd(device_path, "/dev/disk/by-partuuid/")
+        )
+    elif identify == "label":
+        return "LABEL=$({})".format(
+            _identify_device_node_cmd(device_path, "/dev/disk/by-label/")
+        )
+    elif identify == "path":
+        return "$({})".format(
+            _identify_device_path_cmd(device_path, "/dev/disk/by-path/")
+        )
+    elif identify == "id":
+        return "$({})".format(
+            _identify_device_path_cmd(device_path, "/dev/disk/by-id/")
+        )
+    else:
+        raise RuntimeError(f"Unexpected value for identify: '{identify}'")
+
+
 def ln(source: str, dest: str, symbolic: bool = False) -> Command:
     cmd = ["ln", "--force"]
     if symbolic:
@@ -121,3 +148,16 @@ def parted(*args: str, align: Optional[str] = None) -> Command:
         cmd.append(f"--align={align}")
     cmd.append("--")
     return Command(cmd + list(args))
+
+
+def _identify_device_path_cmd(device_path: str, root: str) -> str:
+    return f"find {root} -type l -ilname {quote_argument(device_path)}"
+
+
+def _identify_device_node_cmd(device_path: str, root: str) -> str:
+    return " | ".join(
+        [
+            _identify_device_path_cmd(device_path, root),
+            f"sed --expression='s#{root}##'",
+        ]
+    )

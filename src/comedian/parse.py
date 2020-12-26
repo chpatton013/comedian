@@ -134,7 +134,7 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
         yield from parse_physical_device(physical_device_spec)
 
     for crypt_volume_spec in spec.get("crypt_volumes", []):
-        yield from parse_crypt_volume(crypt_volume_spec)
+        yield from parse_crypt_volume(crypt_volume_spec, "device")
 
     for directory_spec in spec.get("directories", []):
         yield from parse_directory(directory_spec)
@@ -143,7 +143,7 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
         yield from parse_file(file_spec)
 
     for filesystem_spec in spec.get("filesystems", []):
-        yield from parse_filesystem(filesystem_spec)
+        yield from parse_filesystem(filesystem_spec, "device")
 
     for link_spec in spec.get("links", []):
         yield from parse_link(link_spec)
@@ -161,7 +161,7 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
         yield from parse_lvm_volume_group(lvm_volume_group_spec)
 
     for mount_spec in spec.get("mounts", []):
-        yield from parse_mount(mount_spec)
+        yield from parse_mount(mount_spec, "device")
 
     for partition_table_spec in spec.get("partition_tables", []):
         yield from parse_partition_table(partition_table_spec)
@@ -170,7 +170,7 @@ def parse(spec: Mapping[str, Any]) -> Iterator[Specification]:
         yield from parse_raid_volume(raid_volume_spec)
 
     for swap_volume_spec in spec.get("swap_volumes", []):
-        yield from parse_swap_volume(swap_volume_spec)
+        yield from parse_swap_volume(swap_volume_spec, "device")
 
 
 # Private interface
@@ -252,6 +252,7 @@ def parse_block_device(
     name: str,
     spec: Mapping[str, Any],
     device: str,
+    identify: str,
 ) -> Iterator[Specification]:
     # pylint: disable=R0915
 
@@ -284,7 +285,9 @@ def parse_block_device(
             illegal={"device"},
             ignore=True,
         )
-        yield from parse_filesystem({"device": device, **filesystem_spec})
+        yield from parse_filesystem(
+            {"device": device, **filesystem_spec}, spec.get("identify", identify)
+        )
 
     if "crypt_volume" in spec:
         crypt_volume_spec = spec["crypt_volume"]
@@ -294,7 +297,9 @@ def parse_block_device(
             illegal={"device"},
             ignore=True,
         )
-        yield from parse_crypt_volume({"device": device, **crypt_volume_spec})
+        yield from parse_crypt_volume(
+            {"device": device, **crypt_volume_spec}, spec.get("identify", identify)
+        )
 
     if "swap_volume" in spec:
         swap_volume_spec = spec["swap_volume"]
@@ -304,7 +309,9 @@ def parse_block_device(
             illegal={"device"},
             ignore=True,
         )
-        yield from parse_swap_volume({"device": device, **swap_volume_spec})
+        yield from parse_swap_volume(
+            {"device": device, **swap_volume_spec}, spec.get("identify", identify)
+        )
 
     if "lvm_physical_volume" in spec:
         lvm_physical_volume_spec = spec["lvm_physical_volume"]
@@ -334,7 +341,9 @@ def parse_physical_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     yield PhysicalDevice(name=physical_device_name)
 
     if block_device_spec:
-        yield from parse_block_device(name, block_device_spec, physical_device_name)
+        yield from parse_block_device(
+            name, block_device_spec, physical_device_name, "uuid"
+        )
 
 
 def parse_partition_table(
@@ -403,7 +412,9 @@ def parse_partition(spec: Mapping[str, Any]) -> Iterator[Specification]:
     )
 
     if block_device_spec:
-        yield from parse_block_device(name, block_device_spec, partition_name)
+        yield from parse_block_device(
+            name, block_device_spec, partition_name, "partuuid"
+        )
 
 
 def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
@@ -426,10 +437,14 @@ def parse_raid_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     )
 
     if block_device_spec:
-        yield from parse_block_device(name, block_device_spec, raid_volume_name)
+        yield from parse_block_device(
+            name, block_device_spec, raid_volume_name, "device"
+        )
 
 
-def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
+def parse_crypt_volume(
+    spec: Mapping[str, Any], identify: str
+) -> Iterator[Specification]:
     logging.debug("parse_crypt_volume")
 
     name = "CryptVolume"
@@ -437,7 +452,7 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
         name,
         spec,
         required={"name", "device", "type", "keyfile"},
-        allowed={"keysize", "password", "options"},
+        allowed={"identify", "keysize", "password", "options"},
         ignore=True,
     )
 
@@ -449,6 +464,7 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     yield CryptVolume(
         name=crypt_volume_name,
         device=crypt_volume_spec["device"],
+        identify=crypt_volume_spec.get("identify", identify),
         type=crypt_volume_spec["type"],
         keyfile=keyfile,
         keysize=crypt_volume_spec.get("keysize"),
@@ -457,7 +473,9 @@ def parse_crypt_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
     )
 
     if block_device_spec:
-        yield from parse_block_device(name, block_device_spec, crypt_volume_name)
+        yield from parse_block_device(
+            name, block_device_spec, crypt_volume_name, "device"
+        )
 
 
 def parse_lvm_physical_volume(
@@ -563,17 +581,19 @@ def parse_lvm_logical_volume(
     )
 
     if block_device_spec:
-        yield from parse_block_device(name, block_device_spec, lvm_logical_volume_name)
+        yield from parse_block_device(
+            name, block_device_spec, lvm_logical_volume_name, "device"
+        )
 
 
-def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
+def parse_filesystem(spec: Mapping[str, Any], identify: str) -> Iterator[Specification]:
     logging.debug("parse_filesystem")
 
     validate_spec(
         "Filesystem",
         spec,
         required={"name", "type"},
-        allowed={"device", "options", "mount"},
+        allowed={"device", "identify", "options", "mount"},
     )
 
     filesystem_name = spec["name"]
@@ -599,11 +619,12 @@ def parse_filesystem(spec: Mapping[str, Any]) -> Iterator[Specification]:
                 "device": filesystem_name,
                 "type": spec["type"],
                 **mount_spec,
-            }
+            },
+            spec.get("identify", identify),
         )
 
 
-def parse_mount(spec: Mapping[str, Any]) -> Iterator[Specification]:
+def parse_mount(spec: Mapping[str, Any], identify: str) -> Iterator[Specification]:
     logging.debug("parse_mount")
 
     validate_spec(
@@ -612,6 +633,7 @@ def parse_mount(spec: Mapping[str, Any]) -> Iterator[Specification]:
         required={"name", "mountpoint", "type"},
         allowed={
             "device",
+            "identify",
             "options",
             "dump_frequency",
             "fsck_order",
@@ -625,6 +647,7 @@ def parse_mount(spec: Mapping[str, Any]) -> Iterator[Specification]:
     yield Mount(
         name=mount_name,
         device=spec.get("device"),
+        identify=spec.get("identify", identify),
         mountpoint=spec["mountpoint"],
         type=spec["type"],
         options=spec.get("options", []),
@@ -751,7 +774,10 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
             illegal={"device"},
             ignore=True,
         )
-        yield from parse_crypt_volume({"device": file_name, **crypt_volume_spec})
+        yield from parse_crypt_volume(
+            {"device": file_name, **crypt_volume_spec},
+            "device",
+        )
 
     if "swap_volume" in spec:
         validate_spec("File", spec, required={"size"}, ignore=True)
@@ -762,7 +788,10 @@ def parse_file(spec: Mapping[str, Any]) -> Iterator[Specification]:
             illegal={"device"},
             ignore=True,
         )
-        yield from parse_swap_volume({"device": file_name, **swap_volume_spec})
+        yield from parse_swap_volume(
+            {"device": file_name, **swap_volume_spec},
+            "device",
+        )
 
 
 def parse_link(spec: Mapping[str, Any]) -> Iterator[Specification]:
@@ -813,22 +842,27 @@ def parse_loop_device(spec: Mapping[str, Any]) -> Iterator[Specification]:
     )
 
     if block_device_spec:
-        yield from parse_block_device(name, block_device_spec, loop_device_name)
+        yield from parse_block_device(
+            name, block_device_spec, loop_device_name, "device"
+        )
 
 
-def parse_swap_volume(spec: Mapping[str, Any]) -> Iterator[Specification]:
+def parse_swap_volume(
+    spec: Mapping[str, Any], identify: str
+) -> Iterator[Specification]:
     logging.debug("parse_swap_volume")
 
     validate_spec(
         "SwapVolume",
         spec,
         required={"name", "device"},
-        allowed={"label", "pagesize", "uuid"},
+        allowed={"identify", "label", "pagesize", "uuid"},
     )
 
     yield SwapVolume(
         name=spec["name"],
         device=spec["device"],
+        identify=spec.get("identify", identify),
         label=spec.get("label"),
         pagesize=spec.get("pagesize"),
         uuid=spec.get("uuid"),

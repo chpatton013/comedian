@@ -7,6 +7,7 @@ from comedian.command import (
     CommandGenerator,
     cp,
     crypttab_append,
+    identify_device_path,
     mkdir,
     quote_argument,
     quote_subcommand,
@@ -46,9 +47,13 @@ class CryptVolumeDownCommandGenerator(CommandGenerator):
 class CryptVolumeApplyCommandGenerator(CryptVolumeUpCommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         device_path = _device_path(self.specification.device, context)
-        keyfile_path = self.specification.tmp_keyfile_path(context)
+        tmp_keyfile_path = self.specification.tmp_keyfile_path(context)
 
-        if not self.specification.ephemeral_keyfile():
+        keyfile_path = None
+        if self.specification.ephemeral_keyfile():
+            keyfile_path = self.specification.keyfile
+        else:
+            keyfile_path = _keyfile_path(self.specification.keyfile, context)
             if self.specification.keysize is None:
                 raise RuntimeError(
                     "Logical Error: CryptVolume.keysize must be set with explicit keyfile"
@@ -56,26 +61,27 @@ class CryptVolumeApplyCommandGenerator(CryptVolumeUpCommandGenerator):
 
             yield from _randomize_device(self.specification.name, device_path, context)
             yield from _create_keyfile(
-                keyfile_path, self.specification.keysize, context
+                tmp_keyfile_path, self.specification.keysize, context
             )
             yield from _format_crypt(
                 context,
                 device_path,
-                keyfile_path,
+                tmp_keyfile_path,
                 self.specification.type,
                 self.specification.password,
             )
 
         yield from super().__call__(context)
 
+        identify_path = identify_device_path(self.specification.identify, device_path)
         crypttab_entry = [
             "",
-            f"# {self.specification.name}",
+            f"# {self.specification.name} (originally {device_path})",
             "\\t".join(
                 [
                     self.specification.name,
-                    device_path,
-                    self.specification.keyfile,
+                    identify_path,
+                    keyfile_path,
                     ",".join(self.specification.options),
                 ]
             ),
@@ -102,6 +108,7 @@ class CryptVolume(Specification):
         self,
         name: str,
         device: str,
+        identify: str,
         type: str,
         keyfile: str,
         keysize: Optional[str],
@@ -123,6 +130,7 @@ class CryptVolume(Specification):
         )
 
         self.device = device
+        self.identify = identify
         self.type = type
         self.keyfile = keyfile
         self.keysize = keysize

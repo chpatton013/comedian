@@ -14,6 +14,7 @@ class MountTest(SpecificationTestBase, unittest.TestCase):
             Mount(
                 name="name",
                 device="device",
+                identify="device",
                 mountpoint="mountpoint",
                 type="type",
                 options=["opt", "ions"],
@@ -28,6 +29,7 @@ class MountTest(SpecificationTestBase, unittest.TestCase):
         self.assertListEqual(["mountpoint", "device"], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
         self.assertEqual("device", self.specification.device)
+        self.assertEqual("device", self.specification.identify)
         self.assertEqual("mountpoint", self.specification.mountpoint)
         self.assertEqual("type", self.specification.type)
         self.assertEqual(["opt", "ions"], self.specification.options)
@@ -45,6 +47,14 @@ class MountTest(SpecificationTestBase, unittest.TestCase):
         )
 
     def test_apply_commands(self):
+        fstab_lines = "\\n".join(
+            [
+                "",
+                "# name (originally device)",
+                "device\\tmountpoint\\ttype\\topt,ions\\t1\\t2",
+            ]
+        )
+
         expected = [
             Command(
                 [
@@ -61,7 +71,7 @@ class MountTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    'echo -e "\\n# name\\ndevice\\tmountpoint\\ttype\\topt,ions\\t1\\t2" >> tmp_dir/etc/fstab',
+                    f'echo -e "{fstab_lines}" >> tmp_dir/etc/fstab',
                 ]
             ),
         ]

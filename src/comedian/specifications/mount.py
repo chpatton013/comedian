@@ -5,6 +5,7 @@ from comedian.command import (
     CommandContext,
     CommandGenerator,
     fstab_append,
+    identify_device_path,
     quote_argument,
 )
 from comedian.graph import ResolveLink
@@ -48,21 +49,25 @@ class MountApplyCommandGenerator(MountUpCommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
         yield from super().__call__(context)
 
-        device_path = None
+        identify_path = None
         if self.specification.device:
             device_path = _device_path(self.specification.device, context)
+            command = f"# {self.specification.name} (originally {device_path})"
+            identify_path = identify_device_path(
+                self.specification.identify, device_path
+            )
         else:
-            device_path = self.specification.type
+            command = f"# {self.specification.name}"
+            identify_path = self.specification.type
+        mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
 
         fstab_entry = [
             "",
-            f"# {self.specification.name}",
+            command,
             "\\t".join(
                 [
-                    device_path,
-                    quote_argument(
-                        _mountpoint_path(self.specification.mountpoint, context)
-                    ),
+                    quote_argument(identify_path),
+                    quote_argument(mountpoint_path),
                     quote_argument(self.specification.type),
                     quote_argument(",".join(self.specification.options)),
                     str(self.specification.dump_frequency or 0),
@@ -78,6 +83,7 @@ class Mount(Specification):
         self,
         name: str,
         device: Optional[str],
+        identify: str,
         mountpoint: str,
         type: str,
         options: List[str],
@@ -95,6 +101,7 @@ class Mount(Specification):
             down=MountDownCommandGenerator(self),
         )
         self.device = device
+        self.identify = identify
         self.mountpoint = mountpoint
         self.type = type
         self.options = options
