@@ -83,8 +83,10 @@
       "metadata": "1.0",
       "filesystem": {
         "name": "fsefi",
-        "mountpoint": "fsboot:efi",
-        "type": "vfat"
+        "type": "vfat",
+        "mount": {
+          "mountpoint": "fsboot:mount:efi"
+        }
       }
     },
     {
@@ -95,33 +97,35 @@
       "crypt_volume": {
         "name": "cryptboot",
         "type": "luks1",
-        "keyfile": "fsboot:keys/cryptboot.keyfile",
+        "keyfile": "fsboot:mount:keys/cryptboot.keyfile",
         "keysize": "2048",
         "password": "hunter2",
         "filesystem": {
           "name": "fsboot",
-          "mountpoint": "fsroot:boot",
           "type": "ext4",
-          "directories": [
-            {
-              "relative_path": "efi",
-              "mode": "0700"
-            },
-            {
-              "relative_path": "keys",
-              "mode": "0000"
-            }
-          ],
-          "files": [
-            {
-              "relative_path": "keys/cryptboot.keyfile",
-              "mode": "0000"
-            },
-            {
-              "relative_path": "keys/cryptroot.keyfile",
-              "mode": "0000"
-            }
-          ]
+          "mount": {
+            "mountpoint": "fsroot:mount:boot",
+            "directories": [
+              {
+                "relative_path": "efi",
+                "mode": "0700"
+              },
+              {
+                "relative_path": "keys",
+                "mode": "0000"
+              }
+            ],
+            "files": [
+              {
+                "relative_path": "keys/cryptboot.keyfile",
+                "mode": "0000"
+              },
+              {
+                "relative_path": "keys/cryptroot.keyfile",
+                "mode": "0000"
+              }
+            ]
+          }
         }
       }
     },
@@ -133,7 +137,7 @@
       "crypt_volume": {
         "name": "cryptroot",
         "type": "luks2",
-        "keyfile": "fsboot:keys/cryptroot.keyfile",
+        "keyfile": "fsboot:mount:keys/cryptroot.keyfile",
         "keysize": "2048",
         "lvm_physical_volume": {
           "name": "LvmPvRoot"
@@ -151,26 +155,28 @@
           "size": "100%",
           "filesystem": {
             "name": "fsroot",
-            "mountpoint": "/",
             "type": "ext4",
-            "directories": [
-              {
-                "relative_path": "boot",
-                "mode": "0700"
-              }
-            ],
-            "files": [
-              {
-                "relative_path": "swapfile",
-                "owner": "root",
-                "group": "root",
-                "mode": "0000",
-                "size": "1G",
-                "swap_volume": {
-                  "name": "swap"
+            "mount": {
+              "mountpoint": "/",
+              "directories": [
+                {
+                  "relative_path": "boot",
+                  "mode": "0700"
                 }
-              }
-            ]
+              ],
+              "files": [
+                {
+                  "relative_path": "swapfile",
+                  "owner": "root",
+                  "group": "root",
+                  "mode": "0000",
+                  "size": "1G",
+                  "swap_volume": {
+                    "name": "swap"
+                  }
+                }
+              ]
+            }
           }
         }
       ]

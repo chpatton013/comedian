@@ -13,8 +13,10 @@
             "label": "root",
             "filesystem": {
               "name": "fsroot",
-              "mountpoint": "/",
-              "type": "ext4"
+              "type": "ext4",
+              "mount": {
+                "mountpoint": "/"
+              }
             }
           }
         ]
