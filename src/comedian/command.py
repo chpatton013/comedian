@@ -2,6 +2,7 @@
 Command API for generating shell commands to be run on a system.
 """
 
+import os
 import shlex
 from abc import ABC, abstractmethod
 from typing import Dict, Iterator, List, Optional
@@ -55,6 +56,10 @@ def quote_argument(arg: str) -> str:
 
 def quote_subcommand(sub: str) -> str:
     return f"'{sub}'"
+
+
+def ephemeral_keyfile(keyfile: str) -> bool:
+    return os.path.isabs(keyfile) and ":" not in keyfile
 
 
 def cp(source: str, destination: str) -> Command:

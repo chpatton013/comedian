@@ -8,6 +8,7 @@ from comedian.command import (
     cp,
     crypttab_append,
     identify_device_path,
+    ephemeral_keyfile,
     mkdir,
     quote_argument,
     quote_subcommand,
@@ -116,7 +117,7 @@ class CryptVolume(Specification):
         options: List[str],
     ):
         references = []
-        if not _ephemeral_keyfile(keyfile):
+        if not ephemeral_keyfile(keyfile):
             references.append(keyfile)
 
         super().__init__(
@@ -138,7 +139,7 @@ class CryptVolume(Specification):
         self.options = options
 
     def ephemeral_keyfile(self) -> bool:
-        return _ephemeral_keyfile(self.keyfile)
+        return ephemeral_keyfile(self.keyfile)
 
     def tmp_keyfile_path(self, context: CommandContext) -> str:
         if self.ephemeral_keyfile():
@@ -154,10 +155,6 @@ class CryptVolume(Specification):
 
     def resolve_device(self) -> ResolveLink:
         return ResolveLink(None, _crypt_device(self.name))
-
-
-def _ephemeral_keyfile(keyfile: str) -> bool:
-    return os.path.isabs(keyfile)
 
 
 def _crypt_device(name: str) -> str:

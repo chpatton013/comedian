@@ -6,9 +6,9 @@ raise errors on invalid input.
 """
 
 import logging
-import os
 from typing import Any, Dict, Iterator, Mapping, Optional, Set, Tuple
 
+from comedian.command import ephemeral_keyfile
 from comedian.specification import Specification
 from comedian.specifications import (
     CryptVolume,
@@ -457,7 +457,7 @@ def parse_crypt_volume(
     )
 
     keyfile = crypt_volume_spec["keyfile"]
-    if os.path.isabs(keyfile) == ("keysize" in spec):
+    if ephemeral_keyfile(keyfile) == ("keysize" in spec):
         raise FoundIncompatibleKeysError(name, dict(spec), {"keyfile", "keysize"})
 
     crypt_volume_name = crypt_volume_spec["name"]
