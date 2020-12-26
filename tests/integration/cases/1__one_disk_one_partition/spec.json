@@ -15,7 +15,7 @@
               "name": "fsroot",
               "type": "ext4",
               "mount": {
-                "mountpoint": "/"
+                "mountpoint": "//"
               }
             }
           }

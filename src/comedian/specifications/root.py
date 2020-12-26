@@ -51,7 +51,7 @@ class RootPostApplyCommandGenerator(CommandGenerator):
 class Root(Specification):
     def __init__(self):
         super().__init__(
-            "/",
+            "//",
             [],
             apply=RootApplyCommandGenerator(self),
             post_apply=RootPostApplyCommandGenerator(self),

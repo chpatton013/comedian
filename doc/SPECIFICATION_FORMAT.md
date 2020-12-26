@@ -81,7 +81,7 @@ if "B" also refers to "A", etc).
             "label": "root",
             "filesystem": {
               "name": "fsroot",
-              "mountpoint": "/",
+              "mountpoint": "//",
               "type": "ext4"
             }
           }

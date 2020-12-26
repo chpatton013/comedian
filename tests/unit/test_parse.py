@@ -33,7 +33,7 @@ _FSROOT_SPEC = {
     "name": "fsroot",
     "type": "ext4",
     "mount": {
-        "mountpoint": "/",
+        "mountpoint": "//",
         "directories": [
             {
                 "relative_path": "raid",
@@ -251,7 +251,7 @@ class ParseRootTest(ParseTestBase):
                 name="fsroot:mount",
                 device="fsroot",
                 identify="device",
-                mountpoint="/",
+                mountpoint="//",
                 type="ext4",
                 options=[],
                 dump_frequency=None,

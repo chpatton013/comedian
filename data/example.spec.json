@@ -157,7 +157,7 @@
             "name": "fsroot",
             "type": "ext4",
             "mount": {
-              "mountpoint": "/",
+              "mountpoint": "//",
               "directories": [
                 {
                   "relative_path": "boot",

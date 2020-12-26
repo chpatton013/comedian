@@ -16,7 +16,7 @@ class RootTest(SpecificationTestBase, unittest.TestCase):
         unittest.TestCase.__init__(self, *args, **kwargs)
 
     def test_properties(self):
-        self.assertEqual("/", self.specification.name)
+        self.assertEqual("//", self.specification.name)
         self.assertListEqual([], self.specification.dependencies)
         self.assertListEqual([], self.specification.references)
 
