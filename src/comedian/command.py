@@ -156,7 +156,7 @@ def parted(*args: str, align: Optional[str] = None) -> Command:
 
 
 def _identify_device_path_cmd(device_path: str, root: str) -> str:
-    return f"find {root} -type l -ilname {quote_argument(device_path)}"
+    return f"find {root} -type l -lname $(realpath --relative-to={root} {quote_argument(device_path)})"
 
 
 def _identify_device_node_cmd(device_path: str, root: str) -> str:
