@@ -21,7 +21,7 @@ def runtime_dir():
         return os.path.join(script_dir, "..")
 
 
-COMEDIAN_VERSION = "0.0.1"
+COMEDIAN_VERSION = "0.1.0"
 
 README_PATH = os.path.join(runtime_dir(), "README.md")
 
