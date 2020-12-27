@@ -1,5 +1,5 @@
 import os
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Tuple
 
 from comedian.command import (
     Command,
@@ -22,7 +22,7 @@ class CryptVolumeUpCommandGenerator(CommandGenerator):
         self.specification = specification
 
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(self.specification.device, context)
+        _, media_device_path = _device_path(self.specification.device, context)
         type = (
             self.specification.type if self.specification.ephemeral_keyfile() else None
         )
@@ -30,7 +30,7 @@ class CryptVolumeUpCommandGenerator(CommandGenerator):
         yield Command(
             _open_crypt(
                 self.specification.name,
-                device_path,
+                media_device_path,
                 self.specification.tmp_keyfile_path(context),
                 type,
             )
@@ -47,7 +47,9 @@ class CryptVolumeDownCommandGenerator(CommandGenerator):
 
 class CryptVolumeApplyCommandGenerator(CryptVolumeUpCommandGenerator):
     def __call__(self, context: CommandContext) -> Iterator[Command]:
-        device_path = _device_path(self.specification.device, context)
+        device_path, media_device_path = _device_path(
+            self.specification.device, context
+        )
         tmp_keyfile_path = self.specification.tmp_keyfile_path(context)
 
         keyfile_path = None
@@ -60,13 +62,15 @@ class CryptVolumeApplyCommandGenerator(CryptVolumeUpCommandGenerator):
                     "Logical Error: CryptVolume.keysize must be set with explicit keyfile"
                 )
 
-            yield from _randomize_device(self.specification.name, device_path, context)
+            yield from _randomize_device(
+                self.specification.name, media_device_path, context
+            )
             yield from _create_keyfile(
                 tmp_keyfile_path, self.specification.keysize, context
             )
             yield from _format_crypt(
                 context,
-                device_path,
+                media_device_path,
                 tmp_keyfile_path,
                 self.specification.type,
                 self.specification.password,
@@ -263,13 +267,16 @@ def _format_crypt(
         )
 
 
-def _device_path(device: str, context: CommandContext) -> str:
+def _device_path(device: str, context: CommandContext) -> Tuple[str, str]:
     device_path = context.graph.resolve_device(device)
-    if not device_path:
-        device_path = context.graph.resolve_path(device)
+    if device_path:
+        return device_path, device_path
+
+    device_path = context.graph.resolve_path(device)
     if not device_path:
         raise ValueError("Failed to find device path {}".format(device))
-    return device_path
+
+    return device_path, context.config.media_path(device_path)
 
 
 def _keyfile_path(keyfile: str, context: CommandContext) -> str:
