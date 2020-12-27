@@ -71,7 +71,7 @@ class MountTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    f'echo -e "{fstab_lines}" >> tmp_dir/etc/fstab',
+                    "'echo -e \"{}\" >> tmp_dir/etc/fstab'".format(fstab_lines),
                 ]
             ),
         ]

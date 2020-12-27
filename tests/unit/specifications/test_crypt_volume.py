@@ -120,7 +120,7 @@ class CryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    f'echo -e "{crypttab_lines}" >> tmp_dir/etc/crypttab',
+                    "'echo -e \"{}\" >> tmp_dir/etc/crypttab'".format(crypttab_lines),
                 ]
             ),
         ]
@@ -248,7 +248,7 @@ class EphemeralCryptVolumeTest(SpecificationTestBase, unittest.TestCase):
                 [
                     "shell",
                     "-c",
-                    f'echo -e "{crypttab_lines}" >> tmp_dir/etc/crypttab',
+                    "'echo -e \"{}\" >> tmp_dir/etc/crypttab'".format(crypttab_lines),
                 ]
             ),
         ]

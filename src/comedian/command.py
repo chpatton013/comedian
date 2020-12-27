@@ -96,7 +96,7 @@ def crypttab_append(context: CommandContext, crypttab_entry: str) -> Command:
         [
             context.config.shell,
             "-c",
-            f'echo -e "{crypttab_entry}" >> {crypttab_filepath}',
+            quote_subcommand(f'echo -e "{crypttab_entry}" >> {crypttab_filepath}'),
         ]
     )
 
@@ -104,7 +104,11 @@ def crypttab_append(context: CommandContext, crypttab_entry: str) -> Command:
 def fstab_append(context: CommandContext, fstab_entry: str) -> Command:
     fstab_filepath = context.config.tmp_path("/etc/fstab")
     return Command(
-        [context.config.shell, "-c", f'echo -e "{fstab_entry}" >> {fstab_filepath}']
+        [
+            context.config.shell,
+            "-c",
+            quote_subcommand(f'echo -e "{fstab_entry}" >> {fstab_filepath}'),
+        ]
     )
 
 
