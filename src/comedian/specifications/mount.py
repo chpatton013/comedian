@@ -26,6 +26,8 @@ class MountUpCommandGenerator(CommandGenerator):
         if self.specification.device:
             device_path = _device_path(self.specification.device, context)
             mount_cmd.append(quote_argument(device_path))
+        else:
+            mount_cmd.append(quote_argument(self.specification.type))
 
         mountpoint_path = _mountpoint_path(self.specification.mountpoint, context)
         media_mountpoint_path = context.config.media_path(mountpoint_path)
